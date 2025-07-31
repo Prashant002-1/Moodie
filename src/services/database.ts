@@ -1,23 +1,9 @@
-interface DatabaseConfig {
-  host: string;
-  port: number;
-  database: string;
-  username: string;
-  password: string;
-}
 
 class DatabaseService {
-  private config: DatabaseConfig;
   private connected: boolean = false;
 
   constructor() {
-    this.config = {
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'emotionflix',
-      username: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'password'
-    };
+    // Configuration would be used for actual database connection
   }
 
   async connect(): Promise<void> {
@@ -36,7 +22,7 @@ class DatabaseService {
     return this.connected;
   }
 
-  async query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
+  async query<T = any>(_sql: string, _params: any[] = []): Promise<T[]> {
     if (!this.connected) {
       return [];
     }

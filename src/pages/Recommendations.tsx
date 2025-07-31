@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useEmotion } from '../contexts/EmotionContext';
+import { useUser } from '../contexts/UserContext';
 import { recommendationService } from '../services/recommendationService';
 import { GetGenres, GetMoviesByGenres, GetPopularMovies } from '../services/tmdbApi';
 import { Movie, Genre } from '../types/movie';
@@ -18,6 +19,7 @@ type EnhancedMovie = Movie & {
 const Recommendations: React.FC = () => {
   const { theme } = useTheme();
   const { isInWatchlist } = useEmotion();
+  const { user } = useUser();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -100,7 +102,6 @@ const Recommendations: React.FC = () => {
     loadGenres();
   }, []);
 
-  // Enhanced recommendation fetching with multiple sources
   const fetchRecommendations = useCallback(async (currentEmotions: EmotionScores) => {
     const currentNormalizedEmotions: EmotionScores = {
       neutral: currentEmotions.neutral / 100,
@@ -115,16 +116,19 @@ const Recommendations: React.FC = () => {
     setError(null);
     
     try {
-      // Use personalized emotion mapping for user-specific recommendations
+      if (!user?.id) {
+        setShowAuthModal(true);
+        return;
+      }
+      
       const emotionGenreIds = await personalizedEmotionMappingService.getPersonalizedGenreRecommendations(
-        'user123', // In real app, get from user context
+        user.id.toString(),
         currentNormalizedEmotions
       );
       
       // Fetch movies based ONLY on emotion-mapped genres (emotion-driven approach)
-      // Limit to max 500 movies for performance
       const MAX_MOVIES_TOTAL = 500;
-      const MOVIES_PER_GENRE_PAGE = 20; // TMDB returns 20 movies per page
+      const MOVIES_PER_GENRE_PAGE = 20;
       let allEmotionMovies: Movie[] = [];
       
       if (emotionGenreIds.length > 0) {
@@ -144,7 +148,6 @@ const Recommendations: React.FC = () => {
         const emotionMoviesByGenre = await Promise.all(emotionBasedPromises);
         allEmotionMovies = emotionMoviesByGenre.flat();
         
-        // Apply hard limit to prevent performance issues
         if (allEmotionMovies.length > MAX_MOVIES_TOTAL) {
           allEmotionMovies = allEmotionMovies.slice(0, MAX_MOVIES_TOTAL);
         }
@@ -201,7 +204,7 @@ const Recommendations: React.FC = () => {
       
       setAlgorithmInsights({
         confidence: Math.round(averageEmotionScore * 100),
-        reasoning: [], // Removed process details as requested
+        reasoning: [],
         matchingGenres: getMatchingGenres(dominantEmotion).slice(0, emotionGenreIds.length),
         totalFound: uniqueMovies.length,
         emotionProfile: currentEmotions
@@ -212,7 +215,7 @@ const Recommendations: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // No dependencies since we pass parameters
+  }, []); 
   
   // Fetch recommendations when emotions change (with debouncing)
   useEffect(() => {
@@ -220,14 +223,18 @@ const Recommendations: React.FC = () => {
       fetchRecommendations(emotions);
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [emotions, fetchRecommendations]); // Only depend on the actual values that should trigger a refetch
+  }, [emotions, fetchRecommendations]); 
 
   // Calculate emotion compatibility score for a movie using personalized mappings
   const calculateEmotionScore = async (movie: Movie, emotions: EmotionScores): Promise<number> => {
+    if (!user?.id) {
+      return 0.5; // Default score for unauthenticated users
+    }
+    
     const emotionCompatibility = await recommendationService.calculateEmotionCompatibility(
       emotions, 
       movie.genre_ids, 
-      'user123' // In real app, get from user context
+      user.id.toString()
     );
     
     // Quality score from rating and popularity
@@ -306,11 +313,10 @@ const Recommendations: React.FC = () => {
       );
     }
     
-    // Sort movies - ALWAYS prioritize emotion match first, then secondary sort
     filtered.sort((a, b) => {
       // PRIMARY: Always sort by emotion match score first
       const emotionDiff = (b.emotionScore || 0) - (a.emotionScore || 0);
-      if (Math.abs(emotionDiff) > 0.01) { // If emotion scores are significantly different
+      if (Math.abs(emotionDiff) > 0.01) { 
         return emotionDiff;
       }
       
@@ -323,9 +329,9 @@ const Recommendations: React.FC = () => {
         case 'release_date':
           return new Date(b.release_date || '').getTime() - new Date(a.release_date || '').getTime();
         case 'emotion_match':
-          return 0; // Already sorted by emotion match above
+          return 0; 
         default:
-          return b.vote_average - a.vote_average; // Default to rating
+          return b.vote_average - a.vote_average; 
       }
     });
     
@@ -344,11 +350,15 @@ const Recommendations: React.FC = () => {
 
   // Movie interaction handlers
   const handleMovieClick = async (movieId: number) => {
-    // Update personalized mapping when user clicks on a movie
+    if (!user?.id) {
+      setShowAuthModal(true);
+      return;
+    }
+    
     const movie = movies.find(m => m.id === movieId);
     if (movie) {
       await personalizedEmotionMappingService.updateUserMappingFromInteraction(
-        'user123', // In real app, get from user context
+        user.id.toString(),
         movie.genre_ids,
         {
           neutral: emotions.neutral / 100,

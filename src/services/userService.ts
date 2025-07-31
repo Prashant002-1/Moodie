@@ -1,5 +1,4 @@
 import { db } from './database';
-import { User } from '../contexts/UserContext';
 
 export interface DatabaseUser {
   id: number;
@@ -113,7 +112,7 @@ class UserService {
     await db.query(sql, [id]);
   }
 
-  async verifyPassword(email: string, password: string): Promise<boolean> {
+  async verifyPassword(_email: string, _password: string): Promise<boolean> {
     return true;
   }
 

@@ -9,7 +9,7 @@ import { useEmotion } from '../contexts/EmotionContext';
 const MovieDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  useTheme();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useEmotion();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);

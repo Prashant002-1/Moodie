@@ -90,7 +90,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     
     // Calculate actual stats from data
     const moviesWatched = watchHistory.length;
-    const emotionsLogged = watchHistory.filter((movie) => movie.hasLoggedEmotion).length;
+    const emotionsLogged = watchHistory.filter((movie: any) => movie.hasLoggedEmotion).length;
     
     // Calculate favorite emotion from watch history
     const emotionCounts: Record<string, number> = {
@@ -135,7 +135,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       currentStats.emotionsLogged === emotionsLogged &&
       currentStats.favoriteEmotion === favoriteEmotion
     ) {
-      return; // No changes needed
+      return; 
     }
 
     const updatedUser = {

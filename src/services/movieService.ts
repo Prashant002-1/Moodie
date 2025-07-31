@@ -66,23 +66,7 @@ class MovieService {
       const result = await db.query<DatabaseMovie>(sql, values);
       return result[0];
     } catch (error) {
-      
-      const mockResult: DatabaseMovie = {
-        id: movie.id,
-        title: movie.title,
-        overview: movie.overview,
-        release_date: movie.release_date ? new Date(movie.release_date) : null,
-        poster_path: movie.poster_path,
-        backdrop_path: movie.backdrop_path,
-        vote_average: movie.vote_average,
-        vote_count: movie.vote_count,
-        popularity: movie.popularity,
-        runtime: movie.runtime || null,
-        tmdb_data: movie,
-        last_updated: new Date()
-      };
-      
-      return mockResult;
+      throw error;
     }
   }
 
@@ -125,17 +109,7 @@ class MovieService {
       const result = await db.query<UserMovie>(sql, [userId, movieId, status]);
       return result[0];
     } catch (error) {
-      
-      const mockResult: UserMovie = {
-        id: Date.now(),
-        user_id: userId,
-        movie_id: movieId,
-        status,
-        rating: null,
-        created_at: new Date()
-      };
-      
-      return mockResult;
+      throw error;
     }
   }
 
@@ -173,6 +147,7 @@ class MovieService {
         poster_path: row.poster_path,
         release_date: row.release_date,
         vote_average: row.vote_average,
+        genre_ids: row.genre_ids || [],
         hasLoggedEmotion: row.has_logged_emotion,
         emotions: row.has_logged_emotion ? {
           neutral: row.neutral,
@@ -185,31 +160,7 @@ class MovieService {
         } : undefined
       }));
     } catch (error) {
-      
-      return [
-        {
-          movieId: 550,
-          userId: 'user123',
-          watchedAt: new Date('2024-01-15'),
-          title: 'Fight Club',
-          poster_path: '/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
-          release_date: '1999-10-15',
-          vote_average: 8.4,
-          hasLoggedEmotion: true,
-          emotions: { happy: 0.1, sad: 0.3, angry: 0.4, fearful: 0.1, neutral: 0.05, disgusted: 0.03, surprised: 0.02 }
-        },
-        {
-          movieId: 680,
-          userId: 'user123', 
-          watchedAt: new Date('2024-01-12'),
-          title: 'Pulp Fiction',
-          poster_path: '/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
-          release_date: '1994-10-14',
-          vote_average: 8.9,
-          hasLoggedEmotion: true,
-          emotions: { happy: 0.2, sad: 0.1, angry: 0.3, fearful: 0.2, neutral: 0.15, disgusted: 0.03, surprised: 0.02 }
-        }
-      ];
+      return [];
     }
   }
 

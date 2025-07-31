@@ -26,7 +26,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) 
       await login(formData.email, formData.password);
       onSuccess?.();
     } catch (err: unknown) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      setError((err as any)?.response?.data?.error || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }

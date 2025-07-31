@@ -194,11 +194,11 @@ class PersonalizedEmotionMappingService {
    * Simulate database persistence (replace with actual DB call)
    */
   private async persistUserMappingsToDB(
-    userId: string,
+    _userId: string,
     _mappings: PersonalizedMapping,
-    movieGenres: number[],
-    emotionScores: EmotionScores,
-    interactionType: string
+    _movieGenres: number[],
+    _emotionScores: EmotionScores,
+    _interactionType: string
   ): Promise<void> {
     // This would be replaced with actual database update
   }

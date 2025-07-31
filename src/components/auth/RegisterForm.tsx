@@ -39,7 +39,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onSwitchToLogin 
       await register(formData.email, formData.username, formData.password);
       onSuccess?.();
     } catch (err: unknown) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      setError((err as any)?.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

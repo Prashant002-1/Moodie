@@ -50,17 +50,7 @@ class EmotionService {
       
       return result[0];
     } catch (error) {
-      
-      const mockResult: DatabaseEmotion = {
-        id: Date.now(),
-        user_id: userId,
-        session_id: `session_${Date.now()}`,
-        ...emotions,
-        detection_method: detectionMethod,
-        created_at: new Date()
-      };
-      
-      return mockResult;
+      throw error;
     }
   }
 

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS user_emotion_genre_mappings (
     emotion VARCHAR(20) NOT NULL, -- 'happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised', 'neutral'
     genre_id INTEGER REFERENCES genres(id) ON DELETE CASCADE,
     weight DECIMAL(5,4) DEFAULT 0.0000, -- How strongly this emotion maps to this genre for this user
-    interaction_count INTEGER DEFAULT 1, -- Number of times user interacted with this emotion-genre combo
+    interaction_count INTEGER DEFAULT 1, -- Number of times user interacted with this emotion-genre 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, emotion, genre_id)

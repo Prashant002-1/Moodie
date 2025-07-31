@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { EmotionScores, EmotionSession, WatchedMovie } from '../types/emotion';
+import { useUser } from './UserContext';
 
 interface EmotionContextType {
   currentEmotion: EmotionScores | null;
@@ -52,6 +53,7 @@ const EMOTION_COLORS = {
 } as const;
 
 export const EmotionProvider: React.FC<EmotionProviderProps> = ({ children }) => {
+  const { user } = useUser();
   const [currentEmotion, setCurrentEmotion] = useState<EmotionScores | null>(null);
   const [emotionHistory, setEmotionHistory] = useState<EmotionSession[]>([]);
   const [watchHistory, setWatchHistory] = useState<WatchedMovie[]>(() => {
@@ -60,52 +62,7 @@ export const EmotionProvider: React.FC<EmotionProviderProps> = ({ children }) =>
       return JSON.parse(saved);
     }
     
-    return [
-      {
-        movieId: 550,
-        userId: 'user123',
-        watchedAt: new Date('2024-01-15'),
-        title: 'Fight Club',
-        poster_path: '/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
-        release_date: '1999-10-15',
-        vote_average: 8.4,
-        hasLoggedEmotion: true,
-        emotions: { happy: 0.1, sad: 0.3, angry: 0.4, fearful: 0.1, neutral: 0.05, disgusted: 0.03, surprised: 0.02 }
-      },
-      {
-        movieId: 680,
-        userId: 'user123', 
-        watchedAt: new Date('2024-01-12'),
-        title: 'Pulp Fiction',
-        poster_path: '/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
-        release_date: '1994-10-14',
-        vote_average: 8.9,
-        hasLoggedEmotion: true,
-        emotions: { happy: 0.2, sad: 0.1, angry: 0.3, fearful: 0.2, neutral: 0.15, disgusted: 0.03, surprised: 0.02 }
-      },
-      {
-        movieId: 13,
-        userId: 'user123',
-        watchedAt: new Date('2024-01-10'), 
-        title: 'Forrest Gump',
-        poster_path: '/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg',
-        release_date: '1994-07-06',
-        vote_average: 8.5,
-        hasLoggedEmotion: false,
-        emotions: undefined
-      },
-      {
-        movieId: 155,
-        userId: 'user123',
-        watchedAt: new Date('2024-01-08'),
-        title: 'The Dark Knight',
-        poster_path: '/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
-        release_date: '2008-07-18',
-        vote_average: 9.0,
-        hasLoggedEmotion: true,
-        emotions: { happy: 0.15, sad: 0.2, angry: 0.1, fearful: 0.4, neutral: 0.1, disgusted: 0.03, surprised: 0.02 }
-      }
-    ];
+    return [];
   });
 
   const [watchlist, setWatchlist] = useState<WatchedMovie[]>(() => {
@@ -149,6 +106,9 @@ export const EmotionProvider: React.FC<EmotionProviderProps> = ({ children }) =>
   }, [addEmotionSession]);
 
   const addToWatchHistory = useCallback((movie: Omit<WatchedMovie, 'userId' | 'watchedAt' | 'hasLoggedEmotion'>) => {
+    if (!user?.id) {
+      return; // Skip if user not logged in
+    }
     
     setWatchHistory(prev => {
       // Check if movie already exists in watch history
@@ -167,7 +127,7 @@ export const EmotionProvider: React.FC<EmotionProviderProps> = ({ children }) =>
         // New movie, add to beginning of list
         const newWatchedMovie: WatchedMovie = {
           ...movie,
-          userId: 'user123',
+          userId: user?.id?.toString() || '',
           watchedAt: new Date(),
           hasLoggedEmotion: !!movie.emotions
         };
@@ -176,7 +136,7 @@ export const EmotionProvider: React.FC<EmotionProviderProps> = ({ children }) =>
         return updated;
       }
     });
-  }, []);
+  }, [user]);
 
   const getEmotionDisplayString = useCallback((emotions: EmotionScores, threshold: number = 0.008): { emotion: keyof EmotionScores; value: number; icon: string; color: string }[] => {
     const emotionEntries = Object.entries(emotions) as [keyof EmotionScores, number][];
@@ -195,6 +155,9 @@ export const EmotionProvider: React.FC<EmotionProviderProps> = ({ children }) =>
   }, []);
 
   const addToWatchlist = useCallback((movie: Omit<WatchedMovie, 'userId' | 'watchedAt' | 'hasLoggedEmotion'>) => {
+    if (!user?.id) {
+      return; // Skip if user not logged in
+    }
     
     setWatchlist(prev => {
       if (prev.some(m => m.movieId === movie.movieId)) {
@@ -203,7 +166,7 @@ export const EmotionProvider: React.FC<EmotionProviderProps> = ({ children }) =>
       
       const newWatchlistMovie: WatchedMovie = {
         ...movie,
-        userId: 'user123',
+        userId: user?.id?.toString() || '',
         watchedAt: new Date(),
         hasLoggedEmotion: false
       };
@@ -212,7 +175,7 @@ export const EmotionProvider: React.FC<EmotionProviderProps> = ({ children }) =>
       localStorage.setItem('emotionflix-watchlist', JSON.stringify(updated));
       return updated;
     });
-  }, []);
+  }, [user]);
 
   const removeFromWatchlist = useCallback((movieId: number) => {
     
