@@ -1,7 +1,7 @@
 # Emotion Detection System
 
 ## Overview
-The EmotionFlix emotion detection system uses face-api.js to analyze facial expressions from webcam photos and provides manual input as a fallback option.
+The EmotionFlix emotion detection system analyzes facial expressions from webcam photos and provides manual input as a fallback option.
 
 ## Features
 
@@ -43,12 +43,6 @@ All emotions are scored on a 0-1 scale:
 - fearful
 - disgusted
 - surprised
-
-### Database Schema
-```sql
--- Updated emotions table
-ALTER TABLE emotions ADD COLUMN confidence DECIMAL(3,2) DEFAULT 0.00;
-```
 
 ## Usage Flow
 

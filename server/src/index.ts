@@ -1,3 +1,5 @@
+// src/index.ts - Main server file for EmotionFlix
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';

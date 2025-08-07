@@ -1,6 +1,9 @@
+// src/models/User.ts - User model for PostgreSQL database with authentication and profile management
+
 import pool from '../config/database';
 import bcrypt from 'bcryptjs';
 
+// This interface defines the structure of the user object in the database
 export interface User {
   id: number;
   email: string;
@@ -10,6 +13,7 @@ export interface User {
   updated_at: Date;
 }
 
+// This interface defines the structure of the user object in the database
 export interface CreateUserData {
   email: string;
   username: string;

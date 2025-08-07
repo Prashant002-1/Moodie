@@ -1,3 +1,5 @@
+// src/config/database.ts - Database connection configuration for PostgreSQL
+
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 

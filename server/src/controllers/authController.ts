@@ -1,3 +1,5 @@
+// src/controllers/authController.ts - Authentication controller for user registration, login, and profile retrieval
+
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';

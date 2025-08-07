@@ -1,3 +1,5 @@
+// src/routes/auth.ts - Authentication routes for user registration, login, and profile retrieval
+
 import express from 'express';
 import { register, login, getProfile } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
