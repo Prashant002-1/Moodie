@@ -18,16 +18,16 @@ function App() {
                 <UserProvider>
                     <EmotionProvider>
                         <BrowserRouter>
-                            <Routes>
-                                <Route path="/" element={<Layout />}>
-                                    <Route index element={<Home />} />
-                                    <Route path="profile" element={<UserProfile />} />
-                                    <Route path="log" element={<Log />} />
-                                    <Route path="recommendations" element={<Recommendations />} />
-                                    <Route path="movie-match" element={<MovieMatch />} />
-                                    <Route path="movie/:id" element={<MovieDetails />} />
-                                </Route>
-                            </Routes>
+                        <Routes>
+                            <Route path="/" element={<Layout />}>
+                                <Route index element={<Home />} />
+                                <Route path="profile" element={<UserProfile />} />
+                                <Route path="log" element={<Log />} />
+                                <Route path="recommendations" element={<Recommendations />} />
+                                <Route path="movie-match" element={<MovieMatch />} />
+                                <Route path="movie/:id" element={<MovieDetails />} />
+                            </Route>
+                        </Routes>
                         </BrowserRouter>
                     </EmotionProvider>
                 </UserProvider>

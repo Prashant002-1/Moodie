@@ -48,14 +48,14 @@ const Home: React.FC = () => {
             {user ? (
               <>
                 <div className="flex items-center justify-center mb-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-xl shadow-purple-500/25">
+                  <div className="w-20 h-20 bg-cinema-600 rounded-full flex items-center justify-center shadow-cinema animate-float">
                     <i className="fas fa-brain text-white text-2xl"></i>
                   </div>
                 </div>
                 <h1 className={`text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 ${
                   theme === 'dark' ? 'text-white' : 'text-gray-900'
                 }`}>
-                  Welcome back, <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{user.displayName}</span>
+                  Welcome back, <span className="text-gradient-cinema">{user.displayName}</span>
                 </h1>
                 <p className={`text-2xl md:text-3xl font-medium mb-8 ${
                   theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
@@ -66,14 +66,14 @@ const Home: React.FC = () => {
             ) : (
               <>
                 <div className="flex items-center justify-center mb-8">
-                  <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-xl shadow-purple-500/25 animate-pulse">
+                  <div className="w-24 h-24 bg-film-600 rounded-full flex items-center justify-center shadow-film animate-float">
                     <i className="fas fa-heart text-white text-3xl"></i>
                   </div>
                 </div>
                 <h1 className={`text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 ${
                   theme === 'dark' ? 'text-white' : 'text-gray-900'
                 }`}>
-                  Cinema Meets <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Emotions</span>
+                  Cinema Meets <span className="text-gradient-film">Emotions</span>
                 </h1>
                 <p className={`text-2xl md:text-3xl font-medium mb-8 ${
                   theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
@@ -83,17 +83,13 @@ const Home: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                   <button
                     onClick={handleSignInPrompt}
-                    className="px-10 py-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg rounded-2xl transition-all duration-300 hover:shadow-2xl hover:scale-105 shadow-purple-500/25"
+                    className="btn-primary px-10 py-5 text-lg font-bold"
                   >
                     Start Your Emotional Journey
                   </button>
                   <button
                     onClick={handleMovieMatch}
-                    className={`px-10 py-5 font-bold text-lg rounded-2xl transition-all duration-300 hover:scale-105 ${
-                      theme === 'dark'
-                        ? 'bg-gray-800/50 text-white border-2 border-gray-700 hover:bg-gray-700/50'
-                        : 'bg-white/50 text-gray-900 border-2 border-gray-300 hover:bg-white/80'
-                    }`}
+                    className="btn-tertiary px-10 py-5 text-lg font-bold"
                   >
                     Try Movie Match
                   </button>
@@ -106,14 +102,14 @@ const Home: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
             <button
               onClick={handleExploreRecommendations}
-              className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-xl hover:scale-105"
+              className="btn-secondary flex items-center gap-3"
             >
               <i className="fas fa-compass"></i>
               Explore Recommendations
             </button>
             <button
               onClick={handleMovieMatch}
-              className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-xl hover:scale-105"
+              className="btn-primary flex items-center gap-3"
             >
               <i className="fas fa-search"></i>
               Movie Match
@@ -121,11 +117,7 @@ const Home: React.FC = () => {
             {user && (
               <button
                 onClick={() => navigate('/log')}
-                className={`flex items-center gap-3 px-6 py-4 font-semibold rounded-xl transition-all duration-200 hover:scale-105 ${
-                  theme === 'dark'
-                    ? 'bg-gray-800/70 text-white border border-gray-700 hover:bg-gray-700/70'
-                    : 'bg-white/70 text-gray-900 border border-gray-300 hover:bg-white/90'
-                }`}
+                className="btn-tertiary flex items-center gap-3"
               >
                 <i className="fas fa-plus-circle"></i>
                 Log Movie Emotions
@@ -138,70 +130,40 @@ const Home: React.FC = () => {
         {user && (
           <div className="mb-16">
             <div className="text-center mb-8">
-              <h2 className={`text-3xl font-bold mb-2 ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>
+              <h2 className="heading-2 mb-2 text-charcoal-900">
                 Your Emotional Journey
               </h2>
-              <p className={`text-lg ${
-                theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-              }`}>
+              <p className="text-lg text-charcoal-600">
                 Track your cinematic exploration and emotional discoveries
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className={`p-8 rounded-2xl border backdrop-blur-sm shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-2 group ${
-                theme === 'dark' 
-                  ? 'bg-gradient-to-br from-purple-900/30 to-purple-800/20 border-purple-700/30' 
-                  : 'bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200/50'
-              }`}>
+              <div className="card-cinema p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 group">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-purple-700 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-cinema-600 rounded-full flex items-center justify-center">
                     <i className="fas fa-film text-white"></i>
                   </div>
-                  <div className={`text-4xl font-bold ${
-                    theme === 'dark' ? 'text-purple-300' : 'text-purple-600'
-                  }`}>{user.stats.moviesWatched || 0}</div>
+                  <div className="text-4xl font-bold text-cinema-600">{user.stats.moviesWatched || 0}</div>
                 </div>
-                <h3 className={`text-lg font-semibold mb-2 ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>Movies Experienced</h3>
-                <p className={`text-sm ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>Films you've watched and logged emotions for</p>
+                <h3 className="text-lg font-semibold mb-2 text-charcoal-900">Movies Experienced</h3>
+                <p className="text-sm text-charcoal-600">Films you've watched and logged emotions for</p>
               </div>
-              <div className={`p-8 rounded-2xl border backdrop-blur-sm shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-2 group ${
-                theme === 'dark' 
-                  ? 'bg-gradient-to-br from-pink-900/30 to-pink-800/20 border-pink-700/30' 
-                  : 'bg-gradient-to-br from-pink-50 to-pink-100/50 border-pink-200/50'
-              }`}>
+              <div className="card-film p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 group">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-pink-600 to-pink-700 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-film-600 rounded-full flex items-center justify-center">
                     <i className="fas fa-brain text-white"></i>
                   </div>
-                  <div className={`text-4xl font-bold ${
-                    theme === 'dark' ? 'text-pink-300' : 'text-pink-600'
-                  }`}>{user.stats.emotionsLogged || 0}</div>
+                  <div className="text-4xl font-bold text-film-600">{user.stats.emotionsLogged || 0}</div>
                 </div>
-                <h3 className={`text-lg font-semibold mb-2 ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>Emotions Captured</h3>
-                <p className={`text-sm ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>Emotional responses recorded and analyzed</p>
+                <h3 className="text-lg font-semibold mb-2 text-charcoal-900">Emotions Captured</h3>
+                <p className="text-sm text-charcoal-600">Emotional responses recorded and analyzed</p>
               </div>
-              <div className={`p-8 rounded-2xl border backdrop-blur-sm shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-2 group ${
-                theme === 'dark' 
-                  ? 'bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-700/30' 
-                  : 'bg-gradient-to-br from-green-50 to-green-100/50 border-green-200/50'
-              }`}>
+              <div className="card-hover p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 group">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-green-700 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center">
                     <i className="fas fa-heart text-white"></i>
                   </div>
-                  <div className={`text-3xl ${
-                    theme === 'dark' ? 'text-green-300' : 'text-green-600'
-                  }`}>
+                  <div className="text-3xl text-amber-600">
                     {(() => {
                       const emotionIcons = {
                         happy: 'fas fa-smile',
@@ -217,12 +179,8 @@ const Home: React.FC = () => {
                     })()}
                   </div>
                 </div>
-                <h3 className={`text-lg font-semibold mb-2 ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>Favorite Emotion</h3>
-                <p className={`text-sm ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>The emotion you experience most in movies</p>
+                <h3 className="text-lg font-semibold mb-2 text-charcoal-900">Favorite Emotion</h3>
+                <p className="text-sm text-charcoal-600">The emotion you experience most in movies</p>
               </div>
             </div>
           </div>
@@ -237,7 +195,7 @@ const Home: React.FC = () => {
                 <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
                   theme === 'dark' ? 'text-white' : 'text-gray-900'
                 }`}>
-                  Your Recent <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Emotional</span> Journey
+                  Your Recent <span className="text-gradient-cinema">Emotional</span> Journey
                 </h2>
                 <p className={`text-lg max-w-2xl mx-auto ${
                   theme === 'dark' ? 'text-gray-400' : 'text-gray-600'

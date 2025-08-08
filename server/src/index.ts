@@ -31,15 +31,17 @@ app.use('/api/auth', authRoutes);
 
 const startServer = async () => {
   try {
+    console.log('Starting EmotionFlix server...');
     
     try {
       await connectDB();
     } catch (dbError) {
-      // Database connection failed, continuing server startup
+      console.warn('Database connection failed, continuing server startup');
     }
     
     app.listen(PORT, () => {
-      // Server started successfully
+      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Health check: http://localhost:${PORT}/api/health`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

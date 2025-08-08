@@ -417,7 +417,7 @@ const Recommendations: React.FC = () => {
               <h2 className={`text-2xl font-bold flex items-center gap-3 ${
                 theme === 'dark' ? 'text-white' : 'text-gray-900'
               }`}>
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-cinema-600 rounded-full flex items-center justify-center shadow-cinema">
                   <i className="fas fa-brain text-white"></i>
                 </div>
                 Edit Emotion Profile
@@ -515,7 +515,7 @@ const Recommendations: React.FC = () => {
             </button>
             <button
               onClick={handleSave}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 hover:scale-105"
+              className="btn-primary"
             >
               Apply Changes
             </button>
@@ -566,7 +566,7 @@ const Recommendations: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-cinema-600 rounded-full flex items-center justify-center shadow-cinema">
                 <i className="fas fa-brain text-white text-xl"></i>
               </div>
               <div>
@@ -586,14 +586,14 @@ const Recommendations: React.FC = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => window.location.href = '/movie-match'}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 hover:scale-105"
+                className="btn-secondary flex items-center gap-2 px-4 py-2"
               >
                 <i className="fas fa-search"></i>
                 Movie Match
               </button>
               <button
                 onClick={() => setShowEmotionModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 hover:scale-105"
+                className="btn-primary flex items-center gap-2 px-4 py-2"
               >
                 <i className="fas fa-brain"></i>
                 Edit Emotions

@@ -41,7 +41,7 @@ const UserProfile: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/25">
+          <div className="w-24 h-24 bg-cinema-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-cinema">
             <i className="fas fa-user text-white text-3xl"></i>
           </div>
           <h1 className={`text-4xl md:text-5xl font-bold tracking-tight mb-4 ${
@@ -73,10 +73,8 @@ const UserProfile: React.FC = () => {
                 onClick={() => setActiveTab(tab.id as 'profile' | 'stats' | 'watchlist' | 'emotions' | 'settings')}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                    : theme === 'dark'
-                    ? 'text-gray-400 hover:text-white hover:bg-slate-700/50'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                    ? 'bg-cinema-600 text-white shadow-cinema'
+                    : 'text-charcoal-600 hover:text-charcoal-900 hover:bg-charcoal-100/60'
                 }`}
               >
                 <i className={`fas ${tab.icon}`}></i>
@@ -164,7 +162,7 @@ const UserProfile: React.FC = () => {
                       }`}>
                         Movies Watched
                       </span>
-                      <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      <span className="text-2xl font-bold text-gradient-cinema">
                         {user.stats.moviesWatched}
                       </span>
                     </div>
@@ -174,7 +172,7 @@ const UserProfile: React.FC = () => {
                       }`}>
                         Emotions Logged
                       </span>
-                      <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      <span className="text-2xl font-bold text-gradient-film">
                         {user.stats.emotionsLogged}
                       </span>
                     </div>
@@ -184,7 +182,7 @@ const UserProfile: React.FC = () => {
                       }`}>
                         Favorite Emotion
                       </span>
-                      <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      <span className="text-2xl font-bold text-gradient-cinema">
                         {(() => {
                           const emotionIcons = {
                             happy: 'fas fa-smile',
@@ -395,35 +393,6 @@ const UserProfile: React.FC = () => {
               </h2>
               
               <div className="space-y-6">
-                <div className={`p-6 rounded-xl ${
-                  theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-50'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className={`text-lg font-semibold ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-900'
-                      }`}>
-                        Dark Mode
-                      </h3>
-                      <p className={`text-sm ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}>
-                        Switch between light and dark themes
-                      </p>
-                    </div>
-                    <button
-                      onClick={toggleTheme}
-                      className={`relative w-14 h-8 rounded-full transition-colors ${
-                        theme === 'dark' ? 'bg-purple-500' : 'bg-gray-300'
-                      }`}
-                    >
-                      <div className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-transform ${
-                        theme === 'dark' ? 'translate-x-7' : 'translate-x-1'
-                      }`}></div>
-                    </button>
-                  </div>
-                </div>
-
                 <div className={`p-6 rounded-xl ${
                   theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-50'
                 }`}>

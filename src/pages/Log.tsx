@@ -187,7 +187,7 @@ const Log: React.FC = () => {
               <div key={step} className="flex items-center">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
                   currentStep === step 
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' 
+                    ? 'bg-cinema-600 text-white shadow-cinema' 
                     : index < ['search', 'emotions', 'complete'].indexOf(currentStep)
                     ? 'bg-green-500 text-white'
                     : theme === 'dark' 
@@ -248,7 +248,7 @@ const Log: React.FC = () => {
                   <button
                     onClick={handleMovieSearch}
                     disabled={!movieQuery.trim()}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <i className="fas fa-search mr-2"></i>
                     Search
@@ -453,7 +453,7 @@ const Log: React.FC = () => {
 
           {currentStep === 'complete' && (
             <div className="text-center space-y-8">
-              <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
                 <i className="fas fa-check text-white text-2xl"></i>
               </div>
 
@@ -525,7 +525,7 @@ const Log: React.FC = () => {
                 </button>
                 <button
                   onClick={() => navigate('/')}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg"
+                  className="btn-primary"
                 >
                   Back to Home
                 </button>
