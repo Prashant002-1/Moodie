@@ -3,24 +3,27 @@ import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 
+// Helper function to create database connection configs from environment
+const createDbConfig = (database?: string) => {
+  const url = new URL(process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/test_emotionflix');
+  
+  return {
+    host: url.hostname,
+    port: parseInt(url.port) || 5432,
+    user: url.username,
+    password: url.password,
+    database: database || url.pathname.slice(1) // Remove leading '/' from pathname
+  };
+};
+
 const setupTestDatabase = async () => {
   // Connect to postgres (default database) to create test database if it doesn't exist
-  const adminPool = new Pool({
-    host: 'localhost',
-    port: 5432,
-    user: 'postgres',
-    password: 'seniorproject450',
-    database: 'postgres' // Connect to default database first
-  });
+  const adminConfig = createDbConfig('postgres');
+  const adminPool = new Pool(adminConfig);
 
   // Connect to the test database
-  const testPool = new Pool({
-    host: 'localhost',
-    port: 5432,
-    user: 'postgres',
-    password: 'seniorproject450',
-    database: 'test_emotionflix'
-  });
+  const testConfig = createDbConfig();
+  const testPool = new Pool(testConfig);
 
   try {
     // Create test database if it doesn't exist
@@ -65,13 +68,8 @@ const setupTestDatabase = async () => {
 
 const cleanupTestDatabase = async () => {
   // Clean up any open database connections
-  const testPool = new Pool({
-    host: 'localhost',
-    port: 5432,
-    user: 'postgres',
-    password: 'seniorproject450',
-    database: 'test_emotionflix'
-  });
+  const testConfig = createDbConfig();
+  const testPool = new Pool(testConfig);
 
   try {
     // Clear test data but keep schema

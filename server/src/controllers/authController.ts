@@ -124,8 +124,12 @@ export const getProfile = async (req: Request, res: Response) => {
   }
 };
 
-//TESTING
-//Purpose: Token verification endpoint for authentication security testing
+/**
+ * Token verification endpoint for validating JWT tokens.
+ * Used by clients to verify token validity and retrieve user information.
+ * @param req Request containing Authorization header with Bearer token
+ * @param res Response object
+ */
 export const verifyToken = async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
@@ -159,8 +163,11 @@ export const verifyToken = async (req: Request, res: Response) => {
   }
 };
 
-//TESTING
-//Purpose: Controller object export for authentication testing suite
+/**
+ * Authentication controller object export.
+ * Provides a centralized interface for all authentication operations
+ * including registration, login, profile management, and token verification.
+ */
 export const authController = {
   register,
   login,

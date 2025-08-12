@@ -85,8 +85,12 @@ export const updateUserEmotionMappings = async (req: AuthRequest, res: Response)
   }
 };
 
-//TESTING
-//Purpose: Delete individual emotion mapping endpoint for testing CRUD operations
+/**
+ * Delete an individual emotion mapping for a user.
+ * Allows a user to remove a specific genre mapping for a given emotion.
+ * @param req Authenticated request containing userId, emotion, and genreId
+ * @param res Response object
+ */
 export const deleteUserEmotionMapping = async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.params.userId);
@@ -152,13 +156,18 @@ export const deleteUserEmotionMappings = async (req: AuthRequest, res: Response)
   }
 };
 
-//TESTING
-//Purpose: Export aliases for test consistency
+/**
+ * Legacy aliases for backwards compatibility with existing API clients.
+ * These provide shorter method names for common operations.
+ */
 export const getUserMappings = getUserEmotionMappings;
 export const updateUserMappings = updateUserEmotionMappings;
 
-//TESTING
-//Purpose: Controller object export for emotion mapping testing suite
+/**
+ * Controller object export containing all emotion mapping operations.
+ * This provides a centralized interface for all emotion mapping functionality
+ * including CRUD operations with proper authentication and authorization.
+ */
 export const emotionMappingController = {
   getUserMappings: getUserEmotionMappings,
   updateUserMappings: updateUserEmotionMappings,

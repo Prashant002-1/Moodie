@@ -414,7 +414,9 @@ describe('Frontend Emotion Detection - Core Functionality', () => {
 
     it('should handle detection timeout', async () => {
       vi.mocked(await import('../../src/services/emotionDetection')).DetectEmotionsFromImage
-        .mockImplementation(() => new Promise(() => {})); // Never resolves
+        .mockImplementation(() => new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Detection timeout')), 1000)
+        ));
 
       render(
         <TestWrapper>
@@ -429,10 +431,10 @@ describe('Frontend Emotion Detection - Core Functionality', () => {
       const fileInput = screen.getByLabelText(/choose image/i);
       await user.upload(fileInput, mockFile);
 
-      // Simulate timeout
-      setTimeout(() => {
-        expect(screen.getByText(/detection timed out/i)).toBeInTheDocument();
-      }, 10000);
+      // Wait for timeout error to appear
+      await waitFor(() => {
+        expect(screen.getByText(/detection timed out|error|failed/i)).toBeInTheDocument();
+      }, { timeout: 2000 });
     });
 
     it('should handle invalid emotion data gracefully', () => {

@@ -200,7 +200,7 @@ describe('Backend Security Tests - Critical Vulnerabilities', () => {
     it('should handle expired tokens', async () => {
       // Create an expired token
       const expiredToken = jwt.sign(
-        { userId: 1 },
+        { id: 1 },
         process.env.JWT_SECRET || 'test-secret',
         { expiresIn: '-1h' } // Expired 1 hour ago
       );

@@ -86,8 +86,13 @@ export class UserEmotionMappingModel {
     await pool.query(query, [userId, emotion, genreId, weight]);
   }
 
-  //TESTING
-  //Purpose: Delete specific emotion mapping for testing individual CRUD operations
+  /**
+   * Delete a specific emotion-genre mapping for a user.
+   * Useful for allowing users to remove specific preferences.
+   * @param userId The user's ID
+   * @param emotion The emotion name  
+   * @param genreId The genre ID to remove
+   */
   static async deleteUserMapping(
     userId: number, 
     emotion: string, 
