@@ -67,12 +67,12 @@ export const login = async (req: Request, res: Response) => {
 
     const user = await UserModel.findByEmail(email);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const isValidPassword = await UserModel.validatePassword(user, password);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const token = jwt.sign(

@@ -2,6 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import { emotionMappingController } from '../src/controllers/emotionMappingController';
 import { authController } from '../src/controllers/authController';
+import { authenticateToken } from '../src/middleware/auth';
 import { testConfig } from './setup';
 
 describe('Emotion Mapping API - Production Critical', () => {
@@ -17,10 +18,10 @@ describe('Emotion Mapping API - Production Critical', () => {
     app.post('/auth/register', authController.register);
     app.post('/auth/login', authController.login);
     
-    // Add emotion mapping routes
-    app.get('/emotion-mappings/:userId', emotionMappingController.getUserMappings);
-    app.put('/emotion-mappings/:userId', emotionMappingController.updateUserMappings);
-    app.delete('/emotion-mappings/:userId', emotionMappingController.deleteUserMapping);
+    // Add emotion mapping routes with authentication
+    app.get('/emotion-mappings/:userId', authenticateToken, emotionMappingController.getUserMappings);
+    app.put('/emotion-mappings/:userId', authenticateToken, emotionMappingController.updateUserMappings);
+    app.delete('/emotion-mappings/:userId', authenticateToken, emotionMappingController.deleteUserMapping);
 
     // Create test user and get token
     const registerResponse = await request(app)
@@ -28,7 +29,7 @@ describe('Emotion Mapping API - Production Critical', () => {
       .send({
         email: 'mapping-test@test.com',
         username: 'mappingtest',
-        password: 'password123'
+        password: 'password123!'
       });
     
     userToken = registerResponse.body.token;
@@ -46,13 +47,14 @@ describe('Emotion Mapping API - Production Critical', () => {
       expect(typeof response.body.mappings).toBe('object');
     });
 
-    it('should handle non-existent user gracefully', async () => {
+    it('should prevent access to other users data (horizontal privilege escalation)', async () => {
       const response = await request(app)
         .get('/emotion-mappings/99999')
         .set('Authorization', `Bearer ${userToken}`);
 
-      expect(response.status).toBe(200);
-      expect(response.body.mappings).toEqual({});
+      expect(response.status).toBe(403);
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toContain('Access denied');
     });
 
     it('should require authentication', async () => {
@@ -86,8 +88,9 @@ describe('Emotion Mapping API - Production Critical', () => {
         .send({ mappings: validMappings });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('success', true);
-      expect(response.body).toHaveProperty('updated');
+      expect(response.body).toHaveProperty('message');
+      expect(response.body).toHaveProperty('mappings');
+      expect(response.body.message).toContain('updated successfully');
     });
 
     it('should validate emotion mapping structure', async () => {

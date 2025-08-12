@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { expect } from '@jest/globals';
+import { setupTestDatabase, cleanupTestDatabase } from './setup-test-db';
 
 // Load test environment variables
 dotenv.config({ path: '.env.test' });
@@ -7,10 +8,28 @@ dotenv.config({ path: '.env.test' });
 // Global test setup
 global.beforeAll(async () => {
   console.log('Setting up test environment...');
+  
+  try {
+    await setupTestDatabase();
+    console.log('✅ Test database initialized successfully');
+    
+    // Clean database before each test file to avoid conflicts
+    await cleanupTestDatabase();
+    console.log('✅ Test database cleared for fresh start');
+  } catch (error) {
+    console.error('❌ Failed to setup test database:', error);
+    throw error;
+  }
 });
 
 global.afterAll(async () => {
   console.log('Cleaning up test environment...');
+  
+  try {
+    await cleanupTestDatabase();
+  } catch (error) {
+    console.error('Error cleaning up test database:', error);
+  }
 });
 
 // Mock console for cleaner test output
@@ -76,7 +95,7 @@ export const testConfig = {
   testUser: {
     email: 'test@test.com',
     username: 'testuser',
-    password: 'testpassword123'
+    password: 'testpassword123!'
   },
   testEmotion: {
     neutral: 0.1,
