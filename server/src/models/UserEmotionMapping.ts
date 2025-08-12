@@ -86,6 +86,21 @@ export class UserEmotionMappingModel {
     await pool.query(query, [userId, emotion, genreId, weight]);
   }
 
+  //TESTING
+  //Purpose: Delete specific emotion mapping for testing individual CRUD operations
+  static async deleteUserMapping(
+    userId: number, 
+    emotion: string, 
+    genreId: number
+  ): Promise<void> {
+    const query = `
+      DELETE FROM user_emotion_mappings 
+      WHERE user_id = $1 AND emotion = $2 AND genre_id = $3
+    `;
+    
+    await pool.query(query, [userId, emotion, genreId]);
+  }
+
   static async deleteUserMappings(userId: number): Promise<void> {
     await pool.query('DELETE FROM user_emotion_mappings WHERE user_id = $1', [userId]);
   }

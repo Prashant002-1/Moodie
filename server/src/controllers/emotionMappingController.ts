@@ -71,6 +71,41 @@ export const updateUserEmotionMappings = async (req: Request, res: Response) => 
   }
 };
 
+//TESTING
+//Purpose: Delete individual emotion mapping endpoint for testing CRUD operations
+export const deleteUserEmotionMapping = async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const { emotion, genreId } = req.body;
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    if (!emotion || !genreId) {
+      return res.status(400).json({ error: 'Emotion and genre ID are required' });
+    }
+
+    const genreIdNum = parseInt(genreId);
+    if (isNaN(genreIdNum)) {
+      return res.status(400).json({ error: 'Invalid genre ID' });
+    }
+
+    await UserEmotionMappingModel.deleteUserMapping(userId, emotion, genreIdNum);
+    
+    res.json({
+      success: true,
+      message: 'User emotion mapping deleted successfully',
+      userId,
+      emotion,
+      genreId: genreIdNum
+    });
+  } catch (error) {
+    console.error('Error deleting user emotion mapping:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const deleteUserEmotionMappings = async (req: Request, res: Response) => {
   try {
     const userId = parseInt(req.params.userId);
@@ -89,4 +124,18 @@ export const deleteUserEmotionMappings = async (req: Request, res: Response) => 
     console.error('Error deleting user emotion mappings:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+};
+
+//TESTING
+//Purpose: Export aliases for test consistency
+export const getUserMappings = getUserEmotionMappings;
+export const updateUserMappings = updateUserEmotionMappings;
+
+//TESTING
+//Purpose: Controller object export for emotion mapping testing suite
+export const emotionMappingController = {
+  getUserMappings: getUserEmotionMappings,
+  updateUserMappings: updateUserEmotionMappings,
+  deleteUserMapping: deleteUserEmotionMapping,
+  deleteUserMappings: deleteUserEmotionMappings,
 };

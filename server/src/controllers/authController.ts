@@ -123,3 +123,47 @@ export const getProfile = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+//TESTING
+//Purpose: Token verification endpoint for authentication security testing
+export const verifyToken = async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    
+    const user = await UserModel.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+      },
+    });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+//TESTING
+//Purpose: Controller object export for authentication testing suite
+export const authController = {
+  register,
+  login,
+  getProfile,
+  verifyToken,
+};
