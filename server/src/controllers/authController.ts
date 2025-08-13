@@ -67,12 +67,12 @@ export const login = async (req: Request, res: Response) => {
 
     const user = await UserModel.findByEmail(email);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const isValidPassword = await UserModel.validatePassword(user, password);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const token = jwt.sign(
@@ -122,4 +122,55 @@ export const getProfile = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
+};
+
+/**
+ * Token verification endpoint for validating JWT tokens.
+ * Used by clients to verify token validity and retrieve user information.
+ * @param req Request containing Authorization header with Bearer token
+ * @param res Response object
+ */
+export const verifyToken = async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    
+    const user = await UserModel.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+      },
+    });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Authentication controller object export.
+ * Provides a centralized interface for all authentication operations
+ * including registration, login, profile management, and token verification.
+ */
+export const authController = {
+  register,
+  login,
+  getProfile,
+  verifyToken,
 };

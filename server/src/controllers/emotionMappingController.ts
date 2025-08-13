@@ -3,17 +3,36 @@
 import { Request, Response } from 'express';
 import { UserEmotionMappingModel, PersonalizedMapping } from '../models/UserEmotionMapping';
 import { z } from 'zod';
+import { AuthRequest } from '../middleware/auth';
+
+const VALID_EMOTIONS = ['neutral', 'happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised'];
 
 const updateMappingsSchema = z.object({
-  mappings: z.record(z.string(), z.record(z.string(), z.number()))
+  mappings: z.record(
+    z.string().refine((emotion) => VALID_EMOTIONS.includes(emotion), {
+      message: 'Invalid emotion. Must be one of: neutral, happy, sad, angry, fearful, disgusted, surprised'
+    }),
+    z.record(
+      z.string().regex(/^\d+$/, 'Genre ID must be a positive integer').transform(Number),
+      z.number().min(0, 'Weight must be >= 0').max(1, 'Weight must be <= 1')
+    )
+  )
 });
 
-export const getUserEmotionMappings = async (req: Request, res: Response) => {
+const checkUserAuthorization = (authenticatedUserId: number, resourceUserId: number): boolean => {
+  return authenticatedUserId === resourceUserId;
+};
+
+export const getUserEmotionMappings = async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.params.userId);
     
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    if (!req.user || !checkUserAuthorization(req.user.id, userId)) {
+      return res.status(403).json({ error: 'Access denied. You can only access your own emotion mappings.' });
     }
 
     const mappings = await UserEmotionMappingModel.getUserMappings(userId);
@@ -28,7 +47,7 @@ export const getUserEmotionMappings = async (req: Request, res: Response) => {
   }
 };
 
-export const updateUserEmotionMappings = async (req: Request, res: Response) => {
+export const updateUserEmotionMappings = async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.params.userId);
     
@@ -36,20 +55,15 @@ export const updateUserEmotionMappings = async (req: Request, res: Response) => 
       return res.status(400).json({ error: 'Invalid user ID' });
     }
 
+    if (!req.user || !checkUserAuthorization(req.user.id, userId)) {
+      return res.status(403).json({ error: 'Access denied. You can only modify your own emotion mappings.' });
+    }
+
     const validatedData = updateMappingsSchema.parse(req.body);
     const { mappings } = validatedData;
 
-    // Convert string keys to numbers for genre IDs
-    const processedMappings: PersonalizedMapping = {};
-    for (const [emotion, genreWeights] of Object.entries(mappings)) {
-      processedMappings[emotion] = {};
-      for (const [genreIdStr, weight] of Object.entries(genreWeights)) {
-        const genreId = parseInt(genreIdStr);
-        if (!isNaN(genreId)) {
-          processedMappings[emotion][genreId] = weight;
-        }
-      }
-    }
+    // Mappings are already validated by Zod schema
+    const processedMappings: PersonalizedMapping = mappings;
 
     await UserEmotionMappingModel.upsertUserMappings(userId, processedMappings);
     
@@ -71,12 +85,63 @@ export const updateUserEmotionMappings = async (req: Request, res: Response) => 
   }
 };
 
-export const deleteUserEmotionMappings = async (req: Request, res: Response) => {
+/**
+ * Delete an individual emotion mapping for a user.
+ * Allows a user to remove a specific genre mapping for a given emotion.
+ * @param req Authenticated request containing userId, emotion, and genreId
+ * @param res Response object
+ */
+export const deleteUserEmotionMapping = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const { emotion, genreId } = req.body;
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    if (!req.user || !checkUserAuthorization(req.user.id, userId)) {
+      return res.status(403).json({ error: 'Access denied. You can only delete your own emotion mappings.' });
+    }
+
+    if (!emotion || !genreId) {
+      return res.status(400).json({ error: 'Emotion and genre ID are required' });
+    }
+
+    if (!VALID_EMOTIONS.includes(emotion)) {
+      return res.status(400).json({ error: 'Invalid emotion' });
+    }
+
+    const genreIdNum = parseInt(genreId);
+    if (isNaN(genreIdNum) || genreIdNum <= 0) {
+      return res.status(400).json({ error: 'Invalid genre ID' });
+    }
+
+    await UserEmotionMappingModel.deleteUserMapping(userId, emotion, genreIdNum);
+    
+    res.json({
+      success: true,
+      message: 'User emotion mapping deleted successfully',
+      userId,
+      emotion,
+      genreId: genreIdNum
+    });
+  } catch (error) {
+    console.error('Error deleting user emotion mapping:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteUserEmotionMappings = async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.params.userId);
     
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    if (!req.user || !checkUserAuthorization(req.user.id, userId)) {
+      return res.status(403).json({ error: 'Access denied. You can only delete your own emotion mappings.' });
     }
 
     await UserEmotionMappingModel.deleteUserMappings(userId);
@@ -89,4 +154,23 @@ export const deleteUserEmotionMappings = async (req: Request, res: Response) => 
     console.error('Error deleting user emotion mappings:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+};
+
+/**
+ * Legacy aliases for backwards compatibility with existing API clients.
+ * These provide shorter method names for common operations.
+ */
+export const getUserMappings = getUserEmotionMappings;
+export const updateUserMappings = updateUserEmotionMappings;
+
+/**
+ * Controller object export containing all emotion mapping operations.
+ * This provides a centralized interface for all emotion mapping functionality
+ * including CRUD operations with proper authentication and authorization.
+ */
+export const emotionMappingController = {
+  getUserMappings: getUserEmotionMappings,
+  updateUserMappings: updateUserEmotionMappings,
+  deleteUserMapping: deleteUserEmotionMapping,
+  deleteUserMappings: deleteUserEmotionMappings,
 };

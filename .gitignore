@@ -34,6 +34,8 @@ GEMINI.md
 
 # Environment variables
 .env
+.env.*
+.env.test
 .env.development.local
 .env.test.local
 .env.production.local
@@ -55,6 +57,9 @@ logs/
 # AI agent local files
 CLAUDE.local.md
 GEMINI.local.md
+
+# Testing documentation
+TESTING.md
 
 # Build artifacts and cache
 .vite/
