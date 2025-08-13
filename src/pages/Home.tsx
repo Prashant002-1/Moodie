@@ -4,6 +4,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useUser } from '../contexts/UserContext';
 import { useEmotion } from '../contexts/EmotionContext';
 import AuthModal from '../components/auth/AuthModal';
+import EmotionDisplay from '../components/features/emotion/EmotionDisplay';
+import { convertToEmotionScores } from '../services/userMoviesService';
 const Home: React.FC = () => {
   const { theme } = useTheme();
   const { user, updateUserStats } = useUser();
@@ -21,19 +23,12 @@ const Home: React.FC = () => {
     navigate('/movie-match');
   };
 
-  // Update user stats when user logs in
+  // Update user stats when user logs in (only once)
   useEffect(() => {
     if (user) {
       updateUserStats();
     }
-  }, [user, updateUserStats]);
-
-  // Update stats when watch history changes
-  useEffect(() => {
-    if (user && watchHistory.length > 0) {
-      updateUserStats();
-    }
-  }, [user, watchHistory.length, updateUserStats]);
+  }, [user?.id]); // Only depend on user ID, not the entire user object or updateUserStats function
 
   const handleSignInPrompt = () => {
     setShowAuthModal(true);
@@ -228,7 +223,7 @@ const Home: React.FC = () => {
                 </div>
                 <div className="grid gap-4">
                   {watchHistory.slice(0, 3).map((movie, index) => (
-                    <div key={`${movie.movieId}-${index}`} className={`p-4 rounded-xl border transition-all duration-200 hover:shadow-md ${
+                    <div key={`${movie.movie_id}-${index}`} className={`p-4 rounded-xl border transition-all duration-200 hover:shadow-md ${
                       theme === 'dark' 
                         ? 'bg-gray-700/30 border-gray-600/30 hover:bg-gray-700/50' 
                         : 'bg-gray-50/50 border-gray-200/50 hover:bg-white/80'
@@ -248,7 +243,7 @@ const Home: React.FC = () => {
                           <p className={`text-sm mb-3 ${
                             theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                           }`}>
-                            Watched {new Date(movie.watchedAt).toLocaleDateString()}
+                            Watched {new Date(movie.created_at).toLocaleDateString()}
                           </p>
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1">
@@ -259,12 +254,20 @@ const Home: React.FC = () => {
                               </span>
                             </div>
                             <button
-                              onClick={() => navigate(`/movie/${movie.movieId}`)}
+                              onClick={() => navigate(`/movie/${movie.movie_id}`)}
                               className="text-sm text-purple-500 hover:text-purple-400 font-medium transition-colors"
                             >
                               View Details →
                             </button>
                           </div>
+                          {(() => {
+                            const emotions = convertToEmotionScores(movie);
+                            return emotions && (
+                              <div className="mt-3">
+                                <EmotionDisplay emotions={emotions} />
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>

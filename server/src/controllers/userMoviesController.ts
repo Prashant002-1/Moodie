@@ -41,20 +41,21 @@ export const getUserMovies = async (req: AuthRequest, res: Response) => {
         m.release_date, 
         CAST(m.vote_average AS FLOAT) as vote_average, 
         m.overview,
-        e.neutral,
-        e.happy,
-        e.sad,
-        e.angry,
-        e.fearful,
-        e.disgusted,
-        e.surprised,
-        e.confidence,
+        CAST(e.neutral AS FLOAT) as neutral,
+        CAST(e.happy AS FLOAT) as happy,
+        CAST(e.sad AS FLOAT) as sad,
+        CAST(e.angry AS FLOAT) as angry,
+        CAST(e.fearful AS FLOAT) as fearful,
+        CAST(e.disgusted AS FLOAT) as disgusted,
+        CAST(e.surprised AS FLOAT) as surprised,
+        CAST(e.confidence AS FLOAT) as confidence,
         e.detection_method,
         e.created_at as emotion_created_at
       FROM user_movies um
       JOIN movies m ON um.movie_id = m.id
       LEFT JOIN emotions e ON e.user_id = um.user_id 
-        AND e.created_at BETWEEN um.created_at - INTERVAL '5 minutes' AND um.created_at + INTERVAL '5 minutes'
+        AND e.movie_id = um.movie_id
+        AND e.created_at BETWEEN um.created_at - INTERVAL '2 minutes' AND um.created_at + INTERVAL '2 minutes'
       WHERE um.user_id = $1
     `;
     const params: any[] = [userId];
@@ -156,16 +157,26 @@ export const addUserMovie = async (req: AuthRequest, res: Response) => {
     
     const insertResult = await pool.query(insertQuery, [userId, movieId, status, rating || null]);
     
-    // If emotions were provided, store them in the emotions table
+    // If emotions were provided, store them in the emotions table with movie_id
     if (emotions && Object.keys(emotions).length > 0) {
       const emotionQuery = `
-        INSERT INTO emotions (user_id, neutral, happy, sad, angry, fearful, disgusted, surprised, detection_method, confidence)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'manual', $9)
+        INSERT INTO emotions (user_id, movie_id, neutral, happy, sad, angry, fearful, disgusted, surprised, detection_method, confidence, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'manual', $10, CURRENT_TIMESTAMP)
+        ON CONFLICT (user_id, movie_id, created_at) DO UPDATE SET
+          neutral = EXCLUDED.neutral,
+          happy = EXCLUDED.happy,
+          sad = EXCLUDED.sad,
+          angry = EXCLUDED.angry,
+          fearful = EXCLUDED.fearful,
+          disgusted = EXCLUDED.disgusted,
+          surprised = EXCLUDED.surprised,
+          confidence = EXCLUDED.confidence
         RETURNING id
       `;
       
       await pool.query(emotionQuery, [
         userId,
+        movieId,
         emotions.neutral || 0,
         emotions.happy || 0,
         emotions.sad || 0,
@@ -327,20 +338,25 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
     // Calculate favorite emotion
     const favoriteEmotionQuery = `
       SELECT 
-        CASE 
-          WHEN neutral > happy AND neutral > sad AND neutral > angry AND neutral > fearful AND neutral > disgusted AND neutral > surprised THEN 'neutral'
-          WHEN happy > sad AND happy > angry AND happy > fearful AND happy > disgusted AND happy > surprised THEN 'happy'
-          WHEN sad > angry AND sad > fearful AND sad > disgusted AND sad > surprised THEN 'sad'
-          WHEN angry > fearful AND angry > disgusted AND angry > surprised THEN 'angry'
-          WHEN fearful > disgusted AND fearful > surprised THEN 'fearful'
-          WHEN disgusted > surprised THEN 'disgusted'
-          ELSE 'surprised'
-        END as dominant_emotion,
-        COUNT(*) as count
-      FROM emotions 
-      WHERE user_id = $1
-      GROUP BY dominant_emotion
-      ORDER BY count DESC
+        emotion_type,
+        AVG(emotion_value) as avg_value
+      FROM (
+        SELECT 'neutral' as emotion_type, neutral as emotion_value FROM emotions WHERE user_id = $1
+        UNION ALL
+        SELECT 'happy' as emotion_type, happy as emotion_value FROM emotions WHERE user_id = $1
+        UNION ALL
+        SELECT 'sad' as emotion_type, sad as emotion_value FROM emotions WHERE user_id = $1
+        UNION ALL
+        SELECT 'angry' as emotion_type, angry as emotion_value FROM emotions WHERE user_id = $1
+        UNION ALL
+        SELECT 'fearful' as emotion_type, fearful as emotion_value FROM emotions WHERE user_id = $1
+        UNION ALL
+        SELECT 'disgusted' as emotion_type, disgusted as emotion_value FROM emotions WHERE user_id = $1
+        UNION ALL
+        SELECT 'surprised' as emotion_type, surprised as emotion_value FROM emotions WHERE user_id = $1
+      ) emotion_data
+      GROUP BY emotion_type
+      ORDER BY avg_value DESC
       LIMIT 1
     `;
     
@@ -356,7 +372,7 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
       emotions: {
         total: emotionResult.rows[0]?.total_emotions || 0,
         averageConfidence: emotionResult.rows[0]?.avg_confidence || 0,
-        favoriteEmotion: favoriteEmotionResult.rows[0]?.dominant_emotion || 'neutral'
+        favoriteEmotion: favoriteEmotionResult.rows[0]?.emotion_type || 'neutral'
       }
     };
 

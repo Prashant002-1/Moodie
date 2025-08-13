@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS emotions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    movie_id INTEGER REFERENCES movies(id) ON DELETE CASCADE,
     session_id UUID DEFAULT gen_random_uuid(),
     neutral DECIMAL(3,2) DEFAULT 0.00,
     happy DECIMAL(3,2) DEFAULT 0.00,
@@ -25,7 +26,8 @@ CREATE TABLE IF NOT EXISTS emotions (
     surprised DECIMAL(3,2) DEFAULT 0.00,
     detection_method VARCHAR(20) DEFAULT 'manual', -- 'manual', 'webcam'
     confidence DECIMAL(3,2) DEFAULT 0.00, -- confidence level 0-1
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, movie_id, created_at) -- Composite key for unique emotion sessions per movie viewing
 );
 
 -- Movies table for caching TMDB movie data
