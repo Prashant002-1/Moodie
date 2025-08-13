@@ -102,12 +102,17 @@ export const userMoviesService = {
     return response.data.movie;
   },
 
-  async removeMovie(movieId: number): Promise<void> {
-    await apiClient.delete(`/user-movies/${movieId}`);
+  async removeMovie(movieId: number, status: string): Promise<void> {
+    await apiClient.delete(`/user-movies/${movieId}?status=${status}`);
   },
 
   async getUserStats(): Promise<UserStats> {
     const response = await apiClient.get('/user-movies/stats');
+    return response.data;
+  },
+
+  async getUserEmotionalProfile(): Promise<EmotionScores> {
+    const response = await apiClient.get('/user-movies/emotional-profile');
     return response.data;
   },
 

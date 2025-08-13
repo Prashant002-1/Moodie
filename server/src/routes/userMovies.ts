@@ -1,7 +1,7 @@
 // src/routes/userMovies.ts - Routes for user movie management
 
 import express from 'express';
-import { getUserMovies, addUserMovie, updateUserMovie, removeUserMovie, getUserStats } from '../controllers/userMoviesController';
+import { getUserMovies, addUserMovie, updateUserMovie, removeUserMovie, getUserStats, getUserEmotionalProfile } from '../controllers/userMoviesController';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
@@ -23,5 +23,8 @@ router.delete('/:movieId', removeUserMovie);
 
 // Get user statistics
 router.get('/stats', getUserStats);
+
+// Get user's emotional profile
+router.get('/emotional-profile', getUserEmotionalProfile);
 
 export default router;

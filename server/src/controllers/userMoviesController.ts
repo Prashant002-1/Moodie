@@ -8,6 +8,64 @@ import { getMovieDetails, TMDBMovie } from '../services/tmdbService';
 
 const VALID_STATUSES = ['watchlist', 'watched', 'favorite'] as const;
 
+// Helper function to update user's emotional profile
+const updateUserEmotionalProfile = async (userId: number, emotions: Record<string, number>) => {
+  try {
+    // Calculate average emotions from user's recent emotion history (last 10 emotions)
+    const avgEmotionsQuery = `
+      SELECT 
+        AVG(neutral) as avg_neutral,
+        AVG(happy) as avg_happy,
+        AVG(sad) as avg_sad,
+        AVG(angry) as avg_angry,
+        AVG(fearful) as avg_fearful,
+        AVG(disgusted) as avg_disgusted,
+        AVG(surprised) as avg_surprised
+      FROM (
+        SELECT neutral, happy, sad, angry, fearful, disgusted, surprised
+        FROM emotions 
+        WHERE user_id = $1 
+        ORDER BY created_at DESC 
+        LIMIT 10
+      ) recent_emotions
+    `;
+    
+    const avgResult = await pool.query(avgEmotionsQuery, [userId]);
+    const avgEmotions = avgResult.rows[0] || {
+      avg_neutral: 0, avg_happy: 0, avg_sad: 0, avg_angry: 0, 
+      avg_fearful: 0, avg_disgusted: 0, avg_surprised: 0
+    };
+
+    // Upsert user's emotional profile
+    const upsertQuery = `
+      INSERT INTO user_emotion_profiles (user_id, neutral, happy, sad, angry, fearful, disgusted, surprised, last_updated)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+      ON CONFLICT (user_id) DO UPDATE SET
+        neutral = EXCLUDED.neutral,
+        happy = EXCLUDED.happy,
+        sad = EXCLUDED.sad,
+        angry = EXCLUDED.angry,
+        fearful = EXCLUDED.fearful,
+        disgusted = EXCLUDED.disgusted,
+        surprised = EXCLUDED.surprised,
+        last_updated = CURRENT_TIMESTAMP
+    `;
+    
+    await pool.query(upsertQuery, [
+      userId,
+      avgEmotions.avg_neutral || 0,
+      avgEmotions.avg_happy || 0,
+      avgEmotions.avg_sad || 0,
+      avgEmotions.avg_angry || 0,
+      avgEmotions.avg_fearful || 0,
+      avgEmotions.avg_disgusted || 0,
+      avgEmotions.avg_surprised || 0
+    ]);
+  } catch (error) {
+    console.error('Error updating user emotional profile:', error);
+  }
+};
+
 const addMovieSchema = z.object({
   movieId: z.number().positive('Movie ID must be positive'),
   status: z.enum(VALID_STATUSES, {
@@ -186,6 +244,9 @@ export const addUserMovie = async (req: AuthRequest, res: Response) => {
         emotions.surprised || 0,
         confidence || 1.0 // Use provided confidence or default to 1.0 for manual input
       ]);
+
+      // Update user's emotional profile with the new emotions
+      await updateUserEmotionalProfile(userId, emotions);
     }
 
     res.status(201).json({
@@ -280,6 +341,7 @@ export const removeUserMovie = async (req: AuthRequest, res: Response) => {
     }
 
     const { movieId } = req.params;
+    const { status } = req.query; // Get status from query params
     const userId = req.user.id;
 
     const movieIdNum = parseInt(movieId);
@@ -287,8 +349,13 @@ export const removeUserMovie = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid movie ID' });
     }
 
-    const deleteQuery = 'DELETE FROM user_movies WHERE user_id = $1 AND movie_id = $2 RETURNING *';
-    const result = await pool.query(deleteQuery, [userId, movieIdNum]);
+    // Validate status parameter
+    if (!status || !VALID_STATUSES.includes(status as any)) {
+      return res.status(400).json({ error: 'Status parameter is required and must be one of: watchlist, watched, favorite' });
+    }
+
+    const deleteQuery = 'DELETE FROM user_movies WHERE user_id = $1 AND movie_id = $2 AND status = $3 RETURNING *';
+    const result = await pool.query(deleteQuery, [userId, movieIdNum, status]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Movie not found in user lists' });
@@ -335,28 +402,28 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
     
     const emotionResult = await pool.query(emotionQuery, [userId]);
 
-    // Calculate favorite emotion
+    // Calculate favorite emotion - find the most recurring emotion
     const favoriteEmotionQuery = `
       SELECT 
         emotion_type,
-        AVG(emotion_value) as avg_value
+        COUNT(*) as occurrence_count
       FROM (
-        SELECT 'neutral' as emotion_type, neutral as emotion_value FROM emotions WHERE user_id = $1
+        SELECT 'neutral' as emotion_type FROM emotions WHERE user_id = $1 AND neutral > 0.1
         UNION ALL
-        SELECT 'happy' as emotion_type, happy as emotion_value FROM emotions WHERE user_id = $1
+        SELECT 'happy' as emotion_type FROM emotions WHERE user_id = $1 AND happy > 0.1
         UNION ALL
-        SELECT 'sad' as emotion_type, sad as emotion_value FROM emotions WHERE user_id = $1
+        SELECT 'sad' as emotion_type FROM emotions WHERE user_id = $1 AND sad > 0.1
         UNION ALL
-        SELECT 'angry' as emotion_type, angry as emotion_value FROM emotions WHERE user_id = $1
+        SELECT 'angry' as emotion_type FROM emotions WHERE user_id = $1 AND angry > 0.1
         UNION ALL
-        SELECT 'fearful' as emotion_type, fearful as emotion_value FROM emotions WHERE user_id = $1
+        SELECT 'fearful' as emotion_type FROM emotions WHERE user_id = $1 AND fearful > 0.1
         UNION ALL
-        SELECT 'disgusted' as emotion_type, disgusted as emotion_value FROM emotions WHERE user_id = $1
+        SELECT 'disgusted' as emotion_type FROM emotions WHERE user_id = $1 AND disgusted > 0.1
         UNION ALL
-        SELECT 'surprised' as emotion_type, surprised as emotion_value FROM emotions WHERE user_id = $1
+        SELECT 'surprised' as emotion_type FROM emotions WHERE user_id = $1 AND surprised > 0.1
       ) emotion_data
       GROUP BY emotion_type
-      ORDER BY avg_value DESC
+      ORDER BY occurrence_count DESC
       LIMIT 1
     `;
     
@@ -385,6 +452,44 @@ export const getUserStats = async (req: AuthRequest, res: Response) => {
     res.json(stats);
   } catch (error) {
     console.error('Error fetching user stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getUserEmotionalProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const userId = req.user.id;
+
+    // Get user's current emotional profile
+    const profileQuery = `
+      SELECT neutral, happy, sad, angry, fearful, disgusted, surprised, last_updated
+      FROM user_emotion_profiles 
+      WHERE user_id = $1
+    `;
+    
+    const profileResult = await pool.query(profileQuery, [userId]);
+    
+    if (profileResult.rows.length === 0) {
+      // Return default emotions if no profile exists
+      return res.json({
+        neutral: 0.2,
+        happy: 0.3,
+        sad: 0.1,
+        angry: 0.1,
+        fearful: 0.1,
+        disgusted: 0.05,
+        surprised: 0.15,
+        last_updated: null
+      });
+    }
+
+    res.json(profileResult.rows[0]);
+  } catch (error) {
+    console.error('Error fetching user emotional profile:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

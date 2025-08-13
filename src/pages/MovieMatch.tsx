@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useUser } from '../contexts/UserContext';
 import { recommendationService } from '../services/recommendationService';
 import { SearchMovies } from '../services/tmdbApi';
+import { userMoviesService } from '../services/userMoviesService';
 import { Movie } from '../types/movie';
 import { EmotionScores } from '../types/emotion';
 import { LoadingSpinner } from '../components/common';
@@ -27,6 +28,40 @@ const MovieMatch: React.FC = () => {
     disgusted: 5,
     surprised: 15
   });
+
+  const [loading, setLoading] = useState(true);
+
+  // Load user's emotional profile on component mount
+  useEffect(() => {
+    const loadUserEmotionalProfile = async () => {
+      if (user?.id) {
+        try {
+          setLoading(true);
+          const userEmotions = await userMoviesService.getUserEmotionalProfile();
+          // Convert from decimal (0-1) to percentage (0-100)
+          const emotionsAsPercentages: EmotionScores = {
+            neutral: Math.round(userEmotions.neutral * 100),
+            happy: Math.round(userEmotions.happy * 100),
+            sad: Math.round(userEmotions.sad * 100),
+            angry: Math.round(userEmotions.angry * 100),
+            fearful: Math.round(userEmotions.fearful * 100),
+            disgusted: Math.round(userEmotions.disgusted * 100),
+            surprised: Math.round(userEmotions.surprised * 100)
+          };
+          setEmotions(emotionsAsPercentages);
+        } catch (error) {
+          console.error('Error loading user emotional profile:', error);
+          // Keep default emotions if loading fails
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    loadUserEmotionalProfile();
+  }, [user?.id]);
 
   // Calculate emotion compatibility score for a movie using personalized mappings
   const calculateEmotionScore = async (movie: Movie, emotions: EmotionScores): Promise<number> => {
