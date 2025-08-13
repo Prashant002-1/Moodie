@@ -31,7 +31,7 @@ const setupTestDatabase = async () => {
       await adminPool.query('CREATE DATABASE test_emotionflix');
       console.log('Created test_emotionflix database');
     } catch (error: any) {
-      if (error.code === '42P04' || error.code === '23505') {
+      if (error.code === '42P04') {
         console.log('test_emotionflix database already exists');
       } else {
         throw error;
@@ -76,6 +76,8 @@ const cleanupTestDatabase = async () => {
     await testPool.query('DELETE FROM user_emotion_mappings');
     await testPool.query('DELETE FROM users');
     console.log('✅ Test database cleaned up');
+  } catch (error) {
+    console.error('Error cleaning up test database:', error);
   } finally {
     await testPool.end();
   }
