@@ -15,13 +15,13 @@ const UserProfile: React.FC = () => {
   const { watchHistory, watchlist, removeFromWatchlist, removeFromWatchHistory } = useEmotion();
   const [searchParams] = useSearchParams();
   
-  const [activeTab, setActiveTab] = useState<'profile' | 'stats' | 'watchlist' | 'emotions' | 'settings'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'stats' | 'watchlist' | 'emotions'>('profile');
 
   // Handle tab query parameter
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['profile', 'stats', 'watchlist', 'emotions', 'settings'].includes(tabParam)) {
-      setActiveTab(tabParam as 'profile' | 'stats' | 'watchlist' | 'emotions' | 'settings');
+    if (tabParam && ['profile', 'stats', 'watchlist', 'emotions'].includes(tabParam)) {
+      setActiveTab(tabParam as 'profile' | 'stats' | 'watchlist' | 'emotions');
     }
   }, [searchParams]);
 
@@ -62,12 +62,11 @@ const UserProfile: React.FC = () => {
               { id: 'profile', label: 'Profile', icon: 'fa-user' },
               { id: 'stats', label: 'Watch History', icon: 'fa-history' },
               { id: 'watchlist', label: 'Watchlist', icon: 'fa-bookmark' },
-              { id: 'emotions', label: 'Emotions', icon: 'fa-heart' },
-              { id: 'settings', label: 'Settings', icon: 'fa-cog' }
+              { id: 'emotions', label: 'Emotions', icon: 'fa-heart' }
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as 'profile' | 'stats' | 'watchlist' | 'emotions' | 'settings')}
+                onClick={() => setActiveTab(tab.id as 'profile' | 'stats' | 'watchlist' | 'emotions')}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
                   activeTab === tab.id
                     ? 'bg-cinema-600 text-white shadow-cinema'
@@ -381,36 +380,6 @@ const UserProfile: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'settings' && (
-            <div className="space-y-8">
-              <h2 className={`text-2xl font-bold mb-6 ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>
-                Settings
-              </h2>
-              
-              <div className="space-y-6">
-                <div className={`p-6 rounded-xl ${
-                  theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-50'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className={`text-lg font-semibold ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-900'
-                      }`}>
-                        Account Actions
-                      </h3>
-                      <p className={`text-sm ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}>
-                        Manage your account settings and preferences
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

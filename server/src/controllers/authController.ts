@@ -5,10 +5,45 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { UserModel } from '../models/User';
 
+// Password strength validation function
+const validatePasswordStrength = (password: string): { isValid: boolean; error?: string } => {
+  if (password.length < 6) {
+    return { isValid: false, error: 'Password must be at least 6 characters long' };
+  }
+  
+  // Check for common weak patterns
+  if (/^[0-9]+$/.test(password)) {
+    return { isValid: false, error: 'Password cannot be only numbers' };
+  }
+  
+  if (/^[a-zA-Z]+$/.test(password)) {
+    return { isValid: false, error: 'Password must contain at least one number or special character' };
+  }
+  
+  // Check for common weak passwords
+  const commonWeakPasswords = ['123456', 'password', '123456789', 'qwerty', 'abc123'];
+  if (commonWeakPasswords.includes(password.toLowerCase())) {
+    return { isValid: false, error: 'Password is too common, please choose a stronger password' };
+  }
+  
+  return { isValid: true };
+};
+
+// Custom password validation for Zod
+const passwordSchema = z.string()
+  .min(6, 'Password must be at least 6 characters')
+  .refine((password) => {
+    const validation = validatePasswordStrength(password);
+    return validation.isValid;
+  }, (password) => {
+    const validation = validatePasswordStrength(password);
+    return { message: validation.error || 'Password does not meet strength requirements' };
+  });
+
 const registerSchema = z.object({
   email: z.string().email('Invalid email format'),
   username: z.string().min(3, 'Username must be at least 3 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: passwordSchema,
 });
 
 const loginSchema = z.object({
