@@ -833,9 +833,10 @@ const EmotionalProfileDisplay: React.FC<{ theme: string; user: any }> = ({ theme
         if (!info || Object.keys(genreWeights).length === 0) return null;
 
         const isExpanded = selectedEmotion === emotion;
-        const sortedGenres = Object.entries(genreWeights)
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, isExpanded ? 12 : 6);
+        const totalGenres = Object.entries(genreWeights).sort(([, a], [, b]) => b - a);
+        const INITIAL_DISPLAY_COUNT = 6;
+        const EXPANDED_DISPLAY_COUNT = 12;
+        const sortedGenres = totalGenres.slice(0, isExpanded ? EXPANDED_DISPLAY_COUNT : INITIAL_DISPLAY_COUNT);
 
         return (
           <div key={emotion} className={`p-6 rounded-xl border transition-all duration-300 ${
@@ -864,7 +865,7 @@ const EmotionalProfileDisplay: React.FC<{ theme: string; user: any }> = ({ theme
                 <span className={`text-sm font-medium ${
                   theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                 }`}>
-                  {Object.keys(genreWeights).length} total genres
+                  {totalGenres.length} total genres
                 </span>
               </div>
             </div>
@@ -908,7 +909,7 @@ const EmotionalProfileDisplay: React.FC<{ theme: string; user: any }> = ({ theme
                 ))}
               </div>
               
-              {!isExpanded && Object.keys(genreWeights).length > 6 && (
+              {!isExpanded && totalGenres.length > INITIAL_DISPLAY_COUNT && (
                 <div className="text-center mt-6">
                   <button 
                     onClick={(e) => {
@@ -922,12 +923,12 @@ const EmotionalProfileDisplay: React.FC<{ theme: string; user: any }> = ({ theme
                     }`}
                   >
                     <i className="fas fa-plus text-sm"></i>
-                    Show {Object.keys(genreWeights).length - 6} more genres
+                    Show {Math.min(totalGenres.length - INITIAL_DISPLAY_COUNT, EXPANDED_DISPLAY_COUNT - INITIAL_DISPLAY_COUNT)} more genres
                   </button>
                 </div>
               )}
 
-              {isExpanded && Object.keys(genreWeights).length > 6 && (
+              {isExpanded && totalGenres.length > INITIAL_DISPLAY_COUNT && (
                 <div className="text-center mt-6">
                   <button 
                     onClick={(e) => {
