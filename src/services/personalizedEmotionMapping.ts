@@ -1,6 +1,9 @@
 /**
- * PERSONALIZED EMOTION MAPPING SERVICE
- * Dynamic emotion-to-genre mapping based on user behavior
+ * Personalized Emotion Mapping Service
+ * 
+ * Dynamic emotion-to-genre mapping service that learns from user behavior.
+ * Adapts recommendations based on individual user preferences and interactions,
+ * creating personalized emotion-to-genre associations over time.
  */
 
 import { EmotionScores } from '../types/emotion';

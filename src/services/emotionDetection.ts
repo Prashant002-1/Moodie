@@ -1,6 +1,9 @@
 /**
- * EMOTION DETECTION SERVICE
- *   Service for analyzing emotions from images and webcam using face-api.js
+ * Emotion Detection Service
+ * 
+ * Service for analyzing emotions from images and webcam using face-api.js.
+ * Provides face detection, emotion recognition, and utility functions
+ * for capturing photos and managing webcam streams.
  */
 
 import * as faceapi from 'face-api.js';
@@ -11,19 +14,11 @@ let currentStream: MediaStream | null = null;
 let modelLoadingPromise: Promise<void> | null = null;
 
 /**
- * NAME
- *   LoadModels - Loads face-api.js neural network models
- *
- * SYNOPSIS
- *   LoadModels(): Promise<void>
- *
- * DESCRIPTION
- *   Loads the required face-api.js models for face detection, landmarks,
- *   and emotion recognition. Must be called before emotion detection.
- *   Includes validation and retry logic for robust loading.
- *
- * RETURNS
- *   Promise that resolves when all models are loaded
+ * Loads face-api.js neural network models for emotion detection.
+ * Must be called before performing any emotion detection operations.
+ * Includes validation and retry logic for robust model loading.
+ * 
+ * @returns Promise that resolves when all required models are loaded
  */
 export const LoadModels = async (): Promise<void> => {
   if (modelsLoaded) return;
@@ -88,17 +83,20 @@ export const LoadModels = async (): Promise<void> => {
  *   from the provided image. Returns averaged emotion scores if multiple
  *   faces are detected.
  *
- * RETURNS
- *   Promise resolving to EmotionScores object or null if no face detected
+/**
+ * Detects emotions from a static image element.
+ * 
+ * @param imageElement - HTML image element to analyze
+ * @returns Promise resolving to EmotionScores object or null if no face detected
  */
-export const DetectEmotionsFromImage = async (a_imageElement: HTMLImageElement): Promise<EmotionScores | null> => {
+export const DetectEmotionsFromImage = async (imageElement: HTMLImageElement): Promise<EmotionScores | null> => {
   if (!modelsLoaded) {
     await LoadModels();
   }
 
   try {
     const detections = await faceapi
-      .detectAllFaces(a_imageElement, new faceapi.SsdMobilenetv1Options({ 
+      .detectAllFaces(imageElement, new faceapi.SsdMobilenetv1Options({ 
         minConfidence: 0.3,
         maxResults: 10
       }))

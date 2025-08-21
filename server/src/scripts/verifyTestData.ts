@@ -1,3 +1,11 @@
+/**
+ * Test Data Verification Script
+ * 
+ * Verifies that test data has been properly seeded in the database.
+ * Checks for test user existence, movie counts, user interactions,
+ * and emotion data to ensure the database is ready for testing.
+ */
+
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
@@ -8,6 +16,10 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/emotionflix',
 });
 
+/**
+ * Verifies the presence and integrity of test data in the database.
+ * Checks user accounts, movie data, watch history, and emotion records.
+ */
 async function verifyTestData() {
   const client = await pool.connect();
   

@@ -1,3 +1,14 @@
+/**
+ * User Profile Page Component
+ * 
+ * Comprehensive user profile management page with multiple tabs:
+ * - Profile: Basic user information and stats
+ * - Watchlist: User's saved movies to watch later
+ * - Watch History: Previously watched movies with emotion data
+ * - Emotion Analytics: Personalized emotion patterns and insights
+ * - Settings: Account settings and password management
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
@@ -11,6 +22,10 @@ import { Genre } from '../types/movie';
 import { convertToEmotionScores } from '../services/userMoviesService';
 import { authService, ChangePasswordData } from '../services/authService';
 
+/**
+ * UserProfile page component with tabbed interface for user account management.
+ * Handles profile viewing, watchlist management, emotion analytics, and settings.
+ */
 const UserProfile: React.FC = () => {
   const { theme } = useTheme();
   const { user } = useUser();

@@ -1,3 +1,11 @@
+/**
+ * Test Data Seeding Script
+ * 
+ * Populates the database with test data for development and testing purposes.
+ * Creates a test user, fetches popular movies from TMDB API, and generates
+ * sample watch history with emotion data for realistic testing scenarios.
+ */
+
 import { Pool } from 'pg';
 import bcrypt from 'bcrypt';
 import axios from 'axios';
