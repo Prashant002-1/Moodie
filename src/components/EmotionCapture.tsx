@@ -143,7 +143,7 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({
             if (emotions) {
               setCurrentEmotions(emotions);
             }
-          } catch (detectionError) {
+          } catch {
             // Silent retry
           }
         }
@@ -188,7 +188,7 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({
       } else {
         setWebcamError('No face detected');
       }
-    } catch (error) {
+    } catch {
       setWebcamError('Capture failed');
     } finally {
       setIsProcessing(false);
@@ -219,7 +219,7 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({
         alert('No face detected in the uploaded image. Please try another image or use manual input.');
         setCurrentStep('choose');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to process image');
       setCurrentStep('choose');
     } finally {
@@ -228,7 +228,6 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({
   }, []);
 
   const handleManualInput = useCallback(() => {
-    // Stop webcam if active
     StopWebcamStream();
     if (emotionUpdateInterval.current) {
       clearInterval(emotionUpdateInterval.current);
@@ -255,7 +254,6 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({
   const handleManualSubmit = useCallback(() => {
     const total = Object.values(manualEmotions).reduce((sum, val) => sum + val, 0);
     if (total > 0) {
-      // Convert from percentage (0-100) to decimal (0-1)
       const normalizedEmotions: EmotionScores = {
         neutral: manualEmotions.neutral / 100,
         happy: manualEmotions.happy / 100,
@@ -275,8 +273,8 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({
 
   const renderEmotionDisplay = (emotions: EmotionScores, showTitle: boolean = true) => {
     const sortedEmotions = Object.entries(emotions)
-      .filter(([_, score]) => score > 0.008) // VERY low threshold to capture subtle emotions
-      .sort(([_, a], [__, b]) => b - a);
+      .filter(([, score]) => score > 0.008)
+      .sort(([, a], [, b]) => b - a);
 
     return (
       <div className="space-y-2">

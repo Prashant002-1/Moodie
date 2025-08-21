@@ -52,7 +52,8 @@ const Log: React.FC = () => {
         setSelectedMovie(movie);
         setCurrentStep('emotions');
       }
-    } catch (error) {
+    } catch {
+      // Handle error silently
     } finally {
       setLoading(false);
     }
@@ -66,7 +67,8 @@ const Log: React.FC = () => {
     try {
       const response = await SearchMovies(movieQuery);
       setSearchResults(response.results.slice(0, 10));
-    } catch (error) {
+    } catch {
+      // Handle error silently
     } finally {
       setLoading(false);
     }
@@ -83,7 +85,7 @@ const Log: React.FC = () => {
       const response = await SearchMovies(query);
       setAutocompleteResults(response.results.slice(0, 5));
       setShowAutocomplete(true);
-    } catch (error) {
+    } catch {
       setAutocompleteResults([]);
       setShowAutocomplete(false);
     }

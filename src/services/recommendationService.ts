@@ -39,7 +39,7 @@ class RecommendationService {
       }
 
       return movies.slice(0, limit);
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -66,7 +66,7 @@ class RecommendationService {
       movies = this.rankByUserPreferences(movies, userPreferences);
 
       return movies.slice(0, limit);
-    } catch (error) {
+    } catch {
       return this.getPopularMovies(limit);
     }
   }
@@ -85,7 +85,7 @@ class RecommendationService {
       return response.results
         .filter(m => m.id !== movieId)
         .slice(0, limit);
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -193,23 +193,19 @@ class RecommendationService {
     let totalScore = 0;
     let totalEmotionWeight = 0;
     
-    // Calculate weighted compatibility using personalized mappings
     Object.entries(userEmotions).forEach(([emotion, intensity]) => {
       if (intensity > 0.01 && userMappings[emotion]) {
         totalEmotionWeight += intensity;
         
-        // Check how well movie genres match this emotion
         movieGenres.forEach(genreId => {
           const genreWeight = userMappings[emotion][genreId] || 0;
           if (genreWeight > 0) {
-            // Score = emotion intensity × personalized genre weight
             totalScore += intensity * genreWeight;
           }
         });
       }
     });
     
-    // Normalize by total emotion weight only
     if (totalEmotionWeight === 0) return 0;
     
     const normalizedScore = totalScore / totalEmotionWeight;

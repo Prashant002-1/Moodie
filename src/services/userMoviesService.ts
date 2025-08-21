@@ -16,7 +16,6 @@ export interface UserMovie {
   release_date: string;
   vote_average: number;
   overview: string;
-  // Emotion data (optional - only present if emotions were logged)
   neutral?: number;
   happy?: number;
   sad?: number;
@@ -113,7 +112,7 @@ export const userMoviesService = {
       const params = status ? { status } : {};
       const response = await apiClient.get('/user-movies', { params });
       return response.data.movies.some((movie: UserMovie) => movie.movie_id === movieId);
-    } catch (error) {
+    } catch {
       return false;
     }
   }

@@ -45,11 +45,10 @@ const EmotionDisplay: React.FC<EmotionDisplayProps> = ({
 }) => {
   const { theme } = useTheme();
 
-  // Filter emotions that are > 3% and sort by value - show more emotions
   const significantEmotions = Object.entries(emotions)
-    .filter(([_, value]) => value > 0.03)
+    .filter(([, value]) => value > 0.03)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 5); // Show top 5 emotions
+    .slice(0, 5);
 
   if (significantEmotions.length === 0 && showLogButton) {
     return (

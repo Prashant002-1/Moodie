@@ -588,8 +588,9 @@ const UserProfile: React.FC = () => {
   );
 };
 
-// Enhanced Emotional Profile Display Component
-const EmotionalProfileDisplay: React.FC<{ theme: string; user: any }> = ({ theme, user }) => {
+import { User } from '../contexts/UserContext';
+
+const EmotionalProfileDisplay: React.FC<{ theme: string; user: User }> = ({ theme, user }) => {
   const [emotionalProfile, setEmotionalProfile] = useState<PersonalizedMapping | null>(null);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [loading, setLoading] = useState(true);
@@ -985,8 +986,10 @@ const PasswordChangeForm: React.FC<{ theme: string }> = ({ theme }) => {
       setMessage({ type: 'success', text: 'Password changed successfully' });
       setFormData({ currentPassword: '', newPassword: '' });
       setConfirmPassword('');
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.error || 'Failed to change password';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to change password'
+        : 'Failed to change password';
       setMessage({ type: 'error', text: errorMessage });
     } finally {
       setLoading(false);

@@ -23,12 +23,11 @@ const Home: React.FC = () => {
     navigate('/movie-match');
   };
 
-  // Update user stats when user logs in (only once)
   useEffect(() => {
     if (user) {
       updateUserStats();
     }
-  }, [user?.id]); // Only depend on user ID, not the entire user object or updateUserStats function
+  }, [user?.id]);
 
   const handleSignInPrompt = () => {
     setShowAuthModal(true);

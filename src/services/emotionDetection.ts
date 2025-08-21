@@ -125,7 +125,7 @@ export const DetectEmotionsFromImage = async (a_imageElement: HTMLImageElement):
     };
 
     return EnhanceEmotionScores(rawEmotions);
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -167,12 +167,10 @@ export const GetDominantEmotion = (a_emotionScores: EmotionScores): keyof Emotio
  */
 export const StartWebcamStream = async (): Promise<MediaStream | null> => {
   try {
-    // Stop existing stream if any
     if (currentStream) {
       StopWebcamStream();
     }
 
-    // Check if media devices are supported
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       throw new Error('Camera access is not supported in this browser');
     }
@@ -343,7 +341,7 @@ export const CapturePhotoFromVideo = async (video: HTMLVideoElement): Promise<{ 
     const confidence = GetConfidenceLevel(emotions);
 
     return { emotions, imageDataUrl, confidence };
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -390,7 +388,7 @@ export const DetectEmotionsFromFile = async (file: File): Promise<{ emotions: Em
     const confidence = GetConfidenceLevel(emotions);
 
     return { emotions, imageDataUrl, confidence };
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -413,76 +411,67 @@ export const DetectEmotionsFromFile = async (file: File): Promise<{ emotions: Em
  *   Enhanced emotion scores with better sensitivity
  */
 export const EnhanceEmotionScores = (a_emotionScores: EmotionScores): EmotionScores => {
-  // Emotion amplification factors - AGGRESSIVE boosting for subtle emotions
   const amplificationFactors = {
-    neutral: 0.4,    // Heavily suppress neutral dominance
-    happy: 0.8,      // Reduce happy dominance (easily detected)
-    sad: 1.8,        // Strong boost for sadness
-    angry: 2.5,      // VERY strong boost for anger (hardest to detect)
-    fearful: 2.8,    // MAXIMUM boost for fear (most subtle)
-    disgusted: 2.2,  // Strong boost for disgust (often missed)
-    surprised: 1.6   // Good boost for surprise
+    neutral: 0.4,
+    happy: 0.8,
+    sad: 1.8,
+    angry: 2.5,
+    fearful: 2.8,
+    disgusted: 2.2,
+    surprised: 1.6
   };
 
   const powerScale = 0.5;
   
-  // Step 1: Apply power scaling to reduce dominance
   const scaledScores = Object.entries(a_emotionScores).reduce((acc, [emotion, score]) => {
     acc[emotion as keyof EmotionScores] = Math.pow(score, powerScale);
     return acc;
   }, {} as EmotionScores);
 
-  // Step 2: Apply amplification factors
   const amplifiedScores = Object.entries(scaledScores).reduce((acc, [emotion, score]) => {
     const factor = amplificationFactors[emotion as keyof EmotionScores];
     acc[emotion as keyof EmotionScores] = score * factor;
     return acc;
   }, {} as EmotionScores);
 
-  // Step 3: Normalize scores to sum to 1
   const total = Object.values(amplifiedScores).reduce((sum, val) => sum + val, 0);
   
-  if (total === 0) return a_emotionScores; // Fallback to original if all zeros
+  if (total === 0) return a_emotionScores;
   
   const normalizedScores = Object.entries(amplifiedScores).reduce((acc, [emotion, score]) => {
     acc[emotion as keyof EmotionScores] = score / total;
     return acc;
   }, {} as EmotionScores);
 
-  // Step 4: Apply VERY low thresholds to capture subtle emotions
   const minThresholds = {
-    neutral: 0.05,   // Higher threshold for neutral (we want less of it)
-    happy: 0.04,     // Moderate threshold for happiness
-    sad: 0.015,      // VERY low threshold for sadness
-    angry: 0.008,    // EXTREMELY low threshold for anger (catch tiny hints)
-    fearful: 0.005,  // MINIMAL threshold for fear (most important for recommendations)
-    disgusted: 0.01, // Very low threshold for disgust
-    surprised: 0.02  // Low threshold for surprise
+    neutral: 0.05,
+    happy: 0.04,
+    sad: 0.015,
+    angry: 0.008,
+    fearful: 0.005,
+    disgusted: 0.01,
+    surprised: 0.02
   };
 
   const enhancedScores = Object.entries(normalizedScores).reduce((acc, [emotion, score]) => {
     const threshold = minThresholds[emotion as keyof EmotionScores];
-    // If score is above threshold, keep it; otherwise set to 0
     acc[emotion as keyof EmotionScores] = score >= threshold ? score : 0;
     return acc;
   }, {} as EmotionScores);
 
-  // Final normalization after thresholding
   const finalTotal = Object.values(enhancedScores).reduce((sum, val) => sum + val, 0);
   
-  if (finalTotal === 0) return a_emotionScores; // Fallback to original
+  if (finalTotal === 0) return a_emotionScores;
   
   let finalScores = Object.entries(enhancedScores).reduce((acc, [emotion, score]) => {
     acc[emotion as keyof EmotionScores] = score / finalTotal;
     return acc;
   }, {} as EmotionScores);
 
-  // Step 5: DIVERSITY BONUS - If we detect multiple subtle emotions, boost them further
   const subtleEmotions = ['angry', 'fearful', 'disgusted'] as const;
   const detectedSubtleCount = subtleEmotions.filter(emotion => finalScores[emotion] > 0.01).length;
   
   if (detectedSubtleCount >= 2) {
-    
     const diversityBoostedScores = Object.entries(finalScores).reduce((acc, [emotion, score]) => {
       if (subtleEmotions.includes(emotion as 'angry' | 'fearful' | 'disgusted') && score > 0.01) {
         acc[emotion as keyof EmotionScores] = score * 1.4;
@@ -502,7 +491,6 @@ export const EnhanceEmotionScores = (a_emotionScores: EmotionScores): EmotionSco
       }, {} as EmotionScores);
     }
   }
-
 
   return finalScores;
 };

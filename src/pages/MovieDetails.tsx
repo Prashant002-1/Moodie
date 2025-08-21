@@ -23,7 +23,7 @@ const MovieDetails: React.FC = () => {
         setLoading(true);
         const movieData = await GetMovieDetails(parseInt(id));
         setMovie(movieData);
-      } catch (err) {
+      } catch {
         setError('Failed to load movie details');
       } finally {
         setLoading(false);

@@ -82,7 +82,7 @@ const MovieMatch: React.FC = () => {
       const response = await SearchMovies(query);
       setAutocompleteResults(response.results.slice(0, 8));
       setShowAutocomplete(true);
-    } catch (error) {
+    } catch {
       setAutocompleteResults([]);
       setShowAutocomplete(false);
     }
@@ -90,9 +90,8 @@ const MovieMatch: React.FC = () => {
 
   const handleMovieSearchQueryChange = (value: string) => {
     setMovieSearchQuery(value);
-    // Debounce autocomplete search
-    clearTimeout((window as any).autocompleteTimeout);
-    (window as any).autocompleteTimeout = setTimeout(() => {
+    clearTimeout((window as Window & { autocompleteTimeout?: number }).autocompleteTimeout);
+    (window as Window & { autocompleteTimeout?: number }).autocompleteTimeout = window.setTimeout(() => {
       handleAutocompleteSearch(value);
     }, 300);
   };

@@ -96,7 +96,8 @@ const Recommendations: React.FC = () => {
       try {
         const genreResponse = await GetGenres();
         setGenres(genreResponse.genres);
-      } catch (error) {
+      } catch {
+        // Handle error silently
       }
     };
     loadGenres();
@@ -126,16 +127,13 @@ const Recommendations: React.FC = () => {
         currentNormalizedEmotions
       );
       
-      // Fetch movies based ONLY on emotion-mapped genres (emotion-driven approach)
       const MAX_MOVIES_TOTAL = 500;
       const MOVIES_PER_GENRE_PAGE = 20;
       let allEmotionMovies: Movie[] = [];
       
       if (emotionGenreIds.length > 0) {
-        // Calculate how many pages per genre to fetch based on number of genres
         const maxPagesPerGenre = Math.min(2, Math.ceil(MAX_MOVIES_TOTAL / (emotionGenreIds.length * MOVIES_PER_GENRE_PAGE)));
         
-        // Fetch from multiple pages of emotion-matched genres for variety
         const emotionBasedPromises = emotionGenreIds.map(async (genreId) => {
           const pagePromises = [];
           for (let page = 1; page <= maxPagesPerGenre; page++) {
@@ -169,7 +167,6 @@ const Recommendations: React.FC = () => {
       
       const uniqueMovies = Array.from(movieMap.values());
       
-      // Score and sort movies by emotion match (PRIMARY), then by quality
       const scoredMovies = await Promise.all(
         uniqueMovies.map(async movie => ({
           ...movie,
@@ -178,15 +175,12 @@ const Recommendations: React.FC = () => {
       );
       
       scoredMovies.sort((a, b) => {
-        // PRIMARY: Sort by emotion match score (highest first)
         if (b.emotionScore !== a.emotionScore) {
           return b.emotionScore - a.emotionScore;
         }
-        // SECONDARY: If emotion scores are equal, sort by rating
         if (b.vote_average !== a.vote_average) {
           return b.vote_average - a.vote_average;
         }
-        // TERTIARY: If ratings are equal, sort by popularity
         return b.popularity - a.popularity;
       });
       
@@ -210,7 +204,7 @@ const Recommendations: React.FC = () => {
         emotionProfile: currentEmotions
       });
 
-    } catch (err) {
+    } catch {
       setError('Failed to load recommendations. Please try again later.');
     } finally {
       setLoading(false);
@@ -225,10 +219,9 @@ const Recommendations: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [emotions, fetchRecommendations]); 
 
-  // Calculate emotion compatibility score for a movie using personalized mappings
   const calculateEmotionScore = async (movie: Movie, emotions: EmotionScores): Promise<number> => {
     if (!user?.id) {
-      return 0.5; // Default score for unauthenticated users
+      return 0.5;
     }
     
     const emotionCompatibility = await recommendationService.calculateEmotionCompatibility(
@@ -237,10 +230,8 @@ const Recommendations: React.FC = () => {
       user.id.toString()
     );
     
-    // Quality score from rating and popularity
     const qualityScore = (movie.vote_average / 10) * 0.2 + (Math.log10(movie.popularity) / 4) * 0.1;
     
-    // Weighted combination favoring emotion match
     return emotionCompatibility * 0.8 + qualityScore * 0.2;
   };
   

@@ -24,21 +24,16 @@ class PersonalizedEmotionMappingService {
    * Fetches from backend database, creates default mappings for new users
    */
   async getUserEmotionGenreMappings(userId: string): Promise<PersonalizedMapping> {
-    // Check cache first
     if (this.userMappings.has(userId)) {
       return this.userMappings.get(userId)!;
     }
 
     try {
-      // Fetch from the database
       const personalizedMapping = await this.fetchUserMappingsFromDB(userId);
       
       if (Object.keys(personalizedMapping).length === 0) {
-        // Create default mappings for new users and store them
         const defaultMapping = this.getEnhancedDefaultMappings();
-        await this.persistUserMappingsToDB(userId, defaultMapping, [], {
-          neutral: 0, happy: 0, sad: 0, angry: 0, fearful: 0, disgusted: 0, surprised: 0
-        }, 'default');
+        await this.persistUserMappingsToDB(userId, defaultMapping);
         this.userMappings.set(userId, defaultMapping);
         return defaultMapping;
       }
@@ -92,11 +87,9 @@ class PersonalizedEmotionMappingService {
         }
       });
 
-      // Update cache
       this.userMappings.set(userId, currentMappings);
       
-      // Persist to database
-      await this.persistUserMappingsToDB(userId, currentMappings, movieGenres, emotionScores, interactionType);
+      await this.persistUserMappingsToDB(userId, currentMappings);
       
     } catch (error) {
       console.error('Error updating user mapping from interaction:', error);
@@ -205,16 +198,13 @@ class PersonalizedEmotionMappingService {
    */
   private async persistUserMappingsToDB(
     userId: string,
-    mappings: PersonalizedMapping,
-    _movieGenres: number[],
-    _emotionScores: EmotionScores,
-    _interactionType: string
+    mappings: PersonalizedMapping
   ): Promise<void> {
     try {
       await apiClient.put(`/emotion-mappings/${userId}`, { mappings });
     } catch (error) {
       console.error('Failed to persist user mappings:', error);
-      throw error; // Re-throw to handle errors properly
+      throw error;
     }
   }
 

@@ -7,13 +7,11 @@ interface RegisterFormProps {
   onSwitchToLogin?: () => void;
 }
 
-// Password strength validation function (matching backend logic)
 const validatePasswordStrength = (password: string): { isValid: boolean; error?: string } => {
   if (password.length < 6) {
     return { isValid: false, error: 'Password must be at least 6 characters long' };
   }
   
-  // Check for common weak patterns
   if (/^[0-9]+$/.test(password)) {
     return { isValid: false, error: 'Password cannot be only numbers' };
   }
@@ -22,7 +20,6 @@ const validatePasswordStrength = (password: string): { isValid: boolean; error?:
     return { isValid: false, error: 'Password must contain at least one number or special character' };
   }
   
-  // Check for very common weak passwords (exact matches only)
   const commonWeakPasswords = [
     'password', '123456', '123456789', 'qwerty', 'abc123', 'password123',
     'admin', 'letmein', 'welcome', 'monkey', 'dragon', 'master'
@@ -41,7 +38,7 @@ const validatePasswordStrength = (password: string): { isValid: boolean; error?:
     return { isValid: false, error: 'Password must contain at least one number' };
   }
   
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
     return { isValid: false, error: 'Password must contain at least one special character' };
   }
   
@@ -82,10 +79,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onSwitchToLogin 
       await register(formData.email, formData.username, formData.password);
       onSuccess?.();
     } catch (err: unknown) {
-      const errorResponse = (err as any)?.response;
+      const errorResponse = err && typeof err === 'object' && 'response' in err 
+        ? (err as { response?: { status?: number; data?: { error?: string } } }).response
+        : undefined;
+        
       if (errorResponse?.status === 400) {
         setError(errorResponse?.data?.error || 'Please check your input and try again.');
-      } else if (errorResponse?.status >= 500) {
+      } else if (errorResponse?.status && errorResponse.status >= 500) {
         setError('Server error. Please try again later.');
       } else {
         setError('Registration failed. Please try again.');
