@@ -1,18 +1,292 @@
----
+<style>
+  .cover-page {
+    text-align: center;
+    padding: 100px 0;
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .cover-title {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin-bottom: 40px;
+    color: #2c3e50;
+  }
+  
+  .cover-subtitle {
+    font-size: 1.8em;
+    margin-bottom: 30px;
+    color: #34495e;
+  }
+  
+  .cover-info {
+    font-size: 1.2em;
+    line-height: 1.8;
+    margin: 10px 0;
+    color: #555;
+  }
+  
+  .cover-email {
+    color: #3498db;
+    text-decoration: none;
+  }
+  
+  .page-break {
+    page-break-before: always;
+  }
+  
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+  
+  .figure-container {
+    text-align: center;
+    margin: 30px 0;
+    page-break-inside: avoid;
+  }
+  
+  .figure-caption {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin: 15px 0 10px 0;
+    color: #2c3e50;
+  }
+  
+  .figure-subtitle {
+    font-style: italic;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  
+  .section-break {
+    page-break-before: always;
+    margin-top: 50px;
+  }
+  
+  .subsection-break {
+    page-break-before: avoid;
+    margin-top: 30px;
+  }
+  
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+  
+  .dfd-section {
+    page-break-inside: avoid;
+    margin: 40px 0;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+  }
+  
+  h1 {
+    color: #2c3e50;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+  }
+  
+  h2 {
+    color: #34495e;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 8px;
+    margin-top: 40px;
+    margin-bottom: 20px;
+  }
+  
+  h3 {
+    color: #2c3e50;
+    margin-top: 30px;
+    margin-bottom: 15px;
+  }
+  
+  code {
+    background-color: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+  }
+  
+  pre {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid #3498db;
+    overflow-x: auto;
+    page-break-inside: avoid;
+  }
+  
+  blockquote {
+    border-left: 4px solid #3498db;
+    margin: 20px 0;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    font-style: italic;
+  }
+  
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+  }
+  
+  th {
+    background-color: #3498db;
+    color: white;
+    font-weight: bold;
+  }
+  
+  ul, ol {
+    margin: 15px 0;
+    padding-left: 30px;
+  }
+  
+  li {
+    margin: 8px 0;
+  }
+  
+  .toc {
+    page-break-after: always;
+  }
+  
+  .no-break {
+    page-break-inside: avoid;
+  }
+  
+  @page {
+    margin: 1in 0.75in;
+    @bottom-center {
+      content: "EmotionFlix Technical Specifications - Page " counter(page);
+      font-size: 10pt;
+      color: #666;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    @bottom-right {
+      content: "Prashant Shah - Spring 2025";
+      font-size: 9pt;
+      color: #999;
+      font-family: 'Segoe UI', sans-serif;
+    }
+  }
+  
+  .cover-page {
+    page: cover;
+  }
+  
+  @page cover {
+    @bottom-center {
+      content: none;
+    }
+    @bottom-right {
+      content: none;
+    }
+  }
+  
+  .toc {
+    page: toc;
+  }
+  
+  @page toc {
+    @bottom-center {
+      content: "Table of Contents - Page " counter(page);
+      font-size: 10pt;
+      color: #666;
+    }
+  }
+  
+  .section-header {
+    page-break-before: always;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+  }
+  
+  .doc-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 9pt;
+    color: #666;
+    z-index: 1000;
+  }
+  @media print {
+    body {
+      font-size: 11pt;
+      line-height: 1.4;
+    }
+    
+    h1 {
+      font-size: 18pt;
+      margin-top: 0;
+    }
+    
+    h2 {
+      font-size: 14pt;
+    }
+    
+    h3 {
+      font-size: 12pt;
+    }
+    
+    .cover-page {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .page-break {
+      page-break-before: always;
+    }
+    
+    .avoid-break {
+      page-break-inside: avoid;
+    }
+    
+    .section-break {
+      page-break-before: always;
+    }
+  }
+</style>
 
-**Project Name:** EmotionFlix  
-**Class:** Senior Project 
-**Student Name:** Prashant Shah 
-**Email:** [pshah7@ramapo.edu](mailto:pshah7@ramapo.edu)
+<div class="cover-page">
+  <div class="cover-title">EmotionFlix</div>
+  <div class="cover-subtitle">Technical Specifications Document</div>
+  
+  <div style="margin-top: 60px;">
+    <div class="cover-info"><strong>Project Name:</strong> EmotionFlix</div>
+    <div class="cover-info"><strong>Class:</strong> Senior Project</div>
+    <div class="cover-info"><strong>Student Name:</strong> Prashant Shah</div>
+    <div class="cover-info"><strong>Email:</strong> <a href="mailto:pshah7@ramapo.edu" class="cover-email">pshah7@ramapo.edu</a></div>
+    <div class="cover-info"><strong>Semester:</strong> Spring 2025</div>
+  </div>
+</div>
 
-**Semester:** Spring 2025 
+<div class="page-break"></div>
 
----
-
-<div style="page-break-after: always;"></div>
-
----
-
+<div class="toc">
 ## Table of Contents
 
 1. [Project Overview](#1-project-overview)
@@ -61,8 +335,7 @@
    - 9.1 [Implementation Summary](#91-implementation-summary)
    - 9.2 [Developer Experience and Learning Outcomes](#92-developer-experience-and-learning-outcomes)
    - 9.3 [Project Assessment](#93-project-assessment)
-
----
+</div>
 
 <div style="page-break-after: always;"></div>
 
@@ -81,9 +354,11 @@ This specifications document provides a comprehensive technical outline of Emoti
 - **Algorithm Design**: Emotion-to-genre mapping system with personalized learning capabilities
 - **Development Experience**: Technical challenges, solutions implemented, and lessons learned
 
+<div class="section-break"></div>
 
-
+<div class="section-header">
 ## 1. Project Overview
+</div>
 
 ### 1.1 Purpose and Scope
 EmotionFlix addresses the fundamental challenge of movie discovery by introducing emotion-driven recommendations. Traditional recommendation systems rely on genre preferences and ratings, but EmotionFlix analyzes users' current emotional states to suggest movies that align with their immediate emotional needs.
@@ -94,26 +369,52 @@ EmotionFlix addresses the fundamental challenge of movie discovery by introducin
 - **Privacy-First Architecture**: All emotion processing happens client-side with no image data stored
 - **Full-Stack Development**: Complete application with responsive React frontend, Express.js API, and PostgreSQL database
 
+<div class="section-break"></div>
 
----
-
+<div class="section-header">
 ## 2. System Architecture & Design
+</div>
 
 
-### Application Overview Data Flow Diagram (DFD)
-![Application Overview DFD](Overview.png)
+<div class="dfd-section">
+  <div class="figure-container">
+    <div class="figure-caption">Figure 1: Application Overview Data Flow Diagram</div>
+    <div class="figure-subtitle">High-level system architecture showing data flow between major components</div>
+    ![Application Overview DFD](Overview.png)
+  </div>
+</div>
 
-### Emotion Detection DFD
-![Emotion Detection DFD](Emotion_Detection_DFD.png)
+<div class="dfd-section">
+  <div class="figure-container">
+    <div class="figure-caption">Figure 2: Emotion Detection Data Flow Diagram</div>
+    <div class="figure-subtitle">Detailed flow of emotion detection process from input to processing</div>
+    ![Emotion Detection DFD](Emotion_Detection_DFD.png)
+  </div>
+</div>
 
-### Recommendation Engine DFD 
-![Recommendation Engine DFD](Recommendation_DFD.png)
+<div class="dfd-section">
+  <div class="figure-container">
+    <div class="figure-caption">Figure 3: Recommendation Engine Data Flow Diagram</div>
+    <div class="figure-subtitle">Algorithm flow for generating personalized movie recommendations</div>
+    ![Recommendation Engine DFD](Recommendation_DFD.png)
+  </div>
+</div>
 
-### Emotion Mapping and User Management DFD
-![Emotion Mapping and User Management DFD](Emotion_Mapping_DFD.png)
+<div class="dfd-section">
+  <div class="figure-container">
+    <div class="figure-caption">Figure 4: Emotion Mapping and User Management Data Flow Diagram</div>
+    <div class="figure-subtitle">User data management and personalized emotion-to-genre mapping system</div>
+    ![Emotion Mapping and User Management DFD](Emotion_Mapping_DFD.png)
+  </div>
+</div>
 
-### User Interaction DFD
-![User Interaction DFD](User_Interaction_DFD.png)
+<div class="dfd-section">
+  <div class="figure-container">
+    <div class="figure-caption">Figure 5: User Interaction Data Flow Diagram</div>
+    <div class="figure-subtitle">Complete user interaction workflow from login to movie recommendations</div>
+    ![User Interaction DFD](User_Interaction_DFD.png)
+  </div>
+</div>
 
 ### 2.1 Design Summary
 
@@ -168,9 +469,11 @@ EmotionFlix implements a modern three-tier architecture with clear separation of
 **Rationale**: Reduces entry barriers while encouraging registration for personalized experiences.
 **Implementation**: MovieMatch and basic browsing available anonymously, personalized recommendations require authentication.
 
----
+<div class="section-break"></div>
 
+<div class="section-header">
 ## 3. Data Structures and File Organization
+</div>
 
 ### 3.1 Database Architecture & Organization
 
@@ -225,6 +528,7 @@ All user-related data implements `ON DELETE CASCADE` to ensure clean account del
 ### 3.2 TypeScript Data Models
 
 #### 3.2.1 Core Emotion Types
+<div class="no-break">
 ```typescript
 // Primary emotion scoring interface
 interface EmotionScores {
@@ -261,8 +565,10 @@ interface WatchedMovie {
   genre_ids: number[];
 }
 ```
+</div>
 
 #### 3.2.2 Movie and Recommendation Types
+<div class="no-break">
 ```typescript
 // TMDB movie data structure
 interface Movie {
@@ -362,6 +668,8 @@ src/
 └── vite-env.d.ts
 ```
 
+<div class="subsection-break"></div>
+
 #### 3.3.2 Backend Architecture
 ```
 server/src/
@@ -385,9 +693,11 @@ server/src/
 └── index.ts                # Server entry point
 ```
 
----
+<div class="section-break"></div>
 
+<div class="section-header">
 ## 4. Classes and Models Implementation
+</div>
 
 ### 4.1 Service Classes
 
@@ -510,9 +820,11 @@ server/src/
 - Emotion scores: normalized values for all seven emotions
 - Detection metadata: method, confidence, timestamp
 
----
+<div class="section-break"></div>
 
+<div class="section-header">
 ## 5. Core Features and Implementation
+</div>
 
 ### 5.1 Emotion Detection System
 
@@ -549,9 +861,11 @@ server/src/
 - **Database Indexing**: Optimized queries for emotion and movie lookups
 - **Image Optimization**: Responsive images with appropriate sizing
 
----
+<div class="section-break"></div>
 
+<div class="section-header">
 ## 6. Testing Strategy and Implementation
+</div>
 
 ### 6.1 Testing Philosophy
 The project implements a comprehensive testing strategy focusing on both security and functionality. The approach prioritizes real-world scenarios and production-ready validation ensuring the application handles edge cases and security threats effectively.
@@ -622,9 +936,11 @@ cd server && npm test
 npm run test:security      
 ```
 
----
+<div class="section-break"></div>
 
+<div class="section-header">
 ## 7. Project Setup & Running
+</div>
 
 ### Prerequisites
 - **Node.js** 18+ with npm
@@ -711,9 +1027,11 @@ movie_rec/
 - Models (~5MB total) load automatically on first emotion detection
 - Stored in `/public/models/` directory
 
----
+<div class="section-break"></div>
 
+<div class="section-header">
 ## 8. Data Flow and Algorithm
+</div>
 
 ### 8.1 System Architecture Overview
 
@@ -748,10 +1066,10 @@ The enhancement process transforms typical neutral-dominant results into nuanced
 
 #### 8.3.1 Default Mapping Initialization
 New users receive default emotion-to-genre mappings with weighted preferences:
-- **Happy**: Comedy, Family, Animation with decreasing weights
-- **Sad**: Drama, Romance, War with genre-specific associations
-- **Angry**: Action, Crime, Thriller for high-energy content
-- **Fearful**: Horror, Thriller, Mystery for suspenseful experiences
+- **Happy**: Comedy, Family, Animation
+- **Sad**: Drama, Romance, War
+- **Angry**: Action, Crime, Thriller
+- **Fearful**: Horror, Thriller, Mystery
 
 #### 8.3.2 Dynamic Learning Algorithm
 User mappings evolve through exponential moving averages based on movie interactions.
@@ -809,9 +1127,11 @@ User preferences evolve through interaction patterns:
 - **Exponential Decay**: Recent interactions weighted more heavily in learning algorithms
 - **Genre Exploration**: System tracks user exploration of different content categories
 
----
+<div class="section-break"></div>
 
+<div class="section-header">
 ## 9. Conclusion
+</div>
 
 ### 9.1 Implementation Summary
 
