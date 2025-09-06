@@ -1,11 +1,12 @@
 <style>
   .cover-page {
     text-align: center;
-    padding: 100px 0;
-    min-height: 80vh;
+    padding: 80px 0;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
   }
   
   .cover-title {
@@ -44,7 +45,6 @@
   .figure-container {
     text-align: center;
     margin: 30px 0;
-    page-break-inside: avoid;
   }
   
   .figure-caption {
@@ -60,14 +60,16 @@
     margin-bottom: 20px;
   }
   
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+  }
+  
   .section-break {
     page-break-before: always;
     margin-top: 50px;
-  }
-  
-  .subsection-break {
-    page-break-before: avoid;
-    margin-top: 30px;
   }
   
   h1, h2, h3 {
@@ -75,8 +77,7 @@
   }
   
   .dfd-section {
-    page-break-inside: avoid;
-    margin: 40px 0;
+    margin: 20px 0;
   }
   
   body {
@@ -120,7 +121,6 @@
     border-radius: 5px;
     border-left: 4px solid #3498db;
     overflow-x: auto;
-    page-break-inside: avoid;
   }
   
   blockquote {
@@ -135,7 +135,6 @@
     border-collapse: collapse;
     width: 100%;
     margin: 20px 0;
-    page-break-inside: avoid;
   }
   
   th, td {
@@ -168,69 +167,9 @@
   }
   
   @page {
-    margin: 1in 0.75in;
-    @bottom-center {
-      content: "EmotionFlix Technical Specifications - Page " counter(page);
-      font-size: 10pt;
-      color: #666;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    @bottom-right {
-      content: "Prashant Shah - Spring 2025";
-      font-size: 9pt;
-      color: #999;
-      font-family: 'Segoe UI', sans-serif;
-    }
+    margin: 0.75in;
   }
   
-  .cover-page {
-    page: cover;
-  }
-  
-  @page cover {
-    @bottom-center {
-      content: none;
-    }
-    @bottom-right {
-      content: none;
-    }
-  }
-  
-  .toc {
-    page: toc;
-  }
-  
-  @page toc {
-    @bottom-center {
-      content: "Table of Contents - Page " counter(page);
-      font-size: 10pt;
-      color: #666;
-    }
-  }
-  
-  .section-header {
-    page-break-before: always;
-    border-bottom: 3px solid #3498db;
-    padding-bottom: 15px;
-    margin-bottom: 30px;
-  }
-  
-  .doc-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 30px;
-    background-color: #f8f9fa;
-    border-top: 1px solid #dee2e6;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    font-size: 9pt;
-    color: #666;
-    z-index: 1000;
-  }
   @media print {
     body {
       font-size: 11pt;
@@ -286,7 +225,6 @@
 
 <div class="page-break"></div>
 
-<div class="toc">
 ## Table of Contents
 
 1. [Project Overview](#1-project-overview)
@@ -335,9 +273,8 @@
    - 9.1 [Implementation Summary](#91-implementation-summary)
    - 9.2 [Developer Experience and Learning Outcomes](#92-developer-experience-and-learning-outcomes)
    - 9.3 [Project Assessment](#93-project-assessment)
-</div>
 
-<div style="page-break-after: always;"></div>
+<div class="page-break"></div>
 
 ---
 
@@ -356,9 +293,7 @@ This specifications document provides a comprehensive technical outline of Emoti
 
 <div class="section-break"></div>
 
-<div class="section-header">
 ## 1. Project Overview
-</div>
 
 ### 1.1 Purpose and Scope
 EmotionFlix addresses the fundamental challenge of movie discovery by introducing emotion-driven recommendations. Traditional recommendation systems rely on genre preferences and ratings, but EmotionFlix analyzes users' current emotional states to suggest movies that align with their immediate emotional needs.
@@ -371,50 +306,43 @@ EmotionFlix addresses the fundamental challenge of movie discovery by introducin
 
 <div class="section-break"></div>
 
-<div class="section-header">
 ## 2. System Architecture & Design
-</div>
 
 
-<div class="dfd-section">
-  <div class="figure-container">
-    <div class="figure-caption">Figure 1: Application Overview Data Flow Diagram</div>
-    <div class="figure-subtitle">High-level system architecture showing data flow between major components</div>
-    ![Application Overview DFD](Overview.png)
-  </div>
+<div class="figure-container">
+<div class="figure-caption">Figure 2.1: Application Overview Data Flow Diagram</div>
+<div class="figure-subtitle">Complete system architecture showing data flow between frontend, backend, and external services</div>
 </div>
 
-<div class="dfd-section">
-  <div class="figure-container">
-    <div class="figure-caption">Figure 2: Emotion Detection Data Flow Diagram</div>
-    <div class="figure-subtitle">Detailed flow of emotion detection process from input to processing</div>
-    ![Emotion Detection DFD](Emotion_Detection_DFD.png)
-  </div>
+![Application Overview DFD](Overview.png)
+
+<div class="figure-container">
+<div class="figure-caption">Figure 2.2: Emotion Detection Data Flow Diagram</div>
+<div class="figure-subtitle">Multi-modal emotion detection process using face-api.js neural networks</div>
 </div>
 
-<div class="dfd-section">
-  <div class="figure-container">
-    <div class="figure-caption">Figure 3: Recommendation Engine Data Flow Diagram</div>
-    <div class="figure-subtitle">Algorithm flow for generating personalized movie recommendations</div>
-    ![Recommendation Engine DFD](Recommendation_DFD.png)
-  </div>
+![Emotion Detection DFD](Emotion_Detection_DFD.png)
+
+<div class="figure-container">
+<div class="figure-caption">Figure 2.3: Recommendation Engine Data Flow Diagram</div>
+<div class="figure-subtitle">Emotion-based movie recommendation algorithm workflow</div>
 </div>
 
-<div class="dfd-section">
-  <div class="figure-container">
-    <div class="figure-caption">Figure 4: Emotion Mapping and User Management Data Flow Diagram</div>
-    <div class="figure-subtitle">User data management and personalized emotion-to-genre mapping system</div>
-    ![Emotion Mapping and User Management DFD](Emotion_Mapping_DFD.png)
-  </div>
+![Recommendation Engine DFD](Recommendation_DFD.png)
+
+<div class="figure-container">
+<div class="figure-caption">Figure 2.4: Emotion Mapping and User Management Data Flow Diagram</div>
+<div class="figure-subtitle">Personalized learning system for emotion-to-genre preferences</div>
 </div>
 
-<div class="dfd-section">
-  <div class="figure-container">
-    <div class="figure-caption">Figure 5: User Interaction Data Flow Diagram</div>
-    <div class="figure-subtitle">Complete user interaction workflow from login to movie recommendations</div>
-    ![User Interaction DFD](User_Interaction_DFD.png)
-  </div>
+![Emotion Mapping and User Management DFD](Emotion_Mapping_DFD.png)
+
+<div class="figure-container">
+<div class="figure-caption">Figure 2.5: User Interaction Data Flow Diagram</div>
+<div class="figure-subtitle">User interface interactions and movie discovery workflow</div>
 </div>
+
+![User Interaction DFD](User_Interaction_DFD.png)
 
 ### 2.1 Design Summary
 
@@ -464,16 +392,9 @@ EmotionFlix implements a modern three-tier architecture with clear separation of
 **Rationale**: Provides more accurate recommendations by considering multiple factors: current emotion, historical emotional mapping data, and movie genres.
 **Implementation**: Multi-stage scoring system with configurable weights.
 
-#### 2.3.3 Progressive Data Collection
-**Decision**: Allow anonymous usage with limited features, full functionality requires account creation.
-**Rationale**: Reduces entry barriers while encouraging registration for personalized experiences.
-**Implementation**: MovieMatch and basic browsing available anonymously, personalized recommendations require authentication.
-
 <div class="section-break"></div>
 
-<div class="section-header">
 ## 3. Data Structures and File Organization
-</div>
 
 ### 3.1 Database Architecture & Organization
 
@@ -528,7 +449,6 @@ All user-related data implements `ON DELETE CASCADE` to ensure clean account del
 ### 3.2 TypeScript Data Models
 
 #### 3.2.1 Core Emotion Types
-<div class="no-break">
 ```typescript
 // Primary emotion scoring interface
 interface EmotionScores {
@@ -565,10 +485,8 @@ interface WatchedMovie {
   genre_ids: number[];
 }
 ```
-</div>
 
 #### 3.2.2 Movie and Recommendation Types
-<div class="no-break">
 ```typescript
 // TMDB movie data structure
 interface Movie {
@@ -602,7 +520,7 @@ interface RecommendationScore {
 interface UserPreferences {
   favoriteGenres: number[];                    // Preferred genre IDs
   emotionWeights: EmotionScores;              // Personal emotion importance
-  watchHistory: number[];                      // Previously watched movies
+  watchHistory: number[];                      // Watched movies
   ratings: { [movieId: number]: number };     // User movie ratings
 }
 ```
@@ -668,8 +586,6 @@ src/
 └── vite-env.d.ts
 ```
 
-<div class="subsection-break"></div>
-
 #### 3.3.2 Backend Architecture
 ```
 server/src/
@@ -695,9 +611,7 @@ server/src/
 
 <div class="section-break"></div>
 
-<div class="section-header">
 ## 4. Classes and Models Implementation
-</div>
 
 ### 4.1 Service Classes
 
@@ -822,9 +736,7 @@ server/src/
 
 <div class="section-break"></div>
 
-<div class="section-header">
 ## 5. Core Features and Implementation
-</div>
 
 ### 5.1 Emotion Detection System
 
@@ -863,9 +775,7 @@ server/src/
 
 <div class="section-break"></div>
 
-<div class="section-header">
 ## 6. Testing Strategy and Implementation
-</div>
 
 ### 6.1 Testing Philosophy
 The project implements a comprehensive testing strategy focusing on both security and functionality. The approach prioritizes real-world scenarios and production-ready validation ensuring the application handles edge cases and security threats effectively.
@@ -938,9 +848,7 @@ npm run test:security
 
 <div class="section-break"></div>
 
-<div class="section-header">
 ## 7. Project Setup & Running
-</div>
 
 ### Prerequisites
 - **Node.js** 18+ with npm
@@ -962,7 +870,7 @@ Create `.env` files in both root and server directories:
 
 **Root `.env`:**
 ```env
-VITE_TMDB_API_KEY=your_tmdb_api_key_here
+VITE_TMDB_API_KEY=your_tmdb_api_key
 VITE_API_URL=http://localhost:3001/api
 ```
 
@@ -1029,9 +937,7 @@ movie_rec/
 
 <div class="section-break"></div>
 
-<div class="section-header">
 ## 8. Data Flow and Algorithm
-</div>
 
 ### 8.1 System Architecture Overview
 
@@ -1087,9 +993,9 @@ The system calculates weighted genre preferences by:
 #### 8.4.1 Multi-Factor Scoring System
 Movie recommendations use a weighted scoring formula combining multiple factors:
 
-**Popularity Factor**
-**Genre Preference Match**
-**TMDB Rating Filter**
+**Popularity Factor**, 
+**Genre Preference Match**, 
+**TMDB Rating Filter**, 
 **Emotion Compatibility**
 
 #### 8.4.2 Emotion Compatibility Calculation
@@ -1122,16 +1028,10 @@ When users log new movies, the system:
 2. Updates personalized emotion mappings
 3. Stores movie in appropriate user lists (watchlist, watched)
 
-#### 8.5.4 User Preference Learning
-User preferences evolve through interaction patterns:
-- **Exponential Decay**: Recent interactions weighted more heavily in learning algorithms
-- **Genre Exploration**: System tracks user exploration of different content categories
 
 <div class="section-break"></div>
 
-<div class="section-header">
 ## 9. Conclusion
-</div>
 
 ### 9.1 Implementation Summary
 
@@ -1188,4 +1088,4 @@ Additionally, working with movie metadata presented its own set of constraints. 
 
 The development of EmotionFlix has been a valuable learning experience that extended beyond technical implementation into understanding real-world application potential. Working through the software development lifecycle taught me to consistently consider practical use cases, which shaped both the system architecture and user experience decisions.
 
-With access to richer datasets, more sophisticated learning algorithms, and expanded content, I believe this application could realistically compete as a commercial application. While there remain areas for future enhancement—social features, additional content types, and more advanced machine learning models—the foundation I've established could scale to accommodate real-world usage. This project taught me that successful software development requires balancing technical implementation with user value and market viability, transforming what started as an academic project into a comprehensive exploration of product development principles.
+With access to richer datasets, more sophisticated learning algorithms, and expanded content, I believe this application could realistically compete as a commercial application. While there remain areas for future enhancement like social features, additional content types, and more advanced machine learning models, the foundation I've established could scale to accommodate real-world usage. This project taught me that successful software development requires balancing technical implementation with user value and market viability, transforming what started as an academic project into a comprehensive exploration of product development principles.
