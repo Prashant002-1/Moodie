@@ -193,7 +193,7 @@ class RecommendationService {
     const diversityScore = this.calculateDiversityScore(movie, userPreferences);
     score += diversityScore * 0.1;
 
-    return Math.min(10, Math.max(0, score)); // Clamp between 0-10
+    return Math.min(10, Math.max(0, score)); 
   }
 
   private calculateQualityScore(movie: Movie): number {
@@ -228,7 +228,7 @@ class RecommendationService {
       score -= 1; // Penalty for already watched
     }
 
-    return Math.min(5, Math.max(0, score)); // Clamp between 0-5
+    return Math.min(5, Math.max(0, score)); 
   }
 
   private calculateDiversityScore(movie: Movie, userPreferences: UserPreferences): number {
