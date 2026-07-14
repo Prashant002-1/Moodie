@@ -9,7 +9,7 @@ import { catalogService } from '../services/catalogService';
 import { CommunityEntry, discoveryService } from '../services/discoveryService';
 import { EmotionScores } from '../types/emotion';
 import { Movie } from '../types/movie';
-import { dominantEmotion, emotionColors, emotionLabels, imageUrl, releaseYear } from '../utils/display';
+import { dominantEmotion, emotionColors, emotionLabels, imageUrl } from '../utils/display';
 
 const emotionKeys = Object.keys(emotionColors) as (keyof EmotionScores)[];
 
@@ -27,7 +27,6 @@ const Home: React.FC = () => {
   const { openAuth, enterDemo, demoLoading } = useOutletContext<LayoutOutletContext>();
   const [films, setFilms] = useState<Movie[]>([]);
   const [entries, setEntries] = useState<CommunityEntry[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) return;
@@ -36,7 +35,6 @@ const Home: React.FC = () => {
       if (!active) return;
       if (filmResult.status === 'fulfilled') setFilms(filmResult.value.results.filter(film => film.poster_path));
       if (entryResult.status === 'fulfilled') setEntries(entryResult.value);
-      setLoading(false);
     });
     return () => { active = false; };
   }, [user]);
@@ -54,11 +52,7 @@ const Home: React.FC = () => {
       || entries[1],
     [entries, featuredEntry?.id],
   );
-  const featuredFilm = films.find(film => film.backdrop_path && film.poster_path) || films[0];
-  const heroEmotion = featuredEntry ? dominantEmotion(featuredEntry) : null;
   const reactionEmotion = reactionEntry ? dominantEmotion(reactionEntry) : null;
-  const sceneBackdrop = imageUrl(featuredEntry?.backdrop_path || featuredFilm?.backdrop_path, 'w1280');
-  const scenePoster = imageUrl(featuredEntry?.poster_path || featuredFilm?.poster_path, 'w500');
   const reactionPoster = imageUrl(reactionEntry?.poster_path || films[2]?.poster_path, 'w342');
   const socialMoments = useMemo(() => {
     const seen = new Set<number>();
@@ -71,47 +65,16 @@ const Home: React.FC = () => {
       })
       .slice(0, 4);
   }, [entries]);
-  const identityNotes = useMemo(
-    () => entries.filter(entry => entry.note).slice(0, 3).map(entry => entry.note),
-    [entries],
-  );
-
   if (user) return <Navigate replace to="/feed" />;
 
   return (
     <div className="landing-page landing-page--social">
       <section className="landing-hero" aria-labelledby="landing-title" data-nav-tone="light">
-        <div className="landing-hero__copy">
-          <HeroIdentity
-            demoLoading={demoLoading}
-            notes={identityNotes}
-            onEnterDemo={() => void enterDemo()}
-            onSignIn={openAuth}
-          />
-        </div>
-
-        <div className="landing-hero__scene" aria-label="A public film response">
-          {sceneBackdrop && <img alt="" aria-hidden="true" className="landing-scene__backdrop" data-parallax="0.04" src={sceneBackdrop} />}
-          <div className="landing-scene__wash" />
-          <div className="landing-scene__composition landing-scene__composition--post">
-            <figure className="landing-expression-photo">
-              <img alt="A person sharing how a film affected them" src={featuredEntry?.expression_image_path || '/social/ananya-after-whiplash.webp'} />
-              <figcaption>Expression photo <span>optional</span></figcaption>
-            </figure>
-            {scenePoster && (
-              <figure className="landing-scene__poster landing-scene__poster--small">
-                <img alt={featuredEntry?.title ? `Poster for ${featuredEntry.title}` : 'Film poster'} src={scenePoster} />
-                <figcaption><strong>{featuredEntry?.title || featuredFilm?.title}</strong><span>{releaseYear(featuredEntry?.release_date || featuredFilm?.release_date)}</span></figcaption>
-              </figure>
-            )}
-            <article className={`landing-record landing-response${loading ? ' landing-record--loading' : ''}`}>
-              <div className="landing-record__meta"><span>{featuredEntry ? `@${featuredEntry.username}` : '@ananya_sen'}</span><span>{featuredEntry?.title || 'One film'}</span></div>
-              <blockquote>{featuredEntry?.note || 'I felt angry at how easily cruelty can disguise itself as belief in someone, and unsettled by my own excitement.'}</blockquote>
-              <FeelingTrace entry={featuredEntry} label="Feelings shared with this response" />
-              <p className="landing-record__feeling">{heroEmotion ? emotionLabels[heroEmotion.emotion] : 'What they felt'}</p>
-            </article>
-          </div>
-        </div>
+        <HeroIdentity
+          demoLoading={demoLoading}
+          onEnterDemo={() => void enterDemo()}
+          onSignIn={openAuth}
+        />
       </section>
 
       <InkBleed from="#D8D6D1" to="#D76358" mix="#B88B78" seed={9} />
