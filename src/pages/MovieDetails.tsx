@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bookmark, Check, Clock, Star } from 'lucide-react';
+import { Bookmark, Check, Clock } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import BrandMark from '../components/brand/BrandMark';
 import FilmRail from '../components/features/movie/FilmRail';
@@ -77,9 +77,7 @@ const MovieDetails: React.FC = () => {
             {movie.tagline && <p className="details-hero__tagline">{movie.tagline}</p>}
             <div className="details-meta">
               <span>{releaseYear(movie.release_date)}</span>
-              {runtime && <span className="rating"><Clock size={15} />{runtime}</span>}
-              {movie.vote_average > 0 && <span className="rating"><Star size={15} />{movie.vote_average.toFixed(1)} / 10</span>}
-              {movie.genres?.map(genre => <span key={genre.id}>{genre.name}</span>)}
+              {runtime && <span className="runtime-badge"><Clock size={15} />{runtime}</span>}
             </div>
             <p className="details-overview">{movie.overview || 'No synopsis is available for this film.'}</p>
             {user ? (
@@ -99,11 +97,12 @@ const MovieDetails: React.FC = () => {
 
       {publicEntries.length > 0 && (
         <section className="film-responses landing-section" aria-labelledby="film-responses-title">
-          <header className="section-heading-row"><div><h2 id="film-responses-title">What this film left with people</h2><p>Public entries for this film, in their own words.</p></div></header>
+          <header className="section-heading-row"><div><h2 id="film-responses-title">How people felt</h2></div></header>
           <div className="film-response-list">
             {publicEntries.slice(0, 6).map(entry => (
               <article className="film-response" key={entry.id}>
-                <div className="public-entry__byline"><Link className="person-avatar person-avatar--small" to={`/member/${entry.username}`}>{entry.username.charAt(0).toUpperCase()}</Link><p><Link to={`/member/${entry.username}`}><strong>@{entry.username}</strong></Link><small>{entry.rating ? `${entry.rating} / 5` : 'No rating'}</small></p></div>
+                {entry.expression_image_path && <img alt={entry.expression_image_alt || `Expression photo shared by ${entry.username}`} className="film-response__expression" loading="lazy" src={entry.expression_image_path} />}
+                <div className="public-entry__byline"><Link className="person-avatar person-avatar--small" to={`/member/${entry.username}`}>{entry.username.charAt(0).toUpperCase()}</Link><p><Link to={`/member/${entry.username}`}><strong>@{entry.username}</strong></Link></p></div>
                 <blockquote>{entry.note || 'No note on this viewing.'}</blockquote>
               </article>
             ))}
@@ -111,7 +110,7 @@ const MovieDetails: React.FC = () => {
         </section>
       )}
 
-      {similar.length > 0 && <div className="landing-section landing-section--tight"><FilmRail movies={similar} title="More like this" /></div>}
+      {similar.length > 0 && <div className="landing-section landing-section--tight"><FilmRail movies={similar} title="Keep browsing" /></div>}
     </>
   );
 };

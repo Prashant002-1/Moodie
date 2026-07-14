@@ -1,94 +1,118 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "contractVersion": "1.1.0",
-  "purpose": "Populate the diary-first EmotionFlix product with enough credible history and public activity to exercise recommendations and social discovery.",
-  "executionOwner": "A separate seed-data agent. The product-overhaul agent must not author or apply the records.",
-  "productFraming": "Seed records represent reviewed human responses to films. Facial-expression analysis is an optional provenance source, not the meaning of the emotional data or the product identity.",
+  "contractVersion": "2.0.0",
+  "purpose": "Populate EmotionFlix as an emotion-based social film discovery product: people share what a film meant to them, find others who felt similarly about the same films, and discover what those people watched next.",
+  "executionOwner": "The seed-data implementation owns only deterministic synthetic accounts and records identified by this contract. Seeding remains an explicit operator action.",
+  "productFraming": {
+    "primaryObject": "A response to a film, expressed in the viewer's own words and emotional sliders.",
+    "socialObject": "A public response becomes a timeline post. A private response informs only its owner's experience.",
+    "recommendationPrinciple": "Match people by how similarly they responded to the same films, then surface other public films from those people.",
+    "ratingRule": "EmotionFlix does not ask seeded people to rate films. Every active seeded diary rating is null.",
+    "photoRule": "An expression photo is an optional social attachment. It is never evidence that the response was inferred from a face and never changes capture_method from manual. Active uploads accept bounded JPEG, PNG, or WebP data URLs; seed posts use approved app asset paths."
+  },
   "sourceOfTruth": {
     "schema": "database/schema.sql",
     "movieProvider": "TMDB",
     "requiredApiKey": "TMDB_API_KEY",
-    "movieValidation": "Every movie ID must be resolved through TMDB before insertion and cached in movies plus movie_genres. Do not guess IDs or artwork paths."
+    "movieValidation": "Resolve every film through TMDB and cache the returned film and genre metadata. Never guess IDs or artwork paths.",
+    "expressionAssets": [
+      "/social/ananya-after-whiplash.webp",
+      "/social/devon-after-past-lives.webp",
+      "/social/hiro-after-cure.webp"
+    ]
   },
   "demoAccess": {
     "email": "demo@demo.com",
     "password": "demo123!",
-    "accountRule": "Create the demo account when absent and update it safely when present. The Enter demo action must remain usable after every seed run."
+    "accountRule": "Upsert the demo account in place. Its ID and relationships must survive every seed run."
   },
   "executionRequirements": {
-    "entryPoint": "Create server/src/scripts/seedData.ts and expose it as npm run seed from server/package.json.",
-    "verificationEntryPoint": "Create server/src/scripts/verifySeedData.ts and expose it as npm run seed:verify from server/package.json.",
-    "idempotency": "Running the seed command twice must not duplicate accounts, diary entries, saved films, follows, reactions, movie genres, or movie cache records.",
-    "transactionSafety": "Write seed records inside a database transaction. Roll back the complete run when a required TMDB lookup or database write fails.",
-    "dataOwnership": "Use a deterministic manifest of seed-owned email addresses and records. A rerun may replace or reconcile only those seed-owned records and must never delete or rewrite unrelated user data.",
-    "startupBoundary": "Do not run seeding from API startup, database schema initialization, Docker startup, or frontend startup. Seeding must remain an explicit command.",
-    "environment": "Read DATABASE_URL and TMDB_API_KEY from the server environment. Fail with a direct message when either is unavailable.",
-    "completionOutput": "Print a concise count of accounts, movies, diary entries, public entries, saved films, follows, and reactions, then run or instruct the operator to run the verification command."
+    "entryPoint": "server/src/scripts/seedData.ts via npm run seed",
+    "verificationEntryPoint": "server/src/scripts/verifySeedData.ts via npm run seed:verify",
+    "transactionSafety": "Apply all schema compatibility and seed writes in one transaction and roll back when a required lookup or write fails.",
+    "stableOwnership": "Identify users by the exact email manifest and entries by nullable unique seed_key values. Never use domain wildcards as an ownership boundary.",
+    "idempotency": "A second run must preserve seed user IDs, seed entry IDs, timestamps, relationships, media, and logical content while creating no duplicates.",
+    "nonSeedSafety": "Never delete or rewrite an ordinary user's account, diary, follow, reaction, saved film, or relationship to a seed-owned person or post.",
+    "startupBoundary": "Do not seed from API, schema, container, or frontend startup.",
+    "environment": "Use the automatically initialized embedded database and require TMDB_API_KEY with a direct failure message.",
+    "completionOutput": "Print seed-scoped counts for accounts, films, responses, public posts, optional photos, saved films, follows, and reactions, then instruct the operator to run seed:verify."
   },
   "requiredCohorts": [
     {
       "name": "portfolio_demo",
       "accounts": 1,
-      "minimumDiaryEntriesPerAccount": 14,
-      "minimumSavedFilmsPerAccount": 8,
-      "publicEntryRange": [4, 7],
-      "notes": "Create or safely update demo@demo.com with the credentials in demoAccess. Build a coherent history with recurring patterns and a few deliberate outliers."
+      "minimumResponses": 14,
+      "minimumSavedFilms": 8,
+      "publicPostRange": [4, 7],
+      "notes": "Give the demo enough private and public history to match with several different people."
     },
     {
       "name": "community",
-      "accounts": 8,
-      "minimumDiaryEntriesPerAccount": 8,
+      "accounts": 11,
+      "minimumResponsesPerAccount": 8,
       "minimumSavedFilmsPerAccount": 3,
-      "publicEntryRange": [5, 10],
-      "notes": "Each account needs a distinct, internally consistent taste pattern. Do not create generic personas or AI-styled biographies."
+      "publicPostRange": [5, 7],
+      "notes": "Each person needs a distinct emotional perspective, not a genre persona or review style."
     }
   ],
-  "diaryEntryRequirements": {
-    "ratingScale": "0.5 to 5.0 in 0.5 increments, with at least 15 percent of entries left unrated",
-    "watchedOn": "Spread across the previous 18 months. Include at least one repeat viewing for two community accounts.",
-    "noteLength": "0 to 420 characters. At least 70 percent of public entries need a note.",
-    "noteVoice": "Specific to the viewer's response. No plot summaries, marketing copy, review-template prose, em dashes, or claims that the system diagnosed the viewer.",
-    "visibility": "Demo entries are private by default. Community entries must include both public and private records.",
-    "captureMethodMix": {
-      "manualMinimumPercent": 85,
-      "uploadMaximumPercent": 10,
-      "webcamMaximumPercent": 5,
-      "implementationNote": "The current schema cannot represent text-derived or combined sources. Treat manual as the temporary storage source for reviewed seed records. Do not imply that the values came from facial analysis."
-    },
-    "emotionVector": "All seven values must be between 0 and 1. They do not need to sum to 1. Avoid one-hot vectors in more than 10 percent of entries.",
-    "emotionalCoverage": "Every emotion key must be dominant in multiple entries across the full seed. Each account should have two or three recurring dominant feelings rather than a uniform distribution."
+  "responseRequirements": {
+    "rating": "Null for every active seeded response.",
+    "watchedOn": "Use deterministic dates across the previous 18 months and include repeat viewings for at least two community people.",
+    "noteLength": "20 to 420 characters for every public seed post.",
+    "noteVoice": "First-person, specific, emotionally candid, and concerned with what the film meant or stirred in the viewer.",
+    "noteProhibitions": [
+      "plot summary",
+      "star or numeric rating language",
+      "review-template conclusions",
+      "marketing copy",
+      "craft-scorecard language about acting, editing, cinematography, pacing, plotting, or technical execution",
+      "em dashes",
+      "claims that the system diagnosed the viewer"
+    ],
+    "visibility": "The demo is private by default. Every community person has both public and private responses.",
+    "emotionInput": "All seeded vectors are reviewed direct input and use capture_method manual with confidence 1.",
+    "expressionImageInput": "Active diary writes accept only JPEG, PNG, or WebP base64 data URLs whose decoded bytes match the declared MIME signature and are no larger than 2 MiB. SVG, GIF, external URLs, empty payloads, and mismatched signatures are rejected.",
+    "emotionVector": "All seven values are between 0 and 1 and need not sum to 1. Avoid uniform or one-hot vectors.",
+    "emotionalCoverage": "Every emotion is dominant in multiple responses. Each person has recurring feelings plus credible outliers."
   },
   "socialRequirements": {
-    "bios": "Every community account needs a 40 to 160 character bio about what tends to stay with that person after a film. Keep it specific and plain.",
-    "follows": "Create a sparse directed graph. Every community account follows 1 to 4 others. The demo account follows 3 accounts. No self-follows.",
-    "reactions": "React only to public entries. Each public entry may have 0 to 5 reactions. At least 25 percent must have none.",
-    "feedDiversity": "The first 24 public entries by created_at must include at least 6 people and 12 films."
+    "bios": "Write 40 to 160 characters in plain first-person language about what tends to stay with that person after a film.",
+    "sharedFilmOverlap": "The demo shares at least three films with at least six community people.",
+    "matchedPeople": "At least three people closely resemble the demo across shared films and at least two respond differently, demonstrating that feelings are personal.",
+    "candidateDepth": "Every closely matched person has at least three public films the demo has not watched.",
+    "follows": "Use a sparse directed graph. The demo follows three people; community people follow one to four others; no self-follows.",
+    "reactions": "React only to public seed posts, with zero to five reactions per post and at least 25 percent with none.",
+    "feedDiversity": "The authenticated demo feed's first 24 posts includes at least six people and twelve films, with followed people appearing before the wider community.",
+    "photoPosts": "Attach the three approved generated expression assets to their named public posts. Store them as entry_media kind expression_photo; keep capture_method manual."
   },
   "recommendationCoverage": {
-    "minimumDistinctGenresPerAccount": 5,
-    "minimumHighRatingsPerAccount": 3,
-    "minimumLowRatingsPerAccount": 1,
-    "minimumDistinctDominantEmotionsPerAccount": 2,
-    "excludedMovieRule": "A user's recommendation result must not return a movie already present in that user's diary."
+    "matchingBasis": "Emotional similarity on films both people watched.",
+    "candidateBasis": "Other public responses from emotionally matched people.",
+    "privacy": "The viewer's public and private responses may inform their own match. Another person's private responses never become timeline content or recommendation candidates.",
+    "excludedMovieRule": "Never recommend a film already present in the viewer's responses.",
+    "payloadRule": "Recommendation candidates identify the people behind them. Feed and recommendation framing must not expose diary ratings, TMDB votes, top genres, or genre/rating reasons."
   },
   "prohibited": [
-    "Do not call removed /api/user-movies or /api/emotion-mappings routes.",
-    "Do not insert directly into the legacy emotions, user_movies, user_emotion_profiles, user_emotion_mappings, or recommendations tables.",
-    "Do not use lorem ipsum, placeholder titles, fake TMDB IDs, or stock biography templates.",
-    "Do not make every diary entry public.",
-    "Do not attach or persist camera frames or uploaded images.",
-    "Do not write notes, biographies, or verification output that presents facial expression as the source of the product's emotional understanding.",
-    "Do not encode a universal rule that a particular emotion always maps to a particular genre."
+    "Do not call legacy user-movie, emotion-mapping, profile, or recommendations tables.",
+    "Do not make every response public.",
+    "Do not treat an expression photo as emotion evidence.",
+    "Do not attach a photo to a private post.",
+    "Do not use real camera frames or real-person uploads as seed media.",
+    "Do not rank recommendations by ratings, TMDB vote, popularity, or genre affinity.",
+    "Do not delete and recreate seed users or seed posts during reconciliation.",
+    "Do not scan or mutate unrelated user content during verification."
   ],
   "acceptanceChecks": [
-    "POST /api/auth/login with the demoAccess credentials returns 200 and a valid token.",
-    "GET /api/discovery/feed returns at least 24 public entries after seeding.",
-    "GET /api/discovery/people returns at least 8 community accounts.",
-    "GET /api/diary and GET /api/diary/summary agree on the demo account entry count.",
-    "POST /api/recommendations for the demo account returns non-empty forYou, adjacent, and community arrays.",
-    "The recommendation profile source is diary for the demo account without a temporary discovery intent.",
-    "No seeded note contains an em dash or a generic current-state capture prompt.",
-    "Running the seed command a second time succeeds and leaves all seed-owned table counts unchanged.",
-    "No non-seed account or record is modified or deleted by a seed rerun."
+    "Demo login returns a valid token.",
+    "Every active seeded rating is null and every capture_method is manual.",
+    "Every public seeded note is first-person and passes the emotional-response language gate.",
+    "The demo shares at least three films with at least six people.",
+    "The first 24 authenticated feed posts contain at least six people and twelve films and omit rating and vote_average fields.",
+    "The three approved expression assets appear on the intended public posts and do not change capture_method.",
+    "People results use same-film emotional overlap.",
+    "Recommendations are non-empty, exclude watched films, identify matched people, and contain no genre/rating reasons.",
+    "Private responses do not appear in discovery payloads.",
+    "A second seed run preserves seed user IDs, entry IDs, timestamps, and fingerprints.",
+    "A randomized non-seed account, diary entry, follow to a seed person, and reaction to a seed post survive a seed rerun unchanged."
   ]
 }

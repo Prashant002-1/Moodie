@@ -40,7 +40,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
         </button>
         <h2 className="dialog__title" id="auth-title">{mode === 'login' ? 'Sign in' : 'Create an account'}</h2>
         <p className="dialog__intro">
-          {mode === 'login' ? 'Open your diary, saved films, and personal recommendations.' : 'Keep a film diary and let the record change what you find next.'}
+          {mode === 'login' ? 'Return to the films and people that stayed with you.' : 'Share what a film meant to you and find people who felt something similar.'}
         </p>
         <div aria-label="Account action" className="auth-tabs" role="tablist">
           <button aria-selected={mode === 'login'} className={`auth-tab${mode === 'login' ? ' auth-tab--active' : ''}`} onClick={() => setMode('login')} role="tab" type="button">Existing account</button>

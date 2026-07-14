@@ -1,1240 +1,542 @@
-import 'dotenv/config';
-import { Pool, PoolClient } from 'pg';
-import bcrypt from 'bcryptjs';
 import axios from 'axios';
+import bcrypt from 'bcryptjs';
+import pool, { ConnectedDatabaseClient, initializeDatabase } from '../config/database';
+import { env } from '../config/env';
 
-// Ensure required environment variables are available
-const DATABASE_URL = process.env.DATABASE_URL;
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
-
-if (!DATABASE_URL || !TMDB_API_KEY) {
-  console.error('ERROR: DATABASE_URL and TMDB_API_KEY environment variables are required.');
-  process.exit(1);
-}
-
-const pool = new Pool({
-  connectionString: DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+const TMDB_API_KEY = env.tmdbApiKey;
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const SEED_PREFIX = 'emotionflix:v2:';
+const SEED_REFERENCE_DATE = '2026-07-13';
 
-// Helper to get movie details from TMDB
-const getMovieDetails = async (movieId: number): Promise<any> => {
-  const response = await axios.get(`${TMDB_BASE_URL}/movie/${movieId}`, {
-    params: { api_key: TMDB_API_KEY },
-  });
-  const movie = response.data as any;
-  if (!movie.genre_ids?.length && movie.genres) {
-    movie.genre_ids = movie.genres.map((g: any) => g.id);
-  }
-  return movie;
+type EmotionScores = {
+  neutral: number;
+  happy: number;
+  sad: number;
+  angry: number;
+  fearful: number;
+  disgusted: number;
+  surprised: number;
 };
 
-// Transactional movie search and cache helper
-const resolveMovieByTitleAndYear = async (client: PoolClient, title: string, year: number): Promise<any> => {
-  // Check if already in local db cache
+type SeedEntry = {
+  key: string;
+  title: string;
+  year: number;
+  note: string;
+  visibility: 'private' | 'public';
+  emotions: EmotionScores;
+  expressionPhoto?: { assetPath: string; altText: string };
+};
+
+const emos = (
+  neutral = 0.08,
+  happy = 0.08,
+  sad = 0.08,
+  angry = 0.08,
+  fearful = 0.08,
+  disgusted = 0.08,
+  surprised = 0.08,
+): EmotionScores => ({ neutral, happy, sad, angry, fearful, disgusted, surprised });
+
+const post = (
+  key: string,
+  title: string,
+  year: number,
+  note: string,
+  visibility: 'private' | 'public',
+  emotions: EmotionScores,
+  expressionPhoto?: SeedEntry['expressionPhoto'],
+): SeedEntry => ({ key, title, year, note, visibility, emotions, expressionPhoto });
+
+const SEED_USERS = [
+  { email: 'demo@demo.com', username: 'demo', password: 'demo123!', bio: 'I keep films close when they help me name a feeling I could not explain on my own.' },
+  { email: 'clara@seed.emotionflix.com', username: 'clara_valdez', password: 'seed123!', bio: 'I return to films that make loneliness feel shared, especially when tenderness survives the ending.' },
+  { email: 'marcus@seed.emotionflix.com', username: 'marcus_k', password: 'seed123!', bio: 'I love the startled feeling of having my sense of reality loosen, then finding something human inside it.' },
+  { email: 'elena@seed.emotionflix.com', username: 'elena_r', password: 'seed123!', bio: 'I hold onto films that make time feel precious and leave me missing lives I never actually lived.' },
+  { email: 'hiro@seed.emotionflix.com', username: 'hiro_s', password: 'seed123!', bio: 'I am drawn to the quiet fear that follows me home and makes familiar rooms feel unfamiliar.' },
+  { email: 'chloe@seed.emotionflix.com', username: 'chloe_d', password: 'seed123!', bio: 'I look for wonder, playfulness, and the kind of warmth that makes the world feel briefly repairable.' },
+  { email: 'devon@seed.emotionflix.com', username: 'devon_m', password: 'seed123!', bio: 'I like being frightened, but I remember the films that uncover grief or loneliness beneath the fear.' },
+  { email: 'ananya@seed.emotionflix.com', username: 'ananya_sen', password: 'seed123!', bio: 'I stay with films that make injustice personal and turn my anger into attention rather than distance.' },
+  { email: 'lucas@seed.emotionflix.com', username: 'lucas_v', password: 'seed123!', bio: 'I chase the strange little emotional turns that make me laugh, ache, and question my first response.' },
+  { email: 'sarah@seed.emotionflix.com', username: 'sarah_m', password: 'seed123!', bio: 'I remember films through gestures, rooms, and the bittersweet feeling of people trying to reach each other.' },
+  { email: 'tariq@seed.emotionflix.com', username: 'tariq_a', password: 'seed123!', bio: 'I need films that leave enough quiet for my own memories to enter and change what I am watching.' },
+  { email: 'rachel@seed.emotionflix.com', username: 'rachel_g', password: 'seed123!', bio: 'I am interested in the feelings people hide from family, friends, and sometimes from themselves.' },
+] as const;
+
+export const SEED_EMAILS = SEED_USERS.map(user => user.email);
+
+const DIARY_SEED_ENTRIES: Record<string, SeedEntry[]> = {
+  demo: [
+    post('eternal-sunshine', 'Eternal Sunshine of the Spotless Mind', 2004, 'I felt the ache of loving someone even when love cannot save either of you from repeating old wounds.', 'public', emos(0.08, 0.08, 0.72, 0.03, 0.03, 0.02, 0.12)),
+    post('inception', 'Inception', 2010, 'I left with a rush of wonder and a small fear that certainty might be more fragile than I pretend.', 'private', emos(0.12, 0.06, 0.03, 0.02, 0.12, 0.02, 0.72)),
+    post('spirited-away', 'Spirited Away', 2001, 'I felt brave in a childlike way, as if kindness could still guide me through a world I did not understand.', 'public', emos(0.08, 0.34, 0.04, 0.01, 0.05, 0.01, 0.71)),
+    post('before-sunrise', 'Before Sunrise', 1995, 'I felt hopeful about the rare moments when another person seems to understand the exact shape of your loneliness.', 'private', emos(0.12, 0.58, 0.22, 0.01, 0.02, 0.01, 0.18)),
+    post('whiplash', 'Whiplash', 2014, 'I felt angry at how easily cruelty can disguise itself as belief in someone, and unsettled by my own excitement.', 'public', emos(0.04, 0.03, 0.09, 0.74, 0.18, 0.12, 0.06)),
+    post('past-lives', 'Past Lives', 2023, 'I mourned the person I might have become somewhere else, with someone who remembers an earlier version of me.', 'private', emos(0.18, 0.08, 0.76, 0.01, 0.03, 0.01, 0.08)),
+    post('cure', 'Cure', 1997, 'I felt a quiet dread about how little it might take for an ordinary person to become unrecognizable.', 'private', emos(0.28, 0.01, 0.04, 0.05, 0.74, 0.18, 0.03)),
+    post('parasite', 'Parasite', 2019, 'I felt ashamed of how quickly comfort can make suffering invisible, then angry when that distance became unbearable.', 'public', emos(0.04, 0.02, 0.16, 0.68, 0.12, 0.42, 0.08)),
+    post('wall-e', 'WALL-E', 2008, 'I felt tenderness for the need to be noticed, and hope that care can survive even after everything else is neglected.', 'private', emos(0.08, 0.62, 0.22, 0.01, 0.02, 0.01, 0.24)),
+    post('godfather', 'The Godfather', 1972, 'I felt the sadness of watching belonging turn into a cage while everyone keeps calling it family.', 'private', emos(0.42, 0.02, 0.54, 0.18, 0.06, 0.08, 0.02)),
+    post('hereditary', 'Hereditary', 2018, 'I felt trapped inside a family grief so large that every attempt to escape it only made it more frightening.', 'private', emos(0.03, 0.01, 0.34, 0.08, 0.78, 0.12, 0.04)),
+    post('get-out', 'Get Out', 2017, 'I felt the exhausting fear of recognizing danger while everyone around you insists that you are imagining it.', 'public', emos(0.03, 0.01, 0.06, 0.52, 0.71, 0.18, 0.08)),
+    post('2001', '2001: A Space Odyssey', 1968, 'I felt wonderfully small, almost relieved that the universe does not owe me an explanation.', 'private', emos(0.46, 0.05, 0.02, 0.01, 0.08, 0.01, 0.74)),
+    post('la-la-land', 'La La Land', 2016, 'I felt grateful for a love that mattered even though it was not the life either person finally chose.', 'private', emos(0.08, 0.32, 0.68, 0.01, 0.02, 0.01, 0.12)),
+    post('schindlers-list', 'Schindler\'s List', 1993, 'I felt grief become anger when individual lives were treated as numbers, and I did not want that anger softened.', 'private', emos(0.02, 0.01, 0.78, 0.56, 0.08, 0.22, 0.02)),
+    post('toy-story', 'Toy Story', 1995, 'I felt the old childhood fear of being replaced, followed by the relief of discovering that affection can expand.', 'private', emos(0.07, 0.68, 0.18, 0.03, 0.12, 0.01, 0.18)),
+  ],
+  clara_valdez: [
+    post('eternal-sunshine', 'Eternal Sunshine of the Spotless Mind', 2004, 'I felt seen by the wish to erase pain and by the quieter truth that losing the pain would also erase part of me.', 'public', emos(0.09, 0.06, 0.74, 0.02, 0.04, 0.02, 0.11)),
+    post('before-sunrise', 'Before Sunrise', 1995, 'I felt the fragile joy of being fully awake with another person while knowing the night could not last.', 'public', emos(0.09, 0.62, 0.21, 0.01, 0.02, 0.01, 0.19)),
+    post('past-lives', 'Past Lives', 2023, 'I felt homesick for choices I never made and unexpectedly grateful for the life that was actually beside me.', 'public', emos(0.17, 0.12, 0.73, 0.01, 0.02, 0.01, 0.09)),
+    post('moonlight', 'Moonlight', 2016, 'I felt the loneliness of needing tenderness before I had the language or safety to ask for it.', 'public', emos(0.11, 0.05, 0.78, 0.05, 0.11, 0.02, 0.04)),
+    post('portrait', 'Portrait of a Lady on Fire', 2019, 'I felt how attention can become a form of love, and how memory keeps looking after separation.', 'public', emos(0.12, 0.22, 0.67, 0.02, 0.03, 0.01, 0.13)),
+    post('aftersun', 'Aftersun', 2022, 'I felt my adult understanding arrive too late to comfort the parent I remembered from childhood.', 'public', emos(0.14, 0.03, 0.82, 0.04, 0.05, 0.01, 0.05)),
+    post('lost-in-translation', 'Lost in Translation', 2003, 'I felt less alone in the strange intimacy of being understood by someone who cannot stay.', 'private', emos(0.18, 0.24, 0.62, 0.01, 0.02, 0.01, 0.08)),
+    post('in-the-mood', 'In the Mood for Love', 2000, 'I felt the weight of every feeling left unspoken and every life protected by that silence.', 'private', emos(0.28, 0.04, 0.71, 0.02, 0.03, 0.01, 0.07)),
+    post('schindlers-list', 'Schindler\'s List', 1993, 'I felt overwhelmed by the distance between one person choosing care and a system choosing cruelty.', 'private', emos(0.03, 0.01, 0.76, 0.49, 0.12, 0.25, 0.02)),
+  ],
+  marcus_k: [
+    post('inception', 'Inception', 2010, 'I felt exhilarated by the possibility that my deepest certainty could be something another person planted there.', 'public', emos(0.11, 0.08, 0.03, 0.02, 0.12, 0.02, 0.73)),
+    post('2001', '2001: A Space Odyssey', 1968, 'I felt awe without needing to solve it, which was strangely peaceful for someone who always wants an answer.', 'public', emos(0.42, 0.04, 0.02, 0.01, 0.09, 0.01, 0.76)),
+    post('eternal-sunshine', 'Eternal Sunshine of the Spotless Mind', 2004, 'I felt frustrated by the choice to return to pain, then recognized how often I make that same choice in smaller ways.', 'public', emos(0.09, 0.03, 0.38, 0.45, 0.05, 0.04, 0.18)),
+    post('matrix', 'The Matrix', 1999, 'I felt the thrill of realizing that obedience can feel comfortable right up until the moment you see the cage.', 'public', emos(0.08, 0.18, 0.02, 0.28, 0.12, 0.04, 0.68)),
+    post('blade-runner-2049', 'Blade Runner 2049', 2017, 'I felt lonely for a person trying to prove he was real when being loved would have been proof enough.', 'public', emos(0.24, 0.04, 0.69, 0.02, 0.08, 0.02, 0.16)),
+    post('arrival', 'Arrival', 2016, 'I felt devastated and grateful that knowing an ending would not stop me from choosing the love before it.', 'public', emos(0.12, 0.13, 0.76, 0.01, 0.03, 0.01, 0.31)),
+    post('ex-machina', 'Ex Machina', 2015, 'I felt uneasy about how quickly curiosity becomes control when another mind is treated as an object.', 'private', emos(0.17, 0.01, 0.04, 0.26, 0.35, 0.48, 0.09)),
+    post('memento', 'Memento', 2000, 'I felt frightened by how easily I could build an identity around the story I most need to believe.', 'private', emos(0.24, 0.01, 0.09, 0.12, 0.62, 0.12, 0.08)),
+    post('spirited-away', 'Spirited Away', 2001, 'I felt surprised by how much courage can look like simple patience and kindness rather than certainty.', 'private', emos(0.09, 0.41, 0.03, 0.01, 0.04, 0.01, 0.68)),
+  ],
+  elena_r: [
+    post('before-sunrise-first', 'Before Sunrise', 1995, 'I felt the dizzy hope that one conversation could divide my life into before and after.', 'public', emos(0.08, 0.64, 0.19, 0.01, 0.02, 0.01, 0.21)),
+    post('past-lives', 'Past Lives', 2023, 'I felt sorrow for the life that never happened, but I also felt tenderness toward the life that did.', 'public', emos(0.16, 0.14, 0.72, 0.01, 0.02, 0.01, 0.08)),
+    post('la-la-land', 'La La Land', 2016, 'I felt proud of two people for becoming themselves and sad that becoming required them to separate.', 'public', emos(0.08, 0.31, 0.69, 0.01, 0.02, 0.01, 0.11)),
+    post('before-sunset', 'Before Sunset', 2004, 'I felt the urgency of years collapsing into one afternoon and the terror of wasting another chance.', 'public', emos(0.12, 0.39, 0.51, 0.02, 0.16, 0.01, 0.14)),
+    post('amelie', 'Amélie', 2001, 'I felt lighter about the small private ways people can care for strangers without being thanked.', 'public', emos(0.07, 0.74, 0.04, 0.01, 0.02, 0.01, 0.28)),
+    post('aftersun', 'Aftersun', 2022, 'I felt the helpless love of looking backward and finally understanding what a smile was hiding.', 'public', emos(0.12, 0.03, 0.84, 0.03, 0.07, 0.01, 0.04)),
+    post('titanic', 'Titanic', 1997, 'I felt young enough to believe a brief love could permanently change the size of a life.', 'private', emos(0.07, 0.42, 0.51, 0.02, 0.04, 0.01, 0.16)),
+    post('eternal-sunshine', 'Eternal Sunshine of the Spotless Mind', 2004, 'I felt protective of the memories that hurt me because they still belong to who I became.', 'private', emos(0.11, 0.05, 0.75, 0.02, 0.03, 0.01, 0.09)),
+    post('before-sunrise-repeat', 'Before Sunrise', 1995, 'I felt less romantic the second time and more grateful for how rarely two people truly listen.', 'private', emos(0.24, 0.46, 0.22, 0.01, 0.02, 0.01, 0.12)),
+  ],
+  hiro_s: [
+    post('cure', 'Cure', 1997, 'I felt a cold fear that identity might be thinner than I need it to be, and that thought followed me into every quiet room.', 'public', emos(0.29, 0.01, 0.04, 0.06, 0.76, 0.19, 0.03), { assetPath: '/social/hiro-after-cure.webp', altText: 'Hiro sitting quietly after watching Cure' }),
+    post('get-out', 'Get Out', 2017, 'I felt the panic of knowing something is wrong while politeness keeps closing every possible exit.', 'public', emos(0.04, 0.01, 0.04, 0.39, 0.78, 0.21, 0.06)),
+    post('inception', 'Inception', 2010, 'I felt less wonder than dread because a mind that can be entered can never feel entirely private again.', 'public', emos(0.19, 0.02, 0.03, 0.04, 0.66, 0.11, 0.24)),
+    post('silence-lambs', 'The Silence of the Lambs', 1991, 'I felt the pressure of being watched and judged before being allowed to prove I belonged in the room.', 'public', emos(0.06, 0.01, 0.08, 0.27, 0.72, 0.14, 0.04)),
+    post('psycho', 'Psycho', 1960, 'I felt uneasy about how quickly sympathy can pull me toward someone I should fear.', 'public', emos(0.14, 0.01, 0.04, 0.03, 0.71, 0.26, 0.08)),
+    post('shining', 'The Shining', 1980, 'I felt trapped in the dread of a home becoming the place where danger knows me best.', 'public', emos(0.08, 0.01, 0.11, 0.09, 0.79, 0.13, 0.03)),
+    post('memento', 'Memento', 2000, 'I felt suspicious of every certainty I use to keep moving when the truth would stop me.', 'private', emos(0.26, 0.01, 0.08, 0.12, 0.58, 0.15, 0.07)),
+    post('alien', 'Alien', 1979, 'I felt the ancient fear of being hunted somewhere too empty for anyone to hear me.', 'private', emos(0.05, 0.01, 0.04, 0.04, 0.82, 0.17, 0.06)),
+    post('past-lives', 'Past Lives', 2023, 'I felt calm rather than heartbroken, as if accepting an unlived life could finally let the present breathe.', 'private', emos(0.65, 0.16, 0.18, 0.01, 0.01, 0.01, 0.05)),
+  ],
+  chloe_d: [
+    post('spirited-away', 'Spirited Away', 2001, 'I felt the joy of discovering that being gentle does not mean being helpless.', 'public', emos(0.07, 0.58, 0.03, 0.01, 0.03, 0.01, 0.64)),
+    post('wall-e', 'WALL-E', 2008, 'I felt hopeful that one small act of attention could wake people from years of forgetting how to live.', 'public', emos(0.08, 0.69, 0.14, 0.01, 0.02, 0.01, 0.28)),
+    post('la-la-land', 'La La Land', 2016, 'I felt more joy than sadness because I could see love continuing inside the people it changed.', 'public', emos(0.08, 0.63, 0.29, 0.01, 0.02, 0.01, 0.12)),
+    post('toy-story', 'Toy Story', 1995, 'I felt comforted by the idea that jealousy can soften once we stop treating affection as scarce.', 'public', emos(0.06, 0.72, 0.12, 0.03, 0.05, 0.01, 0.18)),
+    post('finding-nemo', 'Finding Nemo', 2003, 'I felt the relief of watching love loosen its grip enough to become trust.', 'public', emos(0.07, 0.66, 0.16, 0.01, 0.06, 0.01, 0.14)),
+    post('coco', 'Coco', 2017, 'I felt close to everyone I have lost when remembering became a form of keeping them present.', 'public', emos(0.06, 0.48, 0.52, 0.01, 0.02, 0.01, 0.22)),
+    post('ratatouille', 'Ratatouille', 2007, 'I felt encouraged that joy and belonging can begin with one memory of being cared for.', 'private', emos(0.08, 0.73, 0.11, 0.01, 0.02, 0.01, 0.18)),
+    post('amelie', 'Amélie', 2001, 'I felt playful and a little braver about turning private kindness into actual connection.', 'private', emos(0.06, 0.76, 0.03, 0.01, 0.02, 0.01, 0.25)),
+    post('hereditary', 'Hereditary', 2018, 'I felt sadder than scared because grief had made everyone unreachable before anything else arrived.', 'private', emos(0.04, 0.01, 0.71, 0.08, 0.43, 0.09, 0.03)),
+  ],
+  devon_m: [
+    post('past-lives', 'Past Lives', 2023, 'I felt exposed by how quietly grief can sit beside a good life without asking that life to disappear.', 'public', emos(0.16, 0.08, 0.77, 0.01, 0.03, 0.01, 0.06), { assetPath: '/social/devon-after-past-lives.webp', altText: 'Devon reflecting after watching Past Lives' }),
+    post('hereditary', 'Hereditary', 2018, 'I felt grief curdle into fear because no one in that family could reach the others before it was too late.', 'public', emos(0.03, 0.01, 0.46, 0.08, 0.77, 0.14, 0.04)),
+    post('get-out', 'Get Out', 2017, 'I felt angry at every smile that asked the frightened person to doubt what he already knew.', 'public', emos(0.04, 0.01, 0.05, 0.61, 0.68, 0.17, 0.06)),
+    post('cure', 'Cure', 1997, 'I felt unsettled by the possibility that violence does not always announce itself with rage.', 'public', emos(0.27, 0.01, 0.04, 0.11, 0.74, 0.25, 0.03)),
+    post('shining', 'The Shining', 1980, 'I felt the terror of being disbelieved inside the place where I should have been safest.', 'public', emos(0.06, 0.01, 0.13, 0.16, 0.79, 0.11, 0.03)),
+    post('alien', 'Alien', 1979, 'I felt fiercely alert, as if survival depended on noticing what everyone else dismissed.', 'public', emos(0.07, 0.01, 0.03, 0.24, 0.73, 0.16, 0.12)),
+    post('psycho', 'Psycho', 1960, 'I felt sorry for a lonely person and disturbed by how that sympathy was used against me.', 'private', emos(0.13, 0.01, 0.26, 0.03, 0.61, 0.31, 0.07)),
+    post('toy-story', 'Toy Story', 1995, 'I felt unexpectedly tender toward the fear that being replaced means becoming unlovable.', 'private', emos(0.08, 0.52, 0.27, 0.03, 0.13, 0.01, 0.12)),
+    post('eternal-sunshine', 'Eternal Sunshine of the Spotless Mind', 2004, 'I felt frightened by how eagerly I might surrender painful memories just to avoid being vulnerable again.', 'private', emos(0.08, 0.02, 0.49, 0.05, 0.58, 0.08, 0.06)),
+  ],
+  ananya_sen: [
+    post('whiplash', 'Whiplash', 2014, 'I felt furious that harm was treated as the price of greatness, and I kept thinking about everyone taught to accept that bargain.', 'public', emos(0.03, 0.01, 0.12, 0.81, 0.16, 0.18, 0.03), { assetPath: '/social/ananya-after-whiplash.webp', altText: 'Ananya reacting after watching Whiplash' }),
+    post('parasite', 'Parasite', 2019, 'I felt anger and shame at how easily one family could remain comfortable above another family\'s fear.', 'public', emos(0.03, 0.01, 0.16, 0.73, 0.11, 0.39, 0.05)),
+    post('before-sunrise', 'Before Sunrise', 1995, 'I felt impatient with the freedom they took for granted, then softened when their loneliness became harder to dismiss.', 'public', emos(0.13, 0.19, 0.18, 0.48, 0.03, 0.07, 0.08)),
+    post('schindlers-list', 'Schindler\'s List', 1993, 'I felt grief and rage at every ordinary process used to make cruelty feel administrative.', 'public', emos(0.02, 0.01, 0.72, 0.69, 0.09, 0.27, 0.02)),
+    post('saving-private-ryan', 'Saving Private Ryan', 1998, 'I felt exhausted by the human cost hidden inside words like duty, victory, and sacrifice.', 'public', emos(0.05, 0.01, 0.67, 0.48, 0.29, 0.14, 0.03)),
+    post('dunkirk-first', 'Dunkirk', 2017, 'I felt the panic of time narrowing until survival became the only thought anyone could hold.', 'public', emos(0.09, 0.01, 0.09, 0.18, 0.76, 0.04, 0.08)),
+    post('dunkirk-repeat', 'Dunkirk', 2017, 'I felt less afraid the second time and more aware of how rescue depends on strangers choosing responsibility.', 'private', emos(0.26, 0.12, 0.22, 0.08, 0.38, 0.02, 0.09)),
+    post('spirited-away', 'Spirited Away', 2001, 'I felt hope in a young person refusing to let a frightening world decide what kindness should cost.', 'private', emos(0.07, 0.49, 0.05, 0.03, 0.05, 0.01, 0.59)),
+    post('godfather', 'The Godfather', 1972, 'I felt sad that loyalty became an excuse for men to keep passing violence down as inheritance.', 'private', emos(0.26, 0.01, 0.58, 0.45, 0.05, 0.13, 0.02)),
+  ],
+  lucas_v: [
+    post('eternal-sunshine', 'Eternal Sunshine of the Spotless Mind', 2004, 'I felt the strange comfort of accepting that love can be real even when it is clumsy and temporary.', 'public', emos(0.08, 0.17, 0.66, 0.02, 0.03, 0.01, 0.22)),
+    post('parasite', 'Parasite', 2019, 'I felt amused until the laughter caught in my throat and turned into embarrassment about what I had enjoyed.', 'public', emos(0.05, 0.26, 0.14, 0.41, 0.12, 0.36, 0.18)),
+    post('wall-e', 'WALL-E', 2008, 'I felt moved by a lonely little being who kept caring without any guarantee that care would be returned.', 'public', emos(0.09, 0.59, 0.28, 0.01, 0.02, 0.01, 0.22)),
+    post('grand-budapest', 'The Grand Budapest Hotel', 2014, 'I felt joy in the bright surface and sadness for a vanished world the storyteller still needed to protect.', 'public', emos(0.11, 0.56, 0.38, 0.01, 0.02, 0.01, 0.19)),
+    post('memento', 'Memento', 2000, 'I felt trapped by the thought that a purpose can become more important than whether it is true.', 'public', emos(0.28, 0.01, 0.12, 0.16, 0.53, 0.13, 0.08)),
+    post('knives-out', 'Knives Out', 2019, 'I felt delighted by kindness becoming a strength instead of an invitation to be used.', 'public', emos(0.08, 0.68, 0.03, 0.03, 0.04, 0.02, 0.28)),
+    post('get-out', 'Get Out', 2017, 'I felt the sick recognition of a room where everyone is friendly and no one sees you as fully human.', 'private', emos(0.04, 0.01, 0.08, 0.51, 0.57, 0.36, 0.05)),
+    post('titanic', 'Titanic', 1997, 'I felt distant from the romance but deeply sad about how class decides whose fear is heard first.', 'private', emos(0.14, 0.03, 0.63, 0.36, 0.11, 0.16, 0.04)),
+    post('whiplash', 'Whiplash', 2014, 'I felt energized and then guilty that someone else\'s pain had been arranged to make me cheer.', 'private', emos(0.04, 0.14, 0.18, 0.55, 0.11, 0.18, 0.16)),
+  ],
+  sarah_m: [
+    post('la-la-land', 'La La Land', 2016, 'I felt the sweetness of seeing what might have been without asking the present to become a regret.', 'public', emos(0.09, 0.37, 0.65, 0.01, 0.02, 0.01, 0.12)),
+    post('godfather', 'The Godfather', 1972, 'I felt sorrow for a person disappearing into the role his family had prepared for him.', 'public', emos(0.39, 0.01, 0.58, 0.21, 0.06, 0.08, 0.02)),
+    post('before-sunrise', 'Before Sunrise', 1995, 'I felt young again in the hope that being listened to can make a stranger feel necessary.', 'public', emos(0.09, 0.59, 0.23, 0.01, 0.02, 0.01, 0.18)),
+    post('amelie', 'Amélie', 2001, 'I felt amused by private kindness and nudged to stop hiding behind it when I want closeness.', 'public', emos(0.08, 0.71, 0.04, 0.01, 0.03, 0.01, 0.23)),
+    post('grand-budapest', 'The Grand Budapest Hotel', 2014, 'I felt comfort in someone preserving grace even after the world around him stopped rewarding it.', 'public', emos(0.16, 0.57, 0.28, 0.01, 0.02, 0.01, 0.14)),
+    post('titanic', 'Titanic', 1997, 'I felt the reckless hope of choosing one vivid day over a lifetime arranged by other people.', 'public', emos(0.07, 0.48, 0.43, 0.03, 0.07, 0.01, 0.18)),
+    post('before-sunset', 'Before Sunset', 2004, 'I felt every polite sentence holding back years of longing and the fear of asking for too much.', 'private', emos(0.12, 0.28, 0.59, 0.02, 0.15, 0.01, 0.08)),
+    post('wall-e', 'WALL-E', 2008, 'I felt hopeful that devotion can remain gentle even when it has been lonely for a long time.', 'private', emos(0.08, 0.64, 0.21, 0.01, 0.02, 0.01, 0.17)),
+    post('hereditary', 'Hereditary', 2018, 'I felt the despair of a family speaking from separate rooms even when they sat at the same table.', 'private', emos(0.04, 0.01, 0.66, 0.17, 0.49, 0.09, 0.03)),
+  ],
+  tariq_a: [
+    post('2001', '2001: A Space Odyssey', 1968, 'I felt still enough to notice how comforting it can be not to understand everything.', 'public', emos(0.63, 0.03, 0.02, 0.01, 0.05, 0.01, 0.62)),
+    post('cure', 'Cure', 1997, 'I felt dread enter slowly, which made it harder to separate the film from my own thoughts afterward.', 'public', emos(0.34, 0.01, 0.05, 0.04, 0.71, 0.16, 0.03)),
+    post('before-sunrise', 'Before Sunrise', 1995, 'I felt peaceful listening to two people make time for thoughts that usually pass without witness.', 'public', emos(0.43, 0.37, 0.18, 0.01, 0.01, 0.01, 0.09)),
+    post('shining', 'The Shining', 1980, 'I felt the silence of a large place pressing against a family that was already coming apart.', 'public', emos(0.31, 0.01, 0.17, 0.08, 0.65, 0.08, 0.03)),
+    post('godfather', 'The Godfather', 1972, 'I felt the quiet sadness of someone mistaking control for the ability to keep his family close.', 'public', emos(0.48, 0.01, 0.52, 0.14, 0.04, 0.06, 0.02)),
+    post('matrix', 'The Matrix', 1999, 'I felt awake to all the small routines I obey simply because they were waiting when I arrived.', 'public', emos(0.22, 0.08, 0.03, 0.21, 0.11, 0.03, 0.59)),
+    post('dunkirk', 'Dunkirk', 2017, 'I felt time as a physical pressure and relief whenever another person chose not to look away.', 'private', emos(0.27, 0.02, 0.13, 0.08, 0.61, 0.03, 0.07)),
+    post('1917', '1917', 2019, 'I felt exhausted by the distance one person can be asked to cross for lives he will never know.', 'private', emos(0.31, 0.01, 0.43, 0.14, 0.37, 0.04, 0.04)),
+    post('before-sunset', 'Before Sunset', 2004, 'I felt the quiet panic of a clock moving while two people tried to say what years had hidden.', 'private', emos(0.34, 0.17, 0.46, 0.02, 0.14, 0.01, 0.06)),
+  ],
+  rachel_g: [
+    post('whiplash', 'Whiplash', 2014, 'I felt angry at the promise that suffering would become worthwhile if it produced something impressive enough.', 'public', emos(0.04, 0.01, 0.11, 0.79, 0.14, 0.19, 0.03)),
+    post('parasite', 'Parasite', 2019, 'I felt the humiliation of being reduced to something another person could smell but refused to understand.', 'public', emos(0.04, 0.01, 0.31, 0.67, 0.09, 0.42, 0.04)),
+    post('hereditary', 'Hereditary', 2018, 'I felt grief turn monstrous when every person in the family needed comfort from someone equally broken.', 'public', emos(0.03, 0.01, 0.54, 0.12, 0.68, 0.13, 0.03)),
+    post('saving-private-ryan', 'Saving Private Ryan', 1998, 'I felt sorrow for the people asked to carry an idea of honor heavier than their own lives.', 'public', emos(0.05, 0.01, 0.72, 0.39, 0.27, 0.11, 0.02)),
+    post('finding-nemo', 'Finding Nemo', 2003, 'I felt the fear of loving someone so much that protection begins to keep them from living.', 'public', emos(0.06, 0.47, 0.25, 0.03, 0.36, 0.01, 0.08)),
+    post('godfather', 'The Godfather', 1972, 'I felt betrayed by every family promise that really meant silence, obedience, and fear.', 'public', emos(0.21, 0.01, 0.46, 0.57, 0.08, 0.16, 0.02)),
+    post('before-sunset', 'Before Sunset', 2004, 'I felt the frustration of watching honesty arrive only when there was almost no time left for it.', 'private', emos(0.12, 0.14, 0.59, 0.38, 0.08, 0.03, 0.05)),
+    post('dark-knight', 'The Dark Knight', 2008, 'I felt exhausted by the idea that proving people are cruel can become its own excuse for cruelty.', 'private', emos(0.09, 0.01, 0.19, 0.58, 0.31, 0.17, 0.04)),
+    post('eternal-sunshine', 'Eternal Sunshine of the Spotless Mind', 2004, 'I felt the old temptation to call a painful pattern fate instead of admitting that I could choose differently.', 'private', emos(0.15, 0.03, 0.61, 0.26, 0.08, 0.05, 0.05)),
+  ],
+};
+
+const SAVED_FILMS: Record<string, { title: string; year: number }[]> = Object.fromEntries(
+  Object.entries(DIARY_SEED_ENTRIES).map(([username, entries]) => [
+    username,
+    entries.slice(username === 'demo' ? 0 : 3, username === 'demo' ? 8 : 7).map(entry => ({ title: entry.title, year: entry.year })),
+  ]),
+);
+
+const FOLLOW_PLAN = [
+  ['demo', 'clara_valdez'], ['demo', 'marcus_k'], ['demo', 'elena_r'],
+  ['clara_valdez', 'elena_r'], ['clara_valdez', 'ananya_sen'],
+  ['marcus_k', 'hiro_s'], ['marcus_k', 'chloe_d'], ['marcus_k', 'lucas_v'],
+  ['elena_r', 'clara_valdez'], ['elena_r', 'chloe_d'],
+  ['hiro_s', 'devon_m'],
+  ['chloe_d', 'marcus_k'], ['chloe_d', 'lucas_v'],
+  ['devon_m', 'hiro_s'], ['devon_m', 'lucas_v'],
+  ['ananya_sen', 'clara_valdez'], ['ananya_sen', 'elena_r'], ['ananya_sen', 'lucas_v'],
+  ['lucas_v', 'chloe_d'], ['lucas_v', 'devon_m'],
+  ['sarah_m', 'elena_r'], ['sarah_m', 'chloe_d'],
+  ['tariq_a', 'clara_valdez'], ['tariq_a', 'ananya_sen'],
+  ['rachel_g', 'ananya_sen'], ['rachel_g', 'tariq_a'],
+] as const;
+
+const ensureSocialSchema = async (client: ConnectedDatabaseClient) => {
+  await client.query('ALTER TABLE diary_entries ADD COLUMN IF NOT EXISTS seed_key VARCHAR(160)');
+  await client.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_diary_entries_seed_key ON diary_entries(seed_key) WHERE seed_key IS NOT NULL');
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS entry_media (
+      entry_id BIGINT NOT NULL REFERENCES diary_entries(id) ON DELETE CASCADE,
+      kind VARCHAR(24) NOT NULL CHECK (kind IN ('expression_photo')),
+      asset_path TEXT NOT NULL,
+      alt_text VARCHAR(240) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (entry_id, kind)
+    )
+  `);
+  await client.query('ALTER TABLE entry_media ALTER COLUMN asset_path TYPE TEXT');
+};
+
+const resolveMovieByTitleAndYear = async (client: ConnectedDatabaseClient, title: string, year: number) => {
   const existing = await client.query(
-    "SELECT id, tmdb_data FROM movies WHERE title = $1 AND EXTRACT(YEAR FROM release_date) = $2",
-    [title, year]
+    'SELECT id, tmdb_data FROM movies WHERE LOWER(title) = LOWER($1) AND EXTRACT(YEAR FROM release_date) = $2 ORDER BY id LIMIT 1',
+    [title, year],
   );
-  if (existing.rowCount && existing.rows[0].tmdb_data) {
-    return existing.rows[0].tmdb_data;
-  }
+  if (existing.rowCount && existing.rows[0].tmdb_data) return existing.rows[0].tmdb_data;
 
-  // Otherwise search TMDB
-  const response = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
-    params: {
-      api_key: TMDB_API_KEY,
-      query: title,
-      primary_release_year: year
-    }
-  }) as any;
-
-  const results = response.data.results || [];
-  const filtered = results.filter((m: any) => {
-    const releaseYear = m.release_date ? new Date(m.release_date).getFullYear() : null;
-    return m.title.toLowerCase() === title.toLowerCase() && releaseYear === year;
+  const search = await axios.get<{ results: Array<{ id: number; title: string; release_date?: string }> }>(`${TMDB_BASE_URL}/search/movie`, {
+    params: { api_key: TMDB_API_KEY, query: title, primary_release_year: year },
   });
+  const results = search.data.results || [];
+  const exact = results.filter(movie => movie.title.toLowerCase() === title.toLowerCase()
+    && Number(movie.release_date?.slice(0, 4)) === year);
+  const match = exact.length === 1 ? exact[0] : results.find(movie => Number(movie.release_date?.slice(0, 4)) === year);
+  if (!match) throw new Error(`No unambiguous TMDB result for "${title}" (${year})`);
 
-  let tmdbMovieId: number;
-  if (filtered.length === 1) {
-    tmdbMovieId = filtered[0].id;
-  } else if (results.length > 0) {
-    const firstResult = results[0];
-    const releaseYear = firstResult.release_date ? new Date(firstResult.release_date).getFullYear() : null;
-    if (releaseYear === year) {
-      tmdbMovieId = firstResult.id;
-    } else {
-      throw new Error(`Ambiguous or unresolved search results for: "${title}" (${year})`);
-    }
-  } else {
-    throw new Error(`No search results for: "${title}" (${year})`);
-  }
-
-  // Get full movie details and cache
-  const movieDetails = await getMovieDetails(tmdbMovieId);
-  const genreIds = movieDetails.genre_ids?.length ? movieDetails.genre_ids : movieDetails.genres?.map((g: any) => g.id) || [];
-
+  const detailsResponse = await axios.get<Record<string, any>>(`${TMDB_BASE_URL}/movie/${match.id}`, { params: { api_key: TMDB_API_KEY } });
+  const details = detailsResponse.data;
+  const genreIds = details.genre_ids?.length ? details.genre_ids : details.genres?.map((genre: { id: number }) => genre.id) || [];
   await client.query(
     `INSERT INTO movies (id, title, overview, release_date, poster_path, backdrop_path, vote_average, vote_count, popularity, runtime, tmdb_data)
-     VALUES ($1, $2, $3, NULLIF($4, '')::date, $5, $6, $7, $8, $9, $10, $11)
+     VALUES ($1,$2,$3,NULLIF($4,'')::date,$5,$6,$7,$8,$9,$10,$11)
      ON CONFLICT (id) DO UPDATE SET
-       title = EXCLUDED.title,
-       overview = EXCLUDED.overview,
-       release_date = EXCLUDED.release_date,
-       poster_path = EXCLUDED.poster_path,
-       backdrop_path = EXCLUDED.backdrop_path,
-       vote_average = EXCLUDED.vote_average,
-       vote_count = EXCLUDED.vote_count,
-       popularity = EXCLUDED.popularity,
-       runtime = COALESCE(EXCLUDED.runtime, movies.runtime),
-       tmdb_data = EXCLUDED.tmdb_data,
-       last_updated = CURRENT_TIMESTAMP`,
-    [
-      movieDetails.id,
-      movieDetails.title,
-      movieDetails.overview || '',
-      movieDetails.release_date || '',
-      movieDetails.poster_path,
-      movieDetails.backdrop_path,
-      movieDetails.vote_average || 0,
-      movieDetails.vote_count || 0,
-      movieDetails.popularity || 0,
-      movieDetails.runtime || null,
-      JSON.stringify({ ...movieDetails, genre_ids: genreIds }),
-    ],
+       title = EXCLUDED.title, overview = EXCLUDED.overview, release_date = EXCLUDED.release_date,
+       poster_path = EXCLUDED.poster_path, backdrop_path = EXCLUDED.backdrop_path,
+       vote_average = EXCLUDED.vote_average, vote_count = EXCLUDED.vote_count,
+       popularity = EXCLUDED.popularity, runtime = EXCLUDED.runtime,
+       tmdb_data = EXCLUDED.tmdb_data, last_updated = CURRENT_TIMESTAMP`,
+    [details.id, details.title, details.overview || '', details.release_date || '', details.poster_path,
+      details.backdrop_path, details.vote_average || 0, details.vote_count || 0, details.popularity || 0,
+      details.runtime || null, JSON.stringify({ ...details, genre_ids: genreIds })],
   );
-
   for (const genreId of genreIds) {
     await client.query(
-      `INSERT INTO movie_genres (movie_id, genre_id) VALUES ($1, $2)
-       ON CONFLICT (movie_id, genre_id) DO NOTHING`,
-      [movieDetails.id, genreId],
+      'INSERT INTO movie_genres (movie_id, genre_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [details.id, genreId],
     );
   }
-
-  return movieDetails;
+  return { ...details, genre_ids: genreIds };
 };
 
-// Handcrafted users manifest
-const HANDCRAFTED_USERS = [
-  {
-    email: 'demo@demo.com',
-    username: 'demo',
-    password: 'demo123!',
-    bio: 'Private cinephile trying to make sense of life\'s emotional waves through film history.',
-    isDemo: true,
-  },
-  {
-    email: 'clara@seed.emotionflix.com',
-    username: 'clara_valdez',
-    password: 'seed123!',
-    bio: 'A lifelong habit of sitting in the dark to feel less alone. Drawn to films that leave you slightly bruised and quiet.',
-    isDemo: false,
-  },
-  {
-    email: 'marcus@seed.emotionflix.com',
-    username: 'marcus_k',
-    password: 'seed123!',
-    bio: 'Looking for formal experimentation, complex puzzles, and bold sci-fi that makes the throat dry. The stranger the better.',
-    isDemo: false,
-  },
-  {
-    email: 'elena@seed.emotionflix.com',
-    username: 'elena_r',
-    password: 'seed123!',
-    bio: 'Nostalgia is a dangerous thing. I seek out movies that capture the ache of passing time, first loves, and beautiful regrets.',
-    isDemo: false,
-  },
-  {
-    email: 'hiro@seed.emotionflix.com',
-    username: 'hiro_s',
-    password: 'seed123!',
-    bio: 'Tension is the truest human emotion. I watch thrillers, mysteries, and film noirs to feel that slow, delicious sense of unease.',
-    isDemo: false,
-  },
-  {
-    email: 'chloe@seed.emotionflix.com',
-    username: 'chloe_d',
-    password: 'seed123!',
-    bio: 'Vibrant animations and feel-good comedies. Life is heavy enough; I want films that spark light, laughter, and human warmth.',
-    isDemo: false,
-  },
-  {
-    email: 'devon@seed.emotionflix.com',
-    username: 'devon_m',
-    password: 'seed123!',
-    bio: 'Obsessed with horror, slashers, and the macabre. The visceral thrill of confronting what we dread in the safety of a cinema.',
-    isDemo: false,
-  },
-  {
-    email: 'ananya@seed.emotionflix.com',
-    username: 'ananya_sen',
-    password: 'seed123!',
-    bio: 'Documentaries, war, and historical epics. I value raw realism and films that make me angry about the state of our world.',
-    isDemo: false,
-  },
-  {
-    email: 'lucas@seed.emotionflix.com',
-    username: 'lucas_v',
-    password: 'seed123!',
-    bio: 'Independent oddities, genre-bending scripts, and dark humor. If it\'s a bit broken and experimental, I\'m interested.',
-    isDemo: false,
-  },
-  {
-    email: 'sarah@seed.emotionflix.com',
-    username: 'sarah_m',
-    password: 'seed123!',
-    bio: 'Classic Hollywood, black-and-white double features, and standard musicals. Seeking elegant pacing and theatricality.',
-    isDemo: false,
-  },
-  {
-    email: 'tariq@seed.emotionflix.com',
-    username: 'tariq_a',
-    password: 'seed123!',
-    bio: 'Slow cinema, long takes, and environmental storytelling. Let me watch water pool, or wind move through leaves.',
-    isDemo: false,
-  },
-  {
-    email: 'rachel@seed.emotionflix.com',
-    username: 'rachel_g',
-    password: 'seed123!',
-    bio: 'Psychological dramas that interrogate family dysfunction, secrets, and moral ambiguity. I like films that make you argue.',
-    isDemo: false,
-  },
-];
-
-// Helper to compile emotional mix
-const emos = (neutral = 0.05, happy = 0.05, sad = 0.05, angry = 0.05, fearful = 0.05, disgusted = 0.05, surprised = 0.05) => {
-  return { neutral, happy, sad, angry, fearful, disgusted, surprised };
+const seedDate = (position: number) => {
+  const date = new Date(`${SEED_REFERENCE_DATE}T12:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() - (5 + ((position * 37) % 520)));
+  return date.toISOString().slice(0, 10);
 };
 
-// Handcrafted viewing history per user
-const DIARY_SEED_ENTRIES: Record<string, { title: string; year: number; rating: number | null; note: string; visibility: 'private' | 'public'; emotions: ReturnType<typeof emos> }[]> = {
-  'demo': [
-    {
-      title: 'Eternal Sunshine of the Spotless Mind', year: 2004, rating: 4.5,
-      note: 'That final scene on the beach always gets me. The quiet acceptance of their own tragic loop is beautiful.',
-      visibility: 'public', emotions: emos(0.1, 0.05, 0.75, 0.02, 0.01, 0.02, 0.05)
-    },
-    {
-      title: 'Inception', year: 2010, rating: 4.0,
-      note: 'The rotating hotel corridor scene is a technical marvel. It is the physical weight of the dream architecture that keeps the stakes feeling real.',
-      visibility: 'public', emotions: emos(0.12, 0.03, 0.02, 0.01, 0.05, 0.02, 0.75)
-    },
-    {
-      title: 'Spirited Away', year: 2001, rating: 5.0,
-      note: 'The train ride across the water is one of my favorite sequences. It feels like a dream you have had but cannot quite remember.',
-      visibility: 'public', emotions: emos(0.15, 0.05, 0.02, 0.01, 0.01, 0.01, 0.75)
-    },
-    {
-      title: '2001: A Space Odyssey', year: 1968, rating: 4.5,
-      note: 'The silence of the space walks. No music, just the breathing in the suit. It captures the vast indifference of the universe.',
-      visibility: 'public', emotions: emos(0.8, 0.02, 0.05, 0.01, 0.05, 0.02, 0.05)
-    },
-    {
-      title: 'Schindler\'s List', year: 1993, rating: 5.0,
-      note: 'The scene with the red coat is the only color, and it hurts. The absolute bleakness is overwhelming.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.85, 0.05, 0.02, 0.01, 0.01)
-    },
-    {
-      title: 'Before Sunrise', year: 1995, rating: null,
-      note: 'The listening booth scene is so awkward and honest. The way they keep avoiding eye contact feels so true to that age.',
-      visibility: 'private', emotions: emos(0.1, 0.75, 0.05, 0.01, 0.02, 0.02, 0.05)
-    },
-    {
-      title: 'Before Sunset', year: 2004, rating: 4.5,
-      note: 'The final moments in her apartment. The singer on the stereo and the ticking clock. The bittersweet reality of time passed.',
-      visibility: 'private', emotions: emos(0.15, 0.1, 0.65, 0.02, 0.01, 0.02, 0.05)
-    },
-    {
-      title: 'The Dark Knight', year: 2008, rating: null,
-      note: 'The pencil trick scene is so sudden and jarring. Ledger\'s physical movements are erratic and terrifying.',
-      visibility: 'private', emotions: emos(0.08, 0.02, 0.02, 0.78, 0.05, 0.02, 0.03)
-    },
-    {
-      title: 'Pulp Fiction', year: 1994, rating: null,
-      note: 'The adrenaline shot scene is pure kinetic tension. The dialogue is sharp but it is the pacing of that sequence that kills.',
-      visibility: 'private', emotions: emos(0.05, 0.02, 0.02, 0.02, 0.1, 0.02, 0.77)
-    },
-    {
-      title: 'The Godfather', year: 1972, rating: 5.0,
-      note: 'The baptism sequence cross-cut with the murders. The contrast of the sacred and the violent is stunning.',
-      visibility: 'private', emotions: emos(0.8, 0.02, 0.02, 0.05, 0.05, 0.02, 0.04)
-    },
-    {
-      title: 'The Shining', year: 1980, rating: 4.0,
-      note: 'The blood pouring from the elevator. The slow motion makes it look like paint. It is the stillness of the hotel that is scary.',
-      visibility: 'private', emotions: emos(0.1, 0.01, 0.02, 0.02, 0.8, 0.03, 0.02)
-    },
-    {
-      title: 'Parasite', year: 2019, rating: 4.5,
-      note: 'The flood scene in the semi-basement apartment. The water mixed with sewage rising up. The physical reality of class.',
-      visibility: 'private', emotions: emos(0.12, 0.02, 0.05, 0.05, 0.02, 0.04, 0.7)
-    },
-    {
-      title: 'La La Land', year: 2016, rating: 4.0,
-      note: 'The planetarium sequence where they dance in the air. A lovely homage, but the ending\'s compromise is what lingers.',
-      visibility: 'private', emotions: emos(0.15, 0.15, 0.6, 0.02, 0.01, 0.02, 0.05)
-    },
-    {
-      title: 'WALL-E', year: 2008, rating: 4.5,
-      note: 'The dance in space with the fire extinguisher. The silence of the vacuum contrasted with the sparks.',
-      visibility: 'private', emotions: emos(0.12, 0.7, 0.05, 0.01, 0.02, 0.02, 0.08)
-    },
-    {
-      title: 'Alien', year: 1979, rating: 2.0,
-      note: 'The chestburster is a great effect, but the middle section drags on this rewatch. The corridors feel too repetitive.',
-      visibility: 'private', emotions: emos(0.1, 0.02, 0.05, 0.05, 0.7, 0.05, 0.03)
-    },
-    {
-      title: 'The Silence of the Lambs', year: 1991, rating: 4.5,
-      note: 'The night vision sequence in the basement. The green tint and the reaching hand in the dark. Pure claustrophobia.',
-      visibility: 'private', emotions: emos(0.08, 0.01, 0.02, 0.01, 0.85, 0.02, 0.01)
-    },
-  ],
-  'clara_valdez': [
-    {
-      title: 'Eternal Sunshine of the Spotless Mind', year: 2004, rating: 4.5,
-      note: 'The beach scene with the crumbling house. It is that feeling of forgetting someone while desperately wanting to hold on.',
-      visibility: 'public', emotions: emos(0.1, 0.05, 0.78, 0.01, 0.01, 0.02, 0.03)
-    },
-    {
-      title: 'Schindler\'s List', year: 1993, rating: 5.0,
-      note: 'The silence at the end of the film. The weight of history is too heavy to speak.',
-      visibility: 'public', emotions: emos(0.15, 0.01, 0.8, 0.01, 0.01, 0.01, 0.01)
-    },
-    {
-      title: 'Before Sunset', year: 2004, rating: 4.5,
-      note: 'They have so little time, and they both know it. The urgency makes every conversation ache.',
-      visibility: 'public', emotions: emos(0.1, 0.05, 0.75, 0.02, 0.01, 0.02, 0.05)
-    },
-    {
-      title: 'The Godfather', year: 1972, rating: 4.5,
-      note: 'The slow closing of the office door on Kay. The shadows swallow him up completely.',
-      visibility: 'public', emotions: emos(0.78, 0.01, 0.1, 0.05, 0.02, 0.01, 0.03)
-    },
-    {
-      title: 'WALL-E', year: 2008, rating: 4.0,
-      note: 'The little robot holding his own hands. A sweet, simple moment of companionship that made me smile.',
-      visibility: 'public', emotions: emos(0.12, 0.72, 0.05, 0.01, 0.01, 0.02, 0.07)
-    },
-    {
-      title: 'Whiplash', year: 2014, rating: 4.0,
-      note: 'The physical pain of his bleeding hands. The cost of ambition is shown as literal self-harm.',
-      visibility: 'public', emotions: emos(0.08, 0.02, 0.7, 0.1, 0.05, 0.02, 0.03)
-    },
-    {
-      title: 'Dunkirk', year: 2017, rating: 3.5,
-      note: 'The soldiers standing on the beach waiting. The wide, grey emptiness of the sea is so cold.',
-      visibility: 'private', emotions: emos(0.8, 0.01, 0.08, 0.02, 0.05, 0.02, 0.02)
-    },
-    {
-      title: 'Before Sunrise', year: 1995, rating: null,
-      note: 'The quiet look they share on the train before they part. It feels so temporary.',
-      visibility: 'private', emotions: emos(0.1, 0.1, 0.65, 0.01, 0.02, 0.02, 0.1)
-    },
-    {
-      title: 'Inception', year: 2010, rating: 2.0,
-      note: 'The dreams feel too mechanical, like levels in a video game. I wanted more emotional resonance.',
-      visibility: 'private', emotions: emos(0.2, 0.02, 0.65, 0.05, 0.03, 0.02, 0.03)
-    },
-  ],
-  'marcus_k': [
-    {
-      title: 'Inception', year: 2010, rating: 5.0,
-      note: 'The gravity shift in the hotel corridor. A brilliant piece of practical stunt work.',
-      visibility: 'public', emotions: emos(0.1, 0.02, 0.01, 0.01, 0.05, 0.01, 0.8)
-    },
-    {
-      title: 'Interstellar', year: 2014, rating: 4.5,
-      note: 'The water planet giant wave. The scale of the horizon is terrifying and majestic.',
-      visibility: 'public', emotions: emos(0.08, 0.02, 0.05, 0.01, 0.05, 0.01, 0.78)
-    },
-    {
-      title: 'The Matrix', year: 1999, rating: 4.5,
-      note: 'The green code rain on the screens. It defined an entire visual language for the digital age.',
-      visibility: 'public', emotions: emos(0.12, 0.05, 0.01, 0.02, 0.02, 0.01, 0.77)
-    },
-    {
-      title: 'Blade Runner 2049', year: 2017, rating: 4.0,
-      note: 'The massive, decaying statues in the orange desert. The empty scale is mesmerizing.',
-      visibility: 'public', emotions: emos(0.75, 0.01, 0.05, 0.01, 0.05, 0.05, 0.08)
-    },
-    {
-      title: 'Star Wars', year: 1977, rating: 4.5,
-      note: 'The binary sunset scene. The simple visual of two suns captures a universe of possibility.',
-      visibility: 'public', emotions: emos(0.1, 0.05, 0.01, 0.01, 0.01, 0.01, 0.81)
-    },
-    {
-      title: 'Titanic', year: 1997, rating: 4.0,
-      note: 'The band playing on the deck while the ship tilts. An absolute tragedy that got to me.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.8, 0.02, 0.05, 0.01, 0.06)
-    },
-    {
-      title: 'The Grand Budapest Hotel', year: 2014, rating: 4.0,
-      note: 'The symmetry of the hotel lobby. Every frame feels like a curated postcard.',
-      visibility: 'private', emotions: emos(0.1, 0.05, 0.02, 0.01, 0.02, 0.01, 0.79)
-    },
-    {
-      title: 'Eternal Sunshine of the Spotless Mind', year: 2004, rating: null,
-      note: 'The memory deletion machine sequence. The low-budget visual effects feel like stage magic.',
-      visibility: 'private', emotions: emos(0.72, 0.02, 0.05, 0.01, 0.05, 0.05, 0.1)
-    },
-    {
-      title: 'Toy Story', year: 1995, rating: null,
-      note: 'The plastic textures of the toys look primitive now, but the staging of the escape is tight.',
-      visibility: 'private', emotions: emos(0.75, 0.05, 0.01, 0.01, 0.02, 0.02, 0.14)
-    },
-  ],
-  'elena_r': [
-    {
-      title: 'Before Sunrise', year: 1995, rating: 5.0,
-      note: 'The record store listening booth. The stolen glances and the silence between them is magic.',
-      visibility: 'public', emotions: emos(0.1, 0.75, 0.05, 0.01, 0.02, 0.01, 0.06)
-    },
-    {
-      title: 'Before Sunset', year: 2004, rating: 4.5,
-      note: 'Nine years later and the spark is still there. The ending in her apartment is perfect.',
-      visibility: 'public', emotions: emos(0.15, 0.72, 0.05, 0.01, 0.01, 0.01, 0.05)
-    },
-    {
-      title: 'La La Land', year: 2016, rating: 4.5,
-      note: 'The final dream ballet. What could have been if they stayed together. It makes me cry.',
-      visibility: 'public', emotions: emos(0.1, 0.05, 0.78, 0.01, 0.01, 0.01, 0.04)
-    },
-    {
-      title: 'Amélie', year: 2001, rating: 4.5,
-      note: 'Putting her hand in the sack of grain. The tactile pleasure of the small things in life.',
-      visibility: 'public', emotions: emos(0.08, 0.78, 0.02, 0.01, 0.01, 0.01, 0.09)
-    },
-    {
-      title: 'Get Out', year: 2017, rating: 4.0,
-      note: 'The tea cup scraping and the sinking feeling. It was so tense it made me physically shudder.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.02, 0.02, 0.85, 0.03, 0.02)
-    },
-    {
-      title: 'Eternal Sunshine of the Spotless Mind', year: 2004, rating: 4.0,
-      note: 'The memories fading into white. The pain of loving someone and wishing you could forget them.',
-      visibility: 'public', emotions: emos(0.12, 0.05, 0.75, 0.02, 0.01, 0.02, 0.03)
-    },
-    {
-      title: 'Titanic', year: 1997, rating: 4.5,
-      note: 'Rose letting go of Jack\'s hand in the freezing water. The silence of the cold night.',
-      visibility: 'private', emotions: emos(0.05, 0.01, 0.82, 0.01, 0.05, 0.01, 0.05)
-    },
-    {
-      title: 'Before Sunrise', year: 1995, rating: 5.0,
-      note: 'Rewatched this. The chemistry is unmatched. Walking around Vienna in the night.',
-      visibility: 'private', emotions: emos(0.1, 0.79, 0.02, 0.01, 0.01, 0.01, 0.06)
-    },
-    {
-      title: 'Finding Nemo', year: 2003, rating: null,
-      note: 'The colorful reef is lovely, but Dory\'s short-term memory loss is treated with sweet kindness.',
-      visibility: 'private', emotions: emos(0.15, 0.65, 0.05, 0.01, 0.02, 0.02, 0.1)
-    },
-  ],
-  'hiro_s': [
-    {
-      title: 'The Silence of the Lambs', year: 1991, rating: 5.0,
-      note: 'The close-ups of Starling\'s face. You can feel the male gaze of the room pressing in on her.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.02, 0.01, 0.85, 0.03, 0.03)
-    },
-    {
-      title: 'Psycho', year: 1960, rating: 4.5,
-      note: 'The shower scene. The fast cuts and the screeching violins. It still feels modern and violent.',
-      visibility: 'public', emotions: emos(0.04, 0.01, 0.02, 0.02, 0.88, 0.01, 0.02)
-    },
-    {
-      title: 'Get Out', year: 2017, rating: 4.5,
-      note: 'The scraping of the spoon on the tea cup. The sound design makes the hypnosis feel physical.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.02, 0.02, 0.84, 0.03, 0.03)
-    },
-    {
-      title: 'Shutter Island', year: 2010, rating: 4.0,
-      note: 'The ash falling in the dream scene. The visual decay of the room matches the mental collapse.',
-      visibility: 'public', emotions: emos(0.1, 0.01, 0.05, 0.01, 0.78, 0.02, 0.03)
-    },
-    {
-      title: 'The Shining', year: 1980, rating: 4.5,
-      note: 'The low camera angles following the tricycle on the carpet. The sound shifts are jarring.',
-      visibility: 'public', emotions: emos(0.08, 0.01, 0.02, 0.02, 0.82, 0.03, 0.02)
-    },
-    {
-      title: 'Toy Story', year: 1995, rating: 4.0,
-      note: 'The claw machine scene with the green aliens. Surprisingly charming and funny.',
-      visibility: 'public', emotions: emos(0.12, 0.7, 0.02, 0.01, 0.05, 0.02, 0.08)
-    },
-    {
-      title: 'Memento', year: 2000, rating: 4.0,
-      note: 'The polaroid photo fading backward. The reverse chronology makes you feel his paranoia.',
-      visibility: 'private', emotions: emos(0.78, 0.02, 0.05, 0.02, 0.05, 0.02, 0.06)
-    },
-    {
-      title: 'Alien', year: 1979, rating: 4.5,
-      note: 'The xenomorph hiding in the machinery. The pipes and the creature look identical. Dreadful.',
-      visibility: 'private', emotions: emos(0.05, 0.01, 0.02, 0.02, 0.85, 0.03, 0.02)
-    },
-    {
-      title: 'Parasite', year: 2019, rating: null,
-      note: 'The reveal of the housekeeper\'s husband in the bunker. The sudden shift to horror.',
-      visibility: 'private', emotions: emos(0.05, 0.01, 0.02, 0.02, 0.1, 0.78, 0.02)
-    },
-  ],
-  'chloe_d': [
-    {
-      title: 'Toy Story', year: 1995, rating: 5.0,
-      note: 'Woody and Buzz flying at the end. They are falling with style. Pure joy.',
-      visibility: 'public', emotions: emos(0.05, 0.85, 0.02, 0.01, 0.01, 0.01, 0.05)
-    },
-    {
-      title: 'Finding Nemo', year: 2003, rating: 4.5,
-      note: 'The sea turtles riding the East Australian Current. The colors and speed are fantastic.',
-      visibility: 'public', emotions: emos(0.08, 0.78, 0.02, 0.01, 0.01, 0.01, 0.09)
-    },
-    {
-      title: 'WALL-E', year: 2008, rating: 4.5,
-      note: 'WALL-E showing Eve his collection of human trinkets. The curiosity of the little robot is sweet.',
-      visibility: 'public', emotions: emos(0.1, 0.75, 0.05, 0.01, 0.01, 0.01, 0.07)
-    },
-    {
-      title: 'Coco', year: 2017, rating: 5.0,
-      note: 'The bridge of marigold petals. The orange glow is so warm and beautiful.',
-      visibility: 'public', emotions: emos(0.05, 0.1, 0.02, 0.01, 0.01, 0.01, 0.8)
-    },
-    {
-      title: 'Schindler\'s List', year: 1993, rating: 5.0,
-      note: 'The absolute horror of the camp liquidation. I felt completely devastated and angry.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.78, 0.1, 0.02, 0.02, 0.02)
-    },
-    {
-      title: 'Amélie', year: 2001, rating: 4.5,
-      note: 'The skipping stones on the Canal Saint-Martin. A lovely depiction of simple pleasures.',
-      visibility: 'public', emotions: emos(0.08, 0.8, 0.02, 0.01, 0.01, 0.01, 0.07)
-    },
-    {
-      title: 'Ratatouille', year: 2007, rating: 4.5,
-      note: 'The critic Ego tasting the ratatouille and remembering his childhood. A beautiful moment.',
-      visibility: 'private', emotions: emos(0.12, 0.75, 0.05, 0.01, 0.01, 0.01, 0.05)
-    },
-    {
-      title: 'Spirited Away', year: 2001, rating: 4.0,
-      note: 'The giant radish spirit in the elevator. The creature designs are so strange and delightful.',
-      visibility: 'private', emotions: emos(0.1, 0.1, 0.02, 0.01, 0.02, 0.01, 0.74)
-    },
-    {
-      title: 'Inception', year: 2010, rating: null,
-      note: 'The folding city of Paris. Visually cool, but the rules are a bit too complicated to follow.',
-      visibility: 'private', emotions: emos(0.12, 0.05, 0.02, 0.01, 0.02, 0.01, 0.77)
-    },
-  ],
-  'devon_m': [
-    {
-      title: 'The Shining', year: 1980, rating: 5.0,
-      note: 'The twin girls at the end of the hallway. The symmetry of the shot makes it twice as creepy.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.02, 0.02, 0.85, 0.03, 0.02)
-    },
-    {
-      title: 'Hereditary', year: 2018, rating: 5.0,
-      note: 'The telephone pole scene and the silence that follows. The dread is thick and suffocating.',
-      visibility: 'public', emotions: emos(0.04, 0.01, 0.05, 0.02, 0.83, 0.03, 0.02)
-    },
-    {
-      title: 'Psycho', year: 1960, rating: 4.5,
-      note: 'The taxidermy birds in the motel office. The shadows they cast on the wall are ominous.',
-      visibility: 'public', emotions: emos(0.08, 0.01, 0.02, 0.02, 0.81, 0.04, 0.02)
-    },
-    {
-      title: 'Alien', year: 1979, rating: 4.5,
-      note: 'The chestburster scene. The raw shock on the actors\' faces is real because they were not warned.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.02, 0.02, 0.05, 0.8, 0.05)
-    },
-    {
-      title: 'Amélie', year: 2001, rating: 2.0,
-      note: 'Too sweet for me normally, but the dark bedroom scenes with the photos had a weird charm.',
-      visibility: 'public', emotions: emos(0.1, 0.65, 0.05, 0.05, 0.05, 0.05, 0.05)
-    },
-    {
-      title: 'Get Out', year: 2017, rating: 4.0,
-      note: 'The taxidermy deer head on the wall. A warning sign that Norman Bates would appreciate.',
-      visibility: 'public', emotions: emos(0.08, 0.01, 0.02, 0.02, 0.81, 0.03, 0.03)
-    },
-    {
-      title: 'The Silence of the Lambs', year: 1991, rating: 4.0,
-      note: 'The night vision climax. The green hue makes it feel like we are trapped inside the killer\'s head.',
-      visibility: 'private', emotions: emos(0.05, 0.01, 0.02, 0.01, 0.86, 0.03, 0.02)
-    },
-    {
-      title: 'The Matrix', year: 1999, rating: 3.5,
-      note: 'The scene where Neo\'s mouth is fused shut. The body horror element is the best part.',
-      visibility: 'private', emotions: emos(0.05, 0.01, 0.02, 0.02, 0.05, 0.81, 0.04)
-    },
-    {
-      title: 'Toy Story', year: 1995, rating: null,
-      note: 'Sid\'s room of mutated toys. The baby head on spider legs is actually great horror design.',
-      visibility: 'private', emotions: emos(0.05, 0.05, 0.02, 0.02, 0.05, 0.77, 0.04)
-    },
-  ],
-  'ananya_sen': [
-    {
-      title: 'Schindler\'s List', year: 1993, rating: 5.0,
-      note: 'The black-and-white filming makes it feel like raw historical footage. The brutality is sickening.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.82, 0.05, 0.02, 0.02, 0.03)
-    },
-    {
-      title: 'Saving Private Ryan', year: 1998, rating: 4.5,
-      note: 'The opening landing at Omaha Beach. The chaotic hand-held camera captures the raw terror of combat.',
-      visibility: 'public', emotions: emos(0.04, 0.01, 0.05, 0.82, 0.05, 0.01, 0.02)
-    },
-    {
-      title: 'Dunkirk', year: 2017, rating: 4.0,
-      note: 'The timeline structure is cold and mechanical, but it effectively conveys the pressure of time.',
-      visibility: 'public', emotions: emos(0.81, 0.01, 0.05, 0.02, 0.05, 0.01, 0.05)
-    },
-    {
-      title: '1917', year: 2019, rating: 4.0,
-      note: 'The illusion of the single take. It feels a bit like a technical gimmick but keeps you in the mud.',
-      visibility: 'public', emotions: emos(0.79, 0.01, 0.05, 0.02, 0.05, 0.01, 0.07)
-    },
-    {
-      title: 'Spirited Away', year: 2001, rating: 4.5,
-      note: 'The bathhouse scenes. The level of detail in the spirits and the architecture is incredible.',
-      visibility: 'public', emotions: emos(0.1, 0.05, 0.02, 0.01, 0.02, 0.01, 0.79)
-    },
-    {
-      title: 'The Godfather', year: 1972, rating: 3.5,
-      note: 'A well-acted family tragedy, but it romanticizes organized crime too much for my liking.',
-      visibility: 'public', emotions: emos(0.78, 0.02, 0.05, 0.05, 0.02, 0.02, 0.06)
-    },
-    {
-      title: 'Before Sunrise', year: 1995, rating: 2.5,
-      note: 'Two privileged students walking around Vienna talking about themselves. Felt tedious.',
-      visibility: 'private', emotions: emos(0.1, 0.05, 0.05, 0.72, 0.02, 0.02, 0.04)
-    },
-    {
-      title: 'Inception', year: 2010, rating: null,
-      note: 'The dream levels feel like rules in a board game. A cool puzzle, but very sterile.',
-      visibility: 'private', emotions: emos(0.82, 0.02, 0.02, 0.02, 0.03, 0.01, 0.08)
-    },
-    {
-      title: 'Dunkirk', year: 2017, rating: 4.0,
-      note: 'Second time watching. The sound design is what carries it. The sirens of the planes are screeching.',
-      visibility: 'private', emotions: emos(0.77, 0.01, 0.05, 0.02, 0.08, 0.02, 0.05)
-    },
-  ],
-  'lucas_v': [
-    {
-      title: 'Eternal Sunshine of the Spotless Mind', year: 2004, rating: 5.0,
-      note: 'The fading memories and the melting library. The surrealism captures the messy reality of love.',
-      visibility: 'public', emotions: emos(0.08, 0.05, 0.02, 0.01, 0.02, 0.02, 0.8)
-    },
-    {
-      title: 'The Grand Budapest Hotel', year: 2014, rating: 4.5,
-      note: 'The snow chase sequence. The stylized model movements look like stop-motion animation. So quirky.',
-      visibility: 'public', emotions: emos(0.12, 0.72, 0.02, 0.01, 0.02, 0.01, 0.1)
-    },
-    {
-      title: 'Parasite', year: 2019, rating: 4.5,
-      note: 'The peach fuzz allergy scene. The execution of the plan is like a silent comedy routine.',
-      visibility: 'public', emotions: emos(0.1, 0.05, 0.02, 0.01, 0.02, 0.01, 0.79)
-    },
-    {
-      title: 'Memento', year: 2000, rating: 4.0,
-      note: 'The backward narrative. It forces you to share the protagonist\'s disorientation and paranoia.',
-      visibility: 'public', emotions: emos(0.77, 0.02, 0.05, 0.02, 0.05, 0.03, 0.06)
-    },
-    {
-      title: 'Saving Private Ryan', year: 1998, rating: 4.0,
-      note: 'The final bridge defence. The death of the translator felt like a real, senseless tragedy.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.81, 0.05, 0.02, 0.01, 0.05)
-    },
-    {
-      title: 'Knives Out', year: 2019, rating: 4.0,
-      note: 'The inheritance reading scene. Craig\'s performance is hilarious, but the plotting is the star.',
-      visibility: 'public', emotions: emos(0.1, 0.75, 0.02, 0.01, 0.02, 0.01, 0.09)
-    },
-    {
-      title: 'WALL-E', year: 2008, rating: 4.0,
-      note: 'The cockroach friend. A weird, funny companion that highlights the lonely setting.',
-      visibility: 'private', emotions: emos(0.15, 0.7, 0.02, 0.01, 0.02, 0.02, 0.08)
-    },
-    {
-      title: 'Get Out', year: 2017, rating: 4.0,
-      note: 'The police officer scene at the end. The sudden shift in expectation is sharp and cynical.',
-      visibility: 'private', emotions: emos(0.05, 0.01, 0.02, 0.02, 0.05, 0.81, 0.04)
-    },
-    {
-      title: 'Titanic', year: 1997, rating: 2.0,
-      note: 'The dialogue is so clunky. The visual effects are massive but the characters feel like cardboard.',
-      visibility: 'private', emotions: emos(0.05, 0.01, 0.02, 0.02, 0.02, 0.83, 0.05)
-    },
-  ],
-  'sarah_m': [
-    {
-      title: 'La La Land', year: 2016, rating: 4.5,
-      note: 'The opening dance on the highway ramp. The long take and the color palettes are so bright.',
-      visibility: 'public', emotions: emos(0.08, 0.78, 0.02, 0.01, 0.01, 0.01, 0.09)
-    },
-    {
-      title: 'Before Sunrise', year: 1995, rating: 4.0,
-      note: 'The record store scene. The simple framing of their faces in that small space is lovely.',
-      visibility: 'public', emotions: emos(0.1, 0.72, 0.05, 0.01, 0.02, 0.01, 0.09)
-    },
-    {
-      title: 'The Godfather', year: 1972, rating: 4.5,
-      note: 'The wedding scene at the start. The contrast of the sunny outdoors with the dark office.',
-      visibility: 'public', emotions: emos(0.78, 0.02, 0.05, 0.05, 0.02, 0.02, 0.06)
-    },
-    {
-      title: 'Amélie', year: 2001, rating: 4.0,
-      note: 'The photobooth album mystery. A charming puzzle that captures the whimsical mood.',
-      visibility: 'public', emotions: emos(0.1, 0.75, 0.02, 0.01, 0.02, 0.01, 0.09)
-    },
-    {
-      title: 'Hereditary', year: 2018, rating: 4.0,
-      note: 'The mother screaming on the ceiling in the corner. I had to sleep with the lights on.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.02, 0.02, 0.85, 0.03, 0.02)
-    },
-    {
-      title: 'The Grand Budapest Hotel', year: 2014, rating: 4.0,
-      note: 'Gustave reciting poetry on the train. The theatricality of the dialogue is wonderful.',
-      visibility: 'public', emotions: emos(0.1, 0.73, 0.02, 0.01, 0.02, 0.01, 0.11)
-    },
-    {
-      title: 'Titanic', year: 1997, rating: 4.0,
-      note: 'The dinner in the third-class cabin. The dancing and the fiddle music feel so alive.',
-      visibility: 'private', emotions: emos(0.08, 0.78, 0.02, 0.01, 0.02, 0.01, 0.08)
-    },
-    {
-      title: 'Before Sunset', year: 2004, rating: null,
-      note: 'Walking through the Parisian gardens. The tracking shots feel like we are walking with them.',
-      visibility: 'private', emotions: emos(0.8, 0.05, 0.05, 0.01, 0.02, 0.02, 0.05)
-    },
-    {
-      title: 'WALL-E', year: 2008, rating: null,
-      note: 'The silent ballet in space. A beautiful, quiet moment that did not need any words.',
-      visibility: 'private', emotions: emos(0.15, 0.7, 0.05, 0.01, 0.02, 0.02, 0.05)
-    },
-  ],
-  'tariq_a': [
-    {
-      title: '2001: A Space Odyssey', year: 1968, rating: 5.0,
-      note: 'The slow docking of the spacecraft to the Blue Danube. The silence of space is majestic.',
-      visibility: 'public', emotions: emos(0.85, 0.01, 0.02, 0.01, 0.02, 0.01, 0.08)
-    },
-    {
-      title: 'The Shining', year: 1980, rating: 4.0,
-      note: 'The long tracking shots of the hallways. The hotel itself feels like it is breathing.',
-      visibility: 'public', emotions: emos(0.79, 0.01, 0.05, 0.02, 0.05, 0.02, 0.06)
-    },
-    {
-      title: 'Before Sunrise', year: 1995, rating: 4.0,
-      note: 'The cemetery scene in Vienna. The quiet conversations about mortality feel very natural.',
-      visibility: 'public', emotions: emos(0.1, 0.05, 0.77, 0.01, 0.02, 0.01, 0.04)
-    },
-    {
-      title: 'The Godfather', year: 1972, rating: 4.5,
-      note: 'The orange grove death scene. The quiet garden and the suddenness of his collapse.',
-      visibility: 'public', emotions: emos(0.8, 0.02, 0.05, 0.02, 0.05, 0.02, 0.04)
-    },
-    {
-      title: 'The Matrix', year: 1999, rating: 4.0,
-      note: 'The lobby shootout scene. The slow motion and the falling concrete dust are gorgeous.',
-      visibility: 'public', emotions: emos(0.1, 0.05, 0.02, 0.02, 0.05, 0.01, 0.75)
-    },
-    {
-      title: 'Schindler\'s List', year: 1993, rating: 4.5,
-      note: 'The scene where the Jews are forced to run naked in front of the doctors. Horrifying.',
-      visibility: 'public', emotions: emos(0.08, 0.01, 0.8, 0.05, 0.02, 0.02, 0.02)
-    },
-    {
-      title: 'Dunkirk', year: 2017, rating: 3.5,
-      note: 'The aerial dogfights. The hum of the spitfire engines is the only soundtrack we need.',
-      visibility: 'private', emotions: emos(0.78, 0.02, 0.05, 0.02, 0.05, 0.02, 0.06)
-    },
-    {
-      title: '1917', year: 2019, rating: null,
-      note: 'The night scene in the ruins of the French town. The flares lighting up the shadows.',
-      visibility: 'private', emotions: emos(0.82, 0.01, 0.05, 0.02, 0.05, 0.01, 0.04)
-    },
-    {
-      title: 'Before Sunset', year: 2004, rating: null,
-      note: 'The boat ride on the Seine. The long takes make the conversation feel completely unedited.',
-      visibility: 'private', emotions: emos(0.12, 0.05, 0.72, 0.02, 0.02, 0.01, 0.06)
-    },
-  ],
-  'rachel_g': [
-    {
-      title: 'Whiplash', year: 2014, rating: 4.5,
-      note: 'Fletcher throwing the chair at Andrew\'s head. The abuse is framed as dedication, which makes me angry.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.05, 0.82, 0.05, 0.01, 0.01)
-    },
-    {
-      title: 'Schindler\'s List', year: 1993, rating: 5.0,
-      note: 'Amon Goeth shooting prisoners from his balcony. The casual sadism is sickening.',
-      visibility: 'public', emotions: emos(0.04, 0.01, 0.05, 0.85, 0.03, 0.01, 0.01)
-    },
-    {
-      title: 'Parasite', year: 2019, rating: 4.5,
-      note: 'The scene where the rich father holds his nose at the smell. The quiet insult is devastating.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.05, 0.81, 0.03, 0.04, 0.01)
-    },
-    {
-      title: 'Saving Private Ryan', year: 1998, rating: 4.0,
-      note: 'The scene where Mellish is slowly stabbed by the German soldier. The struggle is painful.',
-      visibility: 'public', emotions: emos(0.05, 0.01, 0.8, 0.05, 0.05, 0.02, 0.02)
-    },
-    {
-      title: 'Finding Nemo', year: 2003, rating: 4.0,
-      note: 'The scene where Marlin finally lets Nemo go. A sweet moment of parental trust.',
-      visibility: 'public', emotions: emos(0.1, 0.75, 0.05, 0.01, 0.02, 0.02, 0.05)
-    },
-    {
-      title: 'The Godfather', year: 1972, rating: 4.5,
-      note: 'Michael lying to Kay at the end about Carlo\'s death. The betrayal is absolute.',
-      visibility: 'public', emotions: emos(0.08, 0.02, 0.78, 0.05, 0.02, 0.02, 0.03)
-    },
-    {
-      title: 'Before Sunset', year: 2004, rating: 4.0,
-      note: 'The car scene where she reaches out to touch his hair but pulls away. The frustration of years.',
-      visibility: 'private', emotions: emos(0.08, 0.02, 0.8, 0.05, 0.01, 0.02, 0.02)
-    },
-    {
-      title: 'The Dark Knight', year: 2008, rating: null,
-      note: 'The hospital blowing up scene. The anarchy is fun but the societal decay is depressing.',
-      visibility: 'private', emotions: emos(0.05, 0.02, 0.02, 0.81, 0.05, 0.02, 0.03)
-    },
-    {
-      title: 'Eternal Sunshine of the Spotless Mind', year: 2004, rating: null,
-      note: 'The fight in the apartment before she leaves. The bitter words that they both regret.',
-      visibility: 'private', emotions: emos(0.1, 0.02, 0.78, 0.05, 0.01, 0.02, 0.02)
-    },
-  ],
+const seedTimestamp = (position: number) => {
+  const date = seedDate(position);
+  const hour = 8 + (position * 7) % 12;
+  const minute = (position * 17) % 60;
+  return `${date} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
 };
 
-// Curated list of saved films (Demo gets 9, Community gets 4 each)
-const USER_SAVED_PLAN: Record<string, { title: string; year: number }[]> = {
-  'demo': [
-    { title: 'Inception', year: 2010 },
-    { title: 'Interstellar', year: 2014 },
-    { title: '2001: A Space Odyssey', year: 1968 },
-    { title: 'Spirited Away', year: 2001 },
-    { title: 'Eternal Sunshine of the Spotless Mind', year: 2004 },
-    { title: 'The Godfather', year: 1972 },
-    { title: 'Schindler\'s List', year: 1993 },
-    { title: 'Before Sunrise', year: 1995 },
-    { title: 'Alien', year: 1979 },
-  ],
-  'clara_valdez': [
-    { title: 'The Godfather', year: 1972 },
-    { title: 'Schindler\'s List', year: 1993 },
-    { title: 'Eternal Sunshine of the Spotless Mind', year: 2004 },
-    { title: 'Whiplash', year: 2014 }
-  ],
-  'marcus_k': [
-    { title: 'Inception', year: 2010 },
-    { title: 'Interstellar', year: 2014 },
-    { title: 'The Matrix', year: 1999 },
-    { title: 'Star Wars', year: 1977 }
-  ],
-  'elena_r': [
-    { title: 'Before Sunrise', year: 1995 },
-    { title: 'Before Sunset', year: 2004 },
-    { title: 'La La Land', year: 2016 },
-    { title: 'Amélie', year: 2001 }
-  ],
-  'hiro_s': [
-    { title: 'The Silence of the Lambs', year: 1991 },
-    { title: 'Psycho', year: 1960 },
-    { title: 'Get Out', year: 2017 },
-    { title: 'The Shining', year: 1980 }
-  ],
-  'chloe_d': [
-    { title: 'Toy Story', year: 1995 },
-    { title: 'Finding Nemo', year: 2003 },
-    { title: 'WALL-E', year: 2008 },
-    { title: 'Coco', year: 2017 }
-  ],
-  'devon_m': [
-    { title: 'The Shining', year: 1980 },
-    { title: 'Hereditary', year: 2018 },
-    { title: 'Psycho', year: 1960 },
-    { title: 'Alien', year: 1979 }
-  ],
-  'ananya_sen': [
-    { title: 'Schindler\'s List', year: 1993 },
-    { title: 'Saving Private Ryan', year: 1998 },
-    { title: 'Dunkirk', year: 2017 },
-    { title: '1917', year: 2019 }
-  ],
-  'lucas_v': [
-    { title: 'Eternal Sunshine of the Spotless Mind', year: 2004 },
-    { title: 'The Grand Budapest Hotel', year: 2014 },
-    { title: 'Parasite', year: 2019 },
-    { title: 'Memento', year: 2000 }
-  ],
-  'sarah_m': [
-    { title: 'La La Land', year: 2016 },
-    { title: 'Before Sunrise', year: 1995 },
-    { title: 'The Godfather', year: 1972 },
-    { title: 'Amélie', year: 2001 }
-  ],
-  'tariq_a': [
-    { title: '2001: A Space Odyssey', year: 1968 },
-    { title: 'The Shining', year: 1980 },
-    { title: 'Before Sunrise', year: 1995 },
-    { title: 'The Godfather', year: 1972 }
-  ],
-  'rachel_g': [
-    { title: 'Whiplash', year: 2014 },
-    { title: 'Schindler\'s List', year: 1993 },
-    { title: 'Parasite', year: 2019 },
-    { title: 'Saving Private Ryan', year: 1998 }
-  ],
+const stableOrder = (value: string) => {
+  let hash = 2166136261;
+  for (const character of value) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 };
 
-// Directed follows plan (Demo follows 3. Community follows 1-4. No self-follows)
-const FOLLOW_PLAN = [
-  // Demo (follows 3)
-  { follower: 'demo', followed: 'clara_valdez' },
-  { follower: 'demo', followed: 'marcus_k' },
-  { follower: 'demo', followed: 'elena_r' },
-  // Clara Valdez (follows 2)
-  { follower: 'clara_valdez', followed: 'elena_r' },
-  { follower: 'clara_valdez', followed: 'ananya_sen' },
-  // Marcus Kim (follows 3)
-  { follower: 'marcus_k', followed: 'hiro_s' },
-  { follower: 'marcus_k', followed: 'chloe_d' },
-  { follower: 'marcus_k', followed: 'lucas_v' },
-  // Elena Rostova (follows 2)
-  { follower: 'elena_r', followed: 'clara_valdez' },
-  { follower: 'elena_r', followed: 'chloe_d' },
-  // Hiroshi Sato (follows 1)
-  { follower: 'hiro_s', followed: 'devon_m' },
-  // Chloe Delaney (follows 2)
-  { follower: 'chloe_d', followed: 'marcus_k' },
-  { follower: 'chloe_d', followed: 'lucas_v' },
-  // Devon Miller (follows 2)
-  { follower: 'devon_m', followed: 'hiro_s' },
-  { follower: 'devon_m', followed: 'lucas_v' },
-  // Ananya Sen (follows 4)
-  { follower: 'ananya_sen', followed: 'clara_valdez' },
-  { follower: 'ananya_sen', followed: 'elena_r' },
-  { follower: 'ananya_sen', followed: 'marcus_k' },
-  { follower: 'ananya_sen', followed: 'lucas_v' },
-  // Lucas Vance (follows 2)
-  { follower: 'lucas_v', followed: 'chloe_d' },
-  { follower: 'lucas_v', followed: 'devon_m' },
-  // Sarah Jenkins (follows 2)
-  { follower: 'sarah_m', followed: 'elena_r' },
-  { follower: 'sarah_m', followed: 'chloe_d' },
-  // Tariq Al-Fayed (follows 2)
-  { follower: 'tariq_a', followed: 'clara_valdez' },
-  { follower: 'tariq_a', followed: 'ananya_sen' },
-  // Rachel Greenwald (follows 2)
-  { follower: 'rachel_g', followed: 'ananya_sen' },
-  { follower: 'rachel_g', followed: 'tariq_a' },
-];
-
-// Seed generator execution
-const seed = async () => {
+export const seed = async () => {
+  if (!TMDB_API_KEY) throw new Error('TMDB_API_KEY is required to seed film metadata.');
+  await initializeDatabase();
   const client = await pool.connect();
   try {
-    console.log('Starting seed transaction...');
+    console.log('Starting social seed transaction...');
     await client.query('BEGIN');
+    await ensureSocialSchema(client);
 
-    // 1. Purge all legacy and current seed-owned users to ensure no community_user_* profiles remain
-    const oldSeedUsersRes = await client.query(
-      "SELECT id FROM users WHERE email LIKE '%@seed.emotionflix.com' OR email = 'demo@demo.com'"
-    );
-    const oldSeedUserIds = oldSeedUsersRes.rows.map(r => r.id);
-
-    if (oldSeedUserIds.length > 0) {
-      await client.query(
-        `DELETE FROM entry_reactions 
-         WHERE user_id = ANY($1) 
-         OR entry_id IN (SELECT id FROM diary_entries WHERE user_id = ANY($1))`,
-        [oldSeedUserIds]
+    const usernameToId = new Map<string, number>();
+    const emailToId = new Map<string, number>();
+    for (const user of SEED_USERS) {
+      const existing = await client.query(
+        'SELECT id, username, password_hash, bio FROM users WHERE email = $1',
+        [user.email],
       );
-      await client.query(
-        'DELETE FROM follows WHERE follower_id = ANY($1) OR followed_id = ANY($1)',
-        [oldSeedUserIds]
-      );
-      await client.query('DELETE FROM saved_films WHERE user_id = ANY($1)', [oldSeedUserIds]);
-      await client.query('DELETE FROM diary_entries WHERE user_id = ANY($1)', [oldSeedUserIds]);
-      await client.query('DELETE FROM users WHERE id = ANY($1)', [oldSeedUserIds]);
-      console.log(`Purged ${oldSeedUserIds.length} legacy/existing seed-owned users and their child records.`);
-    }
-
-    // 2. Setup seed-owned users (insert new curated personas)
-    const emailToId: Record<string, number> = {};
-    const usernameToId: Record<string, number> = {};
-
-    for (const u of HANDCRAFTED_USERS) {
-      const hashedPassword = await bcrypt.hash(u.password, 12);
-      const res = await client.query(
-        'INSERT INTO users (email, username, password_hash, bio) VALUES ($1, $2, $3, $4) RETURNING id',
-        [u.email, u.username, hashedPassword, u.bio]
-      );
-      const userId = res.rows[0].id;
-      console.log(`Created user: ${u.email} (ID: ${userId})`);
-      emailToId[u.email] = userId;
-      usernameToId[u.username] = userId;
-    }
-
-    // 3. Resolve and cache all movies needed through TMDB dynamically based on our manifest
-    console.log('Resolving and caching movies from TMDB by Title and Year...');
-    const movieCache: Record<string, any> = {};
-
-    const allMoviesToResolve = new Set<string>();
-    Object.values(DIARY_SEED_ENTRIES).flat().forEach(e => allMoviesToResolve.add(`${e.title}|||${e.year}`));
-    Object.values(USER_SAVED_PLAN).flat().forEach(e => allMoviesToResolve.add(`${e.title}|||${e.year}`));
-
-    for (const key of allMoviesToResolve) {
-      const [title, yearStr] = key.split('|||');
-      const year = parseInt(yearStr);
-      try {
-        const movie = await resolveMovieByTitleAndYear(client, title, year);
-        movieCache[key] = movie;
-      } catch (err: any) {
-        console.error(`Failed to resolve movie unambiguously: "${title}" (${year})`, err.message);
-        throw err;
+      let id: number;
+      if (existing.rowCount) {
+        const current = existing.rows[0];
+        const passwordMatches = await bcrypt.compare(user.password, current.password_hash);
+        if (current.username !== user.username || current.bio !== user.bio || !passwordMatches) {
+          const passwordHash = passwordMatches ? current.password_hash : await bcrypt.hash(user.password, 12);
+          const updated = await client.query(
+            `UPDATE users SET username = $2, password_hash = $3, bio = $4, updated_at = CURRENT_TIMESTAMP
+             WHERE email = $1 RETURNING id`,
+            [user.email, user.username, passwordHash, user.bio],
+          );
+          id = Number(updated.rows[0].id);
+        } else {
+          id = Number(current.id);
+        }
+      } else {
+        const passwordHash = await bcrypt.hash(user.password, 12);
+        const inserted = await client.query(
+          `INSERT INTO users (email, username, password_hash, bio)
+           VALUES ($1,$2,$3,$4) RETURNING id`,
+          [user.email, user.username, passwordHash, user.bio],
+        );
+        id = Number(inserted.rows[0].id);
       }
-    }
-    console.log(`Successfully resolved and cached ${allMoviesToResolve.size} movies.`);
-
-    // 4. Generate & Insert Diary Entries
-    // Mix capture methods: manual >= 85%, upload <= 10%, webcam <= 5%
-    // In our loop, we use: index % 20 < 18: manual (90%), === 18: upload (5%), else webcam (5%)
-    let diaryCount = 0;
-    const allPlanEntries: { username: string; title: string; year: number; rating: number | null; note: string; visibility: 'private' | 'public'; emotions: ReturnType<typeof emos> }[] = [];
-    for (const [username, entries] of Object.entries(DIARY_SEED_ENTRIES)) {
-      for (const entry of entries) {
-        allPlanEntries.push({ username, ...entry });
-      }
+      usernameToId.set(user.username, id);
+      emailToId.set(user.email, id);
     }
 
-    // Shuffle entries slightly to interleave users and movies for feed diversity, 
-    // but keep it deterministic using a simple pseudo-random sequence
-    const seededShuffle = (arr: any[]) => {
-      let seedVal = 88;
-      const random = () => {
-        const x = Math.sin(seedVal++) * 10000;
-        return x - Math.floor(x);
-      };
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-    };
-    seededShuffle(allPlanEntries);
+    const allPlans = Object.entries(DIARY_SEED_ENTRIES)
+      .flatMap(([username, entries]) => entries.map(entry => ({ username, ...entry })))
+      .sort((left, right) => stableOrder(`${left.username}:${left.key}`) - stableOrder(`${right.username}:${right.key}`));
+
+    const movieCache = new Map<string, { id: number }>();
+    const moviePlans = new Map<string, { title: string; year: number }>();
+    allPlans.forEach(entry => moviePlans.set(`${entry.title}|||${entry.year}`, entry));
+    Object.values(SAVED_FILMS).flat().forEach(entry => moviePlans.set(`${entry.title}|||${entry.year}`, entry));
+    for (const [movieKey, movie] of moviePlans) {
+      movieCache.set(movieKey, await resolveMovieByTitleAndYear(client, movie.title, movie.year));
+    }
 
     const publicEntryIds: number[] = [];
-
-    console.log(`Seeding ${allPlanEntries.length} diary entries...`);
-    for (let i = 0; i < allPlanEntries.length; i++) {
-      const plan = allPlanEntries[i];
-      const userId = usernameToId[plan.username];
-      const movieKey = `${plan.title}|||${plan.year}`;
-      const movie = movieCache[movieKey];
-
-      if (!movie) {
-        throw new Error(`Movie not found in cache: "${plan.title}" (${plan.year})`);
-      }
-
-      // Determine date spread (over last 18 months, ~540 days)
-      const date = new Date();
-      const daysAgo = Math.floor((i / allPlanEntries.length) * 520) + 5;
-      date.setDate(date.getDate() - daysAgo);
-      const watchedOn = date.toISOString().split('T')[0];
-
-      // Format created_at to align with watchedOn day but at a random time
-      let timeSeed = i * 29 + 17;
-      const timeRand = () => {
-        const x = Math.sin(timeSeed++) * 10000;
-        return x - Math.floor(x);
-      };
-      const hour = Math.floor(timeRand() * 12) + 8; // 8 AM to 8 PM
-      const minute = Math.floor(timeRand() * 60);
-      const createdAt = `${watchedOn} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
-
-      // Determine capture method (to satisfy 85/10/5 ratio: 90% manual, 5% upload, 5% webcam)
-      const methodIndex = i % 20;
-      const captureMethod = methodIndex < 18 ? 'manual' : methodIndex === 18 ? 'upload' : 'webcam';
-      // Manual entries are direct human reviewed and have confidence 1.0. Webcam/upload have standard numeric confidence.
-      const confidence = captureMethod === 'manual' ? 1.0 : parseFloat((0.75 + timeRand() * 0.2).toFixed(3));
-
-      const res = await client.query(
-        `INSERT INTO diary_entries (
-          user_id, movie_id, watched_on, rating, note, visibility,
-          neutral, happy, sad, angry, fearful, disgusted, surprised, 
-          capture_method, confidence, created_at, updated_at
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $16)
-         RETURNING id`,
-        [
-          userId,
-          movie.id,
-          watchedOn,
-          plan.rating,
-          plan.note,
-          plan.visibility,
-          plan.emotions.neutral,
-          plan.emotions.happy,
-          plan.emotions.sad,
-          plan.emotions.angry,
-          plan.emotions.fearful,
-          plan.emotions.disgusted,
-          plan.emotions.surprised,
-          captureMethod,
-          confidence,
-          createdAt,
-        ]
+    const activeSeedKeys: string[] = [];
+    for (const [username, entries] of Object.entries(DIARY_SEED_ENTRIES)) {
+      const userId = usernameToId.get(username);
+      if (!userId) throw new Error(`Missing seed user ${username}`);
+      const existing = await client.query(
+        `SELECT id, movie_id, seed_key FROM diary_entries
+         WHERE user_id = $1
+         ORDER BY id`,
+        [userId],
       );
-      const insertedId = parseInt(res.rows[0].id);
-      if (plan.visibility === 'public') {
-        publicEntryIds.push(insertedId);
-      }
-    }
+      const claimed = new Set<number>();
 
-    // 5. Generate & Insert Saved Films
-    console.log('Seeding saved films...');
-    for (const [username, savedFilms] of Object.entries(USER_SAVED_PLAN)) {
-      const userId = usernameToId[username];
-      for (const item of savedFilms) {
-        const key = `${item.title}|||${item.year}`;
-        const movie = movieCache[key];
-        if (movie) {
+      for (const plan of entries) {
+        const seedKey = `${SEED_PREFIX}${username}:${plan.key}`;
+        activeSeedKeys.push(seedKey);
+        const movie = movieCache.get(`${plan.title}|||${plan.year}`);
+        if (!movie) throw new Error(`Missing resolved film ${plan.title} (${plan.year})`);
+        const globalPosition = allPlans.findIndex(entry => entry.username === username && entry.key === plan.key);
+        let row = existing.rows.find(item => item.seed_key === seedKey && !claimed.has(Number(item.id)));
+        row ||= existing.rows.find(item => item.seed_key === null && Number(item.movie_id) === movie.id && !claimed.has(Number(item.id)));
+        row ||= existing.rows.find(item => item.seed_key === null && !claimed.has(Number(item.id)));
+
+        let entryId: number;
+        if (row) {
+          entryId = Number(row.id);
+          claimed.add(entryId);
           await client.query(
-            `INSERT INTO saved_films (user_id, movie_id, created_at)
-             VALUES ($1, $2, CURRENT_TIMESTAMP)
-             ON CONFLICT (user_id, movie_id) DO NOTHING`,
-            [userId, movie.id]
+            `UPDATE diary_entries SET
+               seed_key = $2, movie_id = $3, watched_on = $4, rating = NULL,
+               note = $5, visibility = $6,
+               neutral = $7, happy = $8, sad = $9, angry = $10,
+               fearful = $11, disgusted = $12, surprised = $13,
+               capture_method = 'manual', confidence = 1
+             WHERE id = $1`,
+            [entryId, seedKey, movie.id, seedDate(globalPosition), plan.note, plan.visibility,
+              plan.emotions.neutral, plan.emotions.happy, plan.emotions.sad, plan.emotions.angry,
+              plan.emotions.fearful, plan.emotions.disgusted, plan.emotions.surprised],
           );
+        } else {
+          const inserted = await client.query(
+            `INSERT INTO diary_entries (
+               seed_key, user_id, movie_id, watched_on, rating, note, visibility,
+               neutral, happy, sad, angry, fearful, disgusted, surprised,
+               capture_method, confidence, created_at, updated_at
+             ) VALUES ($1,$2,$3,$4,NULL,$5,$6,$7,$8,$9,$10,$11,$12,$13,'manual',1,$14,$14)
+             RETURNING id`,
+            [seedKey, userId, movie.id, seedDate(globalPosition), plan.note, plan.visibility,
+              plan.emotions.neutral, plan.emotions.happy, plan.emotions.sad, plan.emotions.angry,
+              plan.emotions.fearful, plan.emotions.disgusted, plan.emotions.surprised, seedTimestamp(globalPosition)],
+          );
+          entryId = Number(inserted.rows[0].id);
         }
+
+        if (plan.expressionPhoto) {
+          await client.query(
+            `INSERT INTO entry_media (entry_id, kind, asset_path, alt_text)
+             VALUES ($1, 'expression_photo', $2, $3)
+             ON CONFLICT (entry_id, kind) DO UPDATE SET
+               asset_path = EXCLUDED.asset_path, alt_text = EXCLUDED.alt_text,
+               updated_at = entry_media.updated_at`,
+            [entryId, plan.expressionPhoto.assetPath, plan.expressionPhoto.altText],
+          );
+        } else {
+          await client.query("DELETE FROM entry_media WHERE entry_id = $1 AND kind = 'expression_photo'", [entryId]);
+        }
+        if (plan.visibility === 'public') publicEntryIds.push(entryId);
       }
+
+      await client.query(
+        `UPDATE diary_entries SET visibility = 'private', rating = NULL, capture_method = 'manual', confidence = 1
+         WHERE user_id = $1 AND (seed_key IS NULL OR (seed_key LIKE $2 AND NOT (seed_key = ANY($3::text[]))))`,
+        [userId, `${SEED_PREFIX}${username}:%`, activeSeedKeys],
+      );
     }
 
-    // 6. Generate & Insert Follows
-    console.log('Seeding follows graph...');
-    for (const link of FOLLOW_PLAN) {
-      const followerId = usernameToId[link.follower];
-      const followedId = usernameToId[link.followed];
-      if (followerId && followedId && followerId !== followedId) {
+    for (const [username, films] of Object.entries(SAVED_FILMS)) {
+      const userId = usernameToId.get(username);
+      if (!userId) continue;
+      for (const film of films) {
+        const movie = movieCache.get(`${film.title}|||${film.year}`);
+        if (!movie) continue;
         await client.query(
-          `INSERT INTO follows (follower_id, followed_id, created_at)
-           VALUES ($1, $2, CURRENT_TIMESTAMP)
-           ON CONFLICT (follower_id, followed_id) DO NOTHING`,
-          [followerId, followedId]
+          `INSERT INTO saved_films (user_id, movie_id, created_at)
+           VALUES ($1,$2,$3) ON CONFLICT (user_id, movie_id) DO NOTHING`,
+          [userId, movie.id, `${SEED_REFERENCE_DATE} 12:00:00`],
         );
       }
     }
 
-    // 7. Generate & Insert Reactions
-    // React only to public entries. At least 25% must have none.
-    // Each public entry gets 0 to 5 reactions.
-    console.log('Seeding reactions...');
-    let reactionCount = 0;
-    const userIds = Object.values(emailToId);
-    for (let idx = 0; idx < publicEntryIds.length; idx++) {
-      const entryId = publicEntryIds[idx];
+    for (const [follower, followed] of FOLLOW_PLAN) {
+      const followerId = usernameToId.get(follower);
+      const followedId = usernameToId.get(followed);
+      if (!followerId || !followedId) throw new Error(`Invalid follow plan ${follower} -> ${followed}`);
+      await client.query(
+        `INSERT INTO follows (follower_id, followed_id, created_at)
+         VALUES ($1,$2,$3) ON CONFLICT (follower_id, followed_id) DO NOTHING`,
+        [followerId, followedId, `${SEED_REFERENCE_DATE} 12:00:00`],
+      );
+    }
 
-      // Get the author of this entry to prevent self-reaction
-      const authorRes = await client.query('SELECT user_id FROM diary_entries WHERE id = $1', [entryId]);
-      const authorId = authorRes.rows[0]?.user_id;
-
-      // 30% chance of no reactions (meets >= 25% none check)
-      if (idx % 10 >= 7) {
-        continue;
-      }
-
-      // Pick a deterministic number of reactions between 1 and 5
-      let rxSeed = idx * 47 + 101;
-      const rxRand = () => {
-        const x = Math.sin(rxSeed++) * 10000;
-        return x - Math.floor(x);
-      };
-      const numReactions = Math.floor(rxRand() * 5) + 1;
-      // Shuffle users (excluding author)
-      const potentialReactors = userIds.filter(id => id !== authorId);
-      for (let k = potentialReactors.length - 1; k > 0; k--) {
-        const j = Math.floor(rxRand() * (k + 1));
-        [potentialReactors[k], potentialReactors[j]] = [potentialReactors[j], potentialReactors[k]];
-      }
-
-      const reactors = potentialReactors.slice(0, numReactions);
-      for (const reactorId of reactors) {
+    const seedUserIds = [...emailToId.values()];
+    await client.query(
+      `DELETE FROM entry_reactions
+       WHERE user_id = ANY($1::int[])
+         AND entry_id = ANY($2::bigint[])`,
+      [seedUserIds, publicEntryIds],
+    );
+    await client.query(
+      `DELETE FROM entry_reactions
+       WHERE user_id = ANY($1::int[])
+         AND entry_id IN (SELECT id FROM diary_entries WHERE visibility = 'private')`,
+      [seedUserIds],
+    );
+    for (let index = 0; index < publicEntryIds.length; index += 1) {
+      if (index % 10 >= 7) continue;
+      const entryId = publicEntryIds[index];
+      const author = await client.query('SELECT user_id FROM diary_entries WHERE id = $1', [entryId]);
+      const possible = seedUserIds.filter(id => id !== Number(author.rows[0].user_id));
+      const reactionTotal = 1 + stableOrder(String(entryId)) % 5;
+      for (let offset = 0; offset < reactionTotal; offset += 1) {
+        const reactorId = possible[(index * 3 + offset * 5) % possible.length];
         await client.query(
           `INSERT INTO entry_reactions (user_id, entry_id, created_at)
-           VALUES ($1, $2, CURRENT_TIMESTAMP)
-           ON CONFLICT (user_id, entry_id) DO NOTHING`,
-          [reactorId, entryId]
+           VALUES ($1,$2,$3) ON CONFLICT (user_id, entry_id) DO NOTHING`,
+          [reactorId, entryId, `${SEED_REFERENCE_DATE} 12:00:00`],
         );
-        reactionCount++;
       }
     }
 
     await client.query('COMMIT');
-    console.log('Seeding transaction committed successfully.');
 
-    // 8. Report the resulting record counts
-    const accountsCount = await pool.query('SELECT COUNT(*)::int FROM users');
-    const moviesCount = await pool.query('SELECT COUNT(*)::int FROM movies');
-    const diaryEntriesCount = await pool.query('SELECT COUNT(*)::int FROM diary_entries');
-    const publicEntriesCount = await pool.query("SELECT COUNT(*)::int FROM diary_entries WHERE visibility = 'public'");
-    const savedFilmsCount = await pool.query('SELECT COUNT(*)::int FROM saved_films');
-    const followsCount = await pool.query('SELECT COUNT(*)::int FROM follows');
-    const reactionsCount = await pool.query('SELECT COUNT(*)::int FROM entry_reactions');
-
-    console.log('\n--- SEED DATA RECORD COUNTS ---');
-    console.log(`Accounts:       ${accountsCount.rows[0].count}`);
-    console.log(`Movies:         ${moviesCount.rows[0].count}`);
-    console.log(`Diary Entries:  ${diaryEntriesCount.rows[0].count}`);
-    console.log(`Public Entries: ${publicEntriesCount.rows[0].count}`);
-    console.log(`Saved Films:    ${savedFilmsCount.rows[0].count}`);
-    console.log(`Follows:        ${followsCount.rows[0].count}`);
-    console.log(`Reactions:      ${reactionsCount.rows[0].count}`);
-    console.log('-------------------------------\n');
-
-    // 9. Report a review sample of 12 public entries with usernames, films, ratings, dominant traces, and notes
-    const sampleRes = await client.query(`
-      SELECT de.note, de.rating, de.neutral, de.happy, de.sad, de.angry, de.fearful, de.disgusted, de.surprised,
-             u.username, m.title
-      FROM diary_entries de
-      JOIN users u ON u.id = de.user_id
-      JOIN movies m ON m.id = de.movie_id
-      WHERE de.visibility = 'public' AND de.note <> ''
-      ORDER BY de.created_at DESC
-      LIMIT 12
-    `);
-    
-    console.log('\n--- SAMPLE PUBLIC ENTRIES REVIEW ---');
-    sampleRes.rows.forEach((row, i) => {
-      const emArr = [
-        { name: 'stillness (neutral)', score: Number(row.neutral) },
-        { name: 'joy (happy)', score: Number(row.happy) },
-        { name: 'melancholy (sad)', score: Number(row.sad) },
-        { name: 'friction (angry)', score: Number(row.angry) },
-        { name: 'tension (fearful)', score: Number(row.fearful) },
-        { name: 'unease (disgusted)', score: Number(row.disgusted) },
-        { name: 'wonder (surprised)', score: Number(row.surprised) },
-      ];
-      const dominant = emArr.reduce((prev, current) => (prev.score > current.score) ? prev : current);
-      console.log(`[${i + 1}] User: @${row.username} | Film: ${row.title} | Rating: ${row.rating !== null ? row.rating + ' stars' : 'Unrated'}`);
-      console.log(`    Dominant Emotional Trace: ${dominant.name} (${dominant.score})`);
-      console.log(`    Note: "${row.note}"\n`);
-    });
-    console.log('-------------------------------------\n');
-
+    const counts = await pool.query(
+      `SELECT
+         COUNT(DISTINCT de.user_id)::int AS accounts,
+         COUNT(DISTINCT de.movie_id)::int AS films,
+         COUNT(*)::int AS responses,
+         COUNT(*) FILTER (WHERE de.visibility = 'public')::int AS public_posts,
+         COUNT(em.entry_id)::int AS expression_photos,
+         (SELECT COUNT(*)::int FROM saved_films WHERE user_id = ANY($1::int[])) AS saved_films,
+         (SELECT COUNT(*)::int FROM follows WHERE follower_id = ANY($1::int[])) AS follows,
+         (SELECT COUNT(*)::int FROM entry_reactions WHERE user_id = ANY($1::int[])) AS reactions
+       FROM diary_entries de
+       LEFT JOIN entry_media em ON em.entry_id = de.id AND em.kind = 'expression_photo'
+       WHERE de.seed_key = ANY($2::text[])`,
+      [seedUserIds, activeSeedKeys],
+    );
+    const result = counts.rows[0];
+    console.log('\nSocial seed complete');
+    console.log(`Accounts: ${result.accounts}`);
+    console.log(`Films: ${result.films}`);
+    console.log(`Responses: ${result.responses}`);
+    console.log(`Public posts: ${result.public_posts}`);
+    console.log(`Expression photos: ${result.expression_photos}`);
+    console.log(`Saved films: ${result.saved_films}`);
+    console.log(`Follows: ${result.follows}`);
+    console.log(`Reactions: ${result.reactions}`);
+    console.log('Run npm run seed:verify to verify the social seed contract.');
   } catch (error) {
-    console.log('Seeding encountered an error. Rolling back transaction...');
     await client.query('ROLLBACK');
     console.error('Seeding failed:', error);
-    process.exit(1);
+    throw error;
   } finally {
     client.release();
-    await pool.end();
   }
 };
 
-void seed();
+if (require.main === module) {
+  void seed()
+    .catch(() => {
+      process.exitCode = 1;
+    })
+    .finally(() => pool.end());
+}

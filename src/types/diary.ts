@@ -10,8 +10,9 @@ export interface DiaryEntry extends EmotionScores {
   username: string;
   movie_id: number;
   watched_on: string;
-  rating: number | null;
   note: string;
+  expression_image_path: string | null;
+  expression_image_alt: string | null;
   visibility: DiaryVisibility;
   capture_method: CaptureMethod;
   confidence: number;
@@ -44,16 +45,14 @@ export interface SavedFilm {
 export interface DiarySummary extends EmotionScores {
   entries: number;
   public_entries: number;
-  average_rating: number | null;
   saved: number;
-  top_genres: { id: number; name: string; entries: number }[];
 }
 
 export interface DiaryEntryInput {
   movieId: number;
   watchedOn: string;
-  rating?: number | null;
   note: string;
+  expressionImage?: string | null;
   visibility: DiaryVisibility;
   emotions: EmotionScores;
   captureMethod: CaptureMethod;

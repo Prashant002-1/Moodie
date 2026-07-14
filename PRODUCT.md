@@ -1,78 +1,112 @@
 # Product
 
-## Register
-
-brand
-
 ## Product purpose
 
-EmotionFlix is emotion-based social film discovery, built on a personal film diary.
+EmotionFlix is emotion-based social film discovery.
 
-A person records a viewing as one entry: the film, date, rating, note, visibility, and emotional record. The record is source-agnostic. A person can set it directly with sliders or labels, ask for suggestions from a written note or review, or choose another consented input that can produce emotional evidence. Any derived values remain suggestions until the person reviews them.
+A person shares a film alongside what it meant to them and the feelings that stayed with them. Other people who responded similarly to the same film become a path to what to watch next. The social feed is the product's signed-in home. The diary preserves a person's own history, and the catalog remains available underneath discovery, but neither should displace people from the center of the experience.
 
-Facial-expression analysis is one optional input adapter. It is not the product, the default path, or the definition of emotion. A face can only provide a narrow expression estimate at one moment. It cannot explain what a film meant to someone.
+EmotionFlix is not a review platform. It does not ask people to judge a film, assign a score, or write criticism. It asks for a first-person response: how the film felt, what it brought up, and what remained afterward.
 
-The recommendation engine reads patterns across the diary. It learns relationships among films, ratings, written responses, reviewed emotional records, and recurring taste for that person. It also compares those patterns with other people. A temporary discovery intent can shift the current results, but the diary remains the base layer.
+Facial-expression analysis is one optional input adapter. It is not the product, the default path, or the definition of emotion. A face can only produce a narrow expression estimate at one moment. It cannot explain what a film meant to someone.
 
-Public entries create a second discovery path. People can find films through viewers whose response patterns feel familiar, follow those diaries, and react to individual entries. This is social discovery through recorded resonance, not a feed of what is broadly popular.
+## The social response
 
-## Core record
+One shared response contains:
 
-`diary_entries` is the source of truth for the reviewed viewing record. A viewing and its canonical emotional response must never be split across separate writes or joined by timestamp proximity.
+- the film;
+- a first-person note about what the film meant to the person;
+- a reviewed mix of feelings;
+- public or private visibility;
+- an optional expression photo chosen by the person.
 
-Input evidence and the reviewed emotional record are different concepts. Direct sliders, text-derived suggestions, and measured estimates may all contribute evidence. The reviewed record is what the person accepts or edits and what the recommendation engine may use. Provenance and model confidence describe how a suggestion was produced. They do not describe whether the person's feeling is true.
+The note and feeling controls are the primary paths. Suggestions may later come from the writing or another consented source, but the person reviews them before saving.
 
-Saved films, follows, and reactions are separate relationships. They do not change the meaning of a diary entry.
+An expression photo is social media attached to a post. It is not emotional evidence, is never analyzed automatically, and is optional even when the response is public. Expression analysis is a separate opt-in adapter whose output is only a suggestion.
 
-The current seven-key emotion vector and `manual`, `upload`, and `webcam` source enum are prototype constraints. They must not become the permanent emotional vocabulary or source model. The target model is defined in `docs/EMOTIONAL_SIGNAL_MODEL.md`.
+There are no user ratings. TMDB metadata may contain catalog values internally, but ratings and vote counts do not appear in the product experience and do not power personal recommendations.
 
-The old list, standalone emotion, profile, and user-maintained genre-mapping APIs are not part of the current product.
+## Product surfaces
 
-## User journeys
+### Public overview
 
-### Understand the product
+The logged-out landing page explains the product. It shows a human response, the feeling input, and the connection from one person to another. It does not expose a streaming-style catalog. Sign in and the one-step demo are the routes into the product.
 
-A visitor lands on a public product overview and can answer three questions without signing in: what a person records, how repeated records change recommendations, and how emotional similarity between people creates social discovery. The visitor enters the product only after signing in or choosing the one-step demo.
+### Feed
 
-### Add a diary entry
+The feed is the signed-in home and the main discovery surface. It is a timeline of public film responses from relevant people and the wider community. Posts keep the film, words, feelings, optional expression photo, author, and reactions together. Following changes whose responses appear first.
 
-An authenticated person searches for a film, records the viewing details, chooses private or public visibility, and creates an emotional record. Direct input and writing are the primary paths. Analysis can suggest values from the note or review. Other inputs, including expression analysis, remain optional and secondary. One save creates one complete diary entry. The date, rating, note, visibility, emotional record, and reviewed source suggestions remain editable afterward.
+### Add a film
 
-### Find the next film
+The composer starts with a film, then asks: how did it make you feel, and what did it mean to you? Direct sliders and writing are sufficient. Optional adapters belong in a secondary area. One save creates one complete response.
 
-The recommendation API ranks films from the accumulated diary pattern and excludes films already recorded. The interface shows the history size, dominant emotional traces, recurring film relationships, and a short reason for each personal recommendation. A temporary discovery intent is optional and can be entered directly or described in words.
+### Discover
 
-### Discover through people
+Recommendations begin with people who felt something similar about the same films. The primary path is:
 
-The community route shows public entries and people with established patterns. Each person opens into a full public diary. Film pages also show public entries for that film, so discovery can move between a film, a person, and the larger diary pattern. Following changes feed order. Reactions stay attached to entries and do not pretend to be a universal rating.
+1. find a film both people responded to;
+2. compare their reviewed feeling mixes for that film;
+3. identify people with meaningful emotional overlap;
+4. recommend other films those people responded to strongly;
+5. show the people and shared film behind the recommendation.
+
+Browse and search remain available below this people-led layer. They are supporting catalog tools, not the product's organizing idea.
+
+### Diary
+
+The diary is a person's private and public history. It supports editing, visibility, saved films, and reflection over time. It does not turn the person into a taste score or genre profile.
+
+### Film and member pages
+
+A film page leads with the film and then shows how people felt. A member page shows that person's public responses and the films that stayed with them. Navigation should move naturally between a person, a shared film, and another response.
+
+## Recommendation rules
+
+- People-led recommendations are the primary personalized source.
+- Similarity is grounded in reviewed feelings on films both people have seen.
+- A recommended film must come from a real public response by a matched person.
+- Reasons name the person and the shared film in plain language.
+- Genre, TMDB rating, vote count, and universal emotion-to-genre mappings do not determine recommendations.
+- Popular or trending catalog items may be used only as an explicitly separate cold-start or browse fallback.
+- Pseudo-scientific percentages are not presented as proof of compatibility.
 
 ## Product principles
 
-1. **Emotion-based social discovery is the product.** The diary exists to preserve emotional memory. The social layer exists to find people whose response patterns reveal films worth watching.
-2. **The person is the authority.** Direct input is valid on its own. Any machine-derived value is a suggestion that the person can accept, edit, or ignore.
-3. **The emotional record is source-agnostic.** Sliders, labels, writing, expression estimates, and future consented inputs can use one adapter contract without defining separate products.
-4. **Writing is emotional evidence.** A note or review can contain more context than a momentary expression. Text-derived suggestions belong beside direct input, not behind facial analysis.
-5. **Facial expression is peripheral.** Camera and photo analysis are optional experiments. They never lead the landing page, entry flow, navigation, imagery, or recommendation explanation.
-6. **Record, do not diagnose.** Emotion values describe what the person chose to save about a viewing. The product does not infer identity, mental health, or an objective internal state.
-7. **Learn personal relationships, not universal stereotypes.** The system should learn how this person responds to films. It must not permanently encode rules such as sadness means drama or joy means comedy.
-8. **Recommendations must show their source.** History size, recurring traces, film relationships, and item-level reasons make personalization visible without exposing internal scoring.
-9. **Social means people, not volume.** Public diary entries, follows, and resonance reactions matter. Popularity alone is not a social layer.
-10. **Private by default.** New entries begin private. Publishing is an explicit choice.
-11. **Film art carries the atmosphere.** The interface frames the record and the artwork. Decorative technology imagery has no place in the product.
+1. **People are the discovery engine.** Films become relevant through another person's lived response.
+2. **Response, not review.** The product invites meaning and feeling, not scores or criticism.
+3. **The person is the authority.** Direct input is complete. Any derived value is an editable suggestion.
+4. **Social has a purpose.** Follows, public responses, and reactions create paths to films rather than popularity theater.
+5. **Private stays private.** A private response may improve the owner's matching but never appears in another person's feed or recommendation explanation.
+6. **Media is not evidence.** An attached expression photo is optional social context, not a biometric signal.
+7. **No emotional stereotypes.** Sadness does not mean drama, and joy does not mean comedy. Relationships are learned between people and films.
+8. **Simple language.** Use response, feelings, note, person, film, feed, diary, and recommendation. Avoid invented system names and technical explanations in the interface.
+9. **Film art and human words carry the experience.** Technology should remain quiet.
+
+## Data boundaries
+
+`diary_entries` is the source of truth for one person's response to one viewing. The film, note, visibility, and reviewed feeling mix are saved atomically.
+
+Input evidence and the reviewed feeling mix are different concepts. Direct sliders, text-derived suggestions, and expression estimates may contribute suggestions. Only the values the person accepts are used for matching.
+
+Optional post media is stored separately from the reviewed feeling mix. Removing the media must not change the meaning or recommendation value of the response.
+
+Saved films, follows, and reactions are separate relationships. Reactions express resonance with a post, not a universal judgment of a film.
+
+The current seven-key vector and `manual`, `upload`, and `webcam` sources are prototype constraints. They must not become the permanent feeling vocabulary or source model. The target is defined in `docs/EMOTIONAL_SIGNAL_MODEL.md`.
 
 ## API boundaries
 
-- `/api/catalog`: server-side TMDB access. The TMDB key never ships to the browser.
-- `/api/diary`: complete diary-entry reads and writes plus personal summary.
+- `/api/catalog`: server-side TMDB access; keys never ship to the browser.
+- `/api/diary`: complete response reads and writes plus diary summary.
 - `/api/library`: saved films only.
-- `/api/recommendations`: diary-derived ranking with an optional temporary discovery intent.
-- `/api/discovery`: public entries, people, follows, and reactions.
-- `/api/auth`: account access and password changes.
+- `/api/recommendations`: people-led recommendations and separate catalog fallbacks.
+- `/api/discovery`: feed, public responses, people, follows, and reactions.
+- `/api/auth`: account access and profile changes.
 
 ## Accessibility and inclusion
 
-Target WCAG 2.2 AA. Every flow works with keyboard input. Focus remains visible. Tap targets are at least 44 by 44 pixels. Body copy and placeholders meet contrast requirements. Motion respects `prefers-reduced-motion`. Emotion data never relies on color alone. Direct entry and text remain complete without camera, microphone, biometric, or model access. Every optional sensor or analysis method requires an explicit action and a review step.
+Target WCAG 2.2 AA. Every core flow works with keyboard input. Focus remains visible. Tap targets are at least 44 by 44 pixels. Motion respects `prefers-reduced-motion`. Feeling data never relies on color alone. A complete response can be created without a camera, microphone, biometric input, or model access.
 
 ## Data policy
 
-Raw camera frames and uploaded images stay in the browser and are discarded after review. Written notes remain part of the diary entry; text analysis stores only the reviewed emotional result and the minimum provenance required to reproduce or explain the suggestion. The system distinguishes model confidence from human certainty. No automatic demo-content seeding runs at server startup. `database/seed-contract.json` defines the separate seed-data task.
+Raw camera frames and uploaded images used for an expression estimate stay in the browser and are discarded after review. Attaching a photo to a public post is a separate, explicit choice. Private responses remain private. Written notes remain part of the diary; future text analysis stores only the reviewed result and minimum provenance. No demo-content seeding runs at server startup. `database/seed-contract.json` defines the separate seed-data task.

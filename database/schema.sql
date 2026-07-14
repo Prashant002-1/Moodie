@@ -112,6 +112,7 @@ CREATE TABLE IF NOT EXISTS user_emotion_profiles (
 -- and the context needed to learn from it live in one atomic record.
 CREATE TABLE IF NOT EXISTS diary_entries (
     id BIGSERIAL PRIMARY KEY,
+    seed_key VARCHAR(160) UNIQUE,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     movie_id INTEGER NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
     watched_on DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -131,6 +132,27 @@ CREATE TABLE IF NOT EXISTS diary_entries (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Stable seed ownership is additive and nullable so ordinary user entries are
+-- never mistaken for data that the explicit seed command may reconcile.
+ALTER TABLE diary_entries ADD COLUMN IF NOT EXISTS seed_key VARCHAR(160);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_diary_entries_seed_key
+    ON diary_entries(seed_key) WHERE seed_key IS NOT NULL;
+
+-- A shared expression image is optional post media. It is deliberately
+-- separate from capture_method: attaching a face does not claim the response
+-- was inferred from that face.
+CREATE TABLE IF NOT EXISTS entry_media (
+    entry_id BIGINT NOT NULL REFERENCES diary_entries(id) ON DELETE CASCADE,
+    kind VARCHAR(24) NOT NULL CHECK (kind IN ('expression_photo')),
+    asset_path TEXT NOT NULL,
+    alt_text VARCHAR(240) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (entry_id, kind)
+);
+
+ALTER TABLE entry_media ALTER COLUMN asset_path TYPE TEXT;
 
 CREATE TABLE IF NOT EXISTS saved_films (
     id BIGSERIAL PRIMARY KEY,
@@ -173,6 +195,7 @@ CREATE INDEX IF NOT EXISTS idx_user_emotion_profiles_user_id ON user_emotion_pro
 CREATE INDEX IF NOT EXISTS idx_diary_entries_user_date ON diary_entries(user_id, watched_on DESC, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_diary_entries_public ON diary_entries(visibility, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_diary_entries_movie ON diary_entries(movie_id);
+CREATE INDEX IF NOT EXISTS idx_entry_media_kind ON entry_media(kind);
 CREATE INDEX IF NOT EXISTS idx_saved_films_user ON saved_films(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_follows_followed ON follows(followed_id);
 

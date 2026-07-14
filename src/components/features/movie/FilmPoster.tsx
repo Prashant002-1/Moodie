@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Star } from 'lucide-react';
 import { Movie } from '../../../types/movie';
 import { imageUrl, releaseYear } from '../../../utils/display';
 import BrandMark from '../../brand/BrandMark';
@@ -22,19 +21,14 @@ const FilmPoster: React.FC<FilmPosterProps> = ({ movie, actionLabel = 'View film
           ) : (
             <div className="film-poster__fallback"><BrandMark /></div>
           )}
-          <div className="film-poster__overlay" aria-hidden="true">
-            <span className="film-poster__action"><Play size={14} strokeWidth={2} />{actionLabel}</span>
-          </div>
         </div>
         <h3 className="film-poster__title">{movie.title}</h3>
         <div className="film-poster__meta">
           <span>{releaseYear(movie.release_date)}</span>
-          {movie.vote_average > 0 && (
-            <span className="rating"><Star aria-hidden="true" size={13} strokeWidth={2} />{movie.vote_average.toFixed(1)}</span>
-          )}
         </div>
-        {movie.recommendation_reason && <p className="film-poster__reason">{movie.recommendation_reason}</p>}
       </Link>
+      {movie.recommended_by?.length ? <p className="film-poster__people">From {movie.recommended_by.slice(0, 2).map((person, index) => <React.Fragment key={person.id}>{index > 0 ? ' and ' : ''}<Link to={`/member/${person.username}`}>@{person.username}</Link></React.Fragment>)}</p> : null}
+      {movie.recommendation_reason && <p className="film-poster__reason">{movie.recommendation_reason}</p>}
     </article>
   );
 };

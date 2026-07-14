@@ -8,11 +8,12 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
     const limit = z.coerce.number().int().min(1).max(60).default(24).parse(req.query.limit);
     const viewerId = req.user?.id || null;
     const result = await pool.query(
-      `SELECT de.id, de.user_id, de.movie_id, de.watched_on, de.rating, de.note, de.created_at,
+      `SELECT de.id, de.user_id, de.movie_id, de.watched_on, de.note, de.created_at,
               de.neutral::float, de.happy::float, de.sad::float, de.angry::float,
               de.fearful::float, de.disgusted::float, de.surprised::float,
               u.username, u.bio, m.title, m.poster_path, m.backdrop_path, m.release_date,
-              CAST(m.vote_average AS FLOAT) AS vote_average,
+              em.asset_path AS expression_image_path,
+              em.alt_text AS expression_image_alt,
               (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS reaction_count,
               CASE WHEN $1::int IS NULL THEN FALSE ELSE EXISTS(
                 SELECT 1 FROM entry_reactions er WHERE er.entry_id = de.id AND er.user_id = $1
@@ -23,6 +24,7 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
        FROM diary_entries de
        JOIN users u ON u.id = de.user_id
        JOIN movies m ON m.id = de.movie_id
+       LEFT JOIN entry_media em ON em.entry_id = de.id AND em.kind = 'expression_photo'
        WHERE de.visibility = 'public'
        ORDER BY following DESC, de.created_at DESC
        LIMIT $2`,
@@ -40,11 +42,12 @@ export const getFilmEntries = async (req: AuthRequest, res: Response) => {
     const movieId = z.coerce.number().int().positive().parse(req.params.movieId);
     const viewerId = req.user?.id || null;
     const result = await pool.query(
-      `SELECT de.id, de.user_id, de.movie_id, de.watched_on, de.rating, de.note, de.created_at,
+      `SELECT de.id, de.user_id, de.movie_id, de.watched_on, de.note, de.created_at,
               de.neutral::float, de.happy::float, de.sad::float, de.angry::float,
               de.fearful::float, de.disgusted::float, de.surprised::float,
               u.username, u.bio, m.title, m.poster_path, m.backdrop_path, m.release_date,
-              CAST(m.vote_average AS FLOAT) AS vote_average,
+              em.asset_path AS expression_image_path,
+              em.alt_text AS expression_image_alt,
               (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS reaction_count,
               CASE WHEN $2::int IS NULL THEN FALSE ELSE EXISTS(
                 SELECT 1 FROM entry_reactions er WHERE er.entry_id = de.id AND er.user_id = $2
@@ -53,6 +56,7 @@ export const getFilmEntries = async (req: AuthRequest, res: Response) => {
        FROM diary_entries de
        JOIN users u ON u.id = de.user_id
        JOIN movies m ON m.id = de.movie_id
+       LEFT JOIN entry_media em ON em.entry_id = de.id AND em.kind = 'expression_photo'
        WHERE de.visibility = 'public' AND de.movie_id = $1
        ORDER BY reaction_count DESC, de.created_at DESC LIMIT 24`,
       [movieId, viewerId],
@@ -68,11 +72,28 @@ export const getPeople = async (req: AuthRequest, res: Response) => {
   try {
     const viewerId = req.user?.id || null;
     const result = await pool.query(
-      `WITH viewer AS (
-         SELECT AVG(neutral)::float AS neutral, AVG(happy)::float AS happy, AVG(sad)::float AS sad,
-                AVG(angry)::float AS angry, AVG(fearful)::float AS fearful,
-                AVG(disgusted)::float AS disgusted, AVG(surprised)::float AS surprised
+      `WITH viewer_entries AS (
+         SELECT DISTINCT ON (movie_id) movie_id, neutral, happy, sad, angry, fearful, disgusted, surprised
          FROM diary_entries WHERE user_id = $1
+         ORDER BY movie_id, watched_on DESC, created_at DESC
+       ), public_latest AS (
+         SELECT DISTINCT ON (user_id, movie_id)
+                user_id, movie_id, neutral, happy, sad, angry, fearful, disgusted, surprised
+         FROM diary_entries
+         WHERE visibility = 'public'
+         ORDER BY user_id, movie_id, watched_on DESC, created_at DESC
+       ), person_overlap AS (
+         SELECT candidate.user_id, COUNT(*)::int AS shared_films,
+                AVG(GREATEST(0, 1 - (
+                  ABS(candidate.neutral - viewer.neutral) + ABS(candidate.happy - viewer.happy) +
+                  ABS(candidate.sad - viewer.sad) + ABS(candidate.angry - viewer.angry) +
+                  ABS(candidate.fearful - viewer.fearful) + ABS(candidate.disgusted - viewer.disgusted) +
+                  ABS(candidate.surprised - viewer.surprised)
+                ) / 7))::float AS pattern_overlap
+         FROM public_latest candidate
+         JOIN viewer_entries viewer ON viewer.movie_id = candidate.movie_id
+         WHERE candidate.user_id <> $1
+         GROUP BY candidate.user_id
        )
        SELECT u.id, u.username, u.bio,
               COUNT(de.id)::int AS entries,
@@ -82,24 +103,20 @@ export const getPeople = async (req: AuthRequest, res: Response) => {
               AVG(de.sad)::float AS sad, AVG(de.angry)::float AS angry,
               AVG(de.fearful)::float AS fearful, AVG(de.disgusted)::float AS disgusted,
               AVG(de.surprised)::float AS surprised,
-              CASE WHEN v.neutral IS NULL THEN NULL ELSE GREATEST(0, 1 - (
-                ABS(AVG(de.neutral)::float - v.neutral) + ABS(AVG(de.happy)::float - v.happy) +
-                ABS(AVG(de.sad)::float - v.sad) + ABS(AVG(de.angry)::float - v.angry) +
-                ABS(AVG(de.fearful)::float - v.fearful) + ABS(AVG(de.disgusted)::float - v.disgusted) +
-                ABS(AVG(de.surprised)::float - v.surprised)
-              ) / 7) END AS pattern_overlap,
+              o.shared_films, o.pattern_overlap,
               CASE WHEN $1::int IS NULL THEN FALSE ELSE EXISTS(
                 SELECT 1 FROM follows f WHERE f.follower_id = $1 AND f.followed_id = u.id
               ) END AS following
        FROM users u JOIN diary_entries de ON de.user_id = u.id AND de.visibility = 'public'
-       CROSS JOIN viewer v
+       LEFT JOIN person_overlap o ON o.user_id = u.id
        WHERE ($1::int IS NULL OR u.id <> $1)
-       GROUP BY u.id, v.neutral, v.happy, v.sad, v.angry, v.fearful, v.disgusted, v.surprised
-       ORDER BY following DESC, pattern_overlap DESC NULLS LAST, entries DESC, u.username ASC LIMIT 18`,
+       GROUP BY u.id, o.shared_films, o.pattern_overlap
+       ORDER BY following DESC, o.shared_films DESC NULLS LAST, pattern_overlap DESC NULLS LAST, entries DESC, u.username ASC LIMIT 18`,
       [viewerId],
     );
     res.json({ people: result.rows });
-  } catch {
+  } catch (error) {
+    console.error('People discovery error:', error);
     res.status(500).json({ error: 'People could not be loaded' });
   }
 };
@@ -129,11 +146,12 @@ export const getPersonProfile = async (req: AuthRequest, res: Response) => {
     if (!person.rowCount) return res.status(404).json({ error: 'Member not found' });
 
     const entries = await pool.query(
-      `SELECT de.id, de.user_id, de.movie_id, de.watched_on, de.rating, de.note, de.created_at,
+      `SELECT de.id, de.user_id, de.movie_id, de.watched_on, de.note, de.created_at,
               de.neutral::float, de.happy::float, de.sad::float, de.angry::float,
               de.fearful::float, de.disgusted::float, de.surprised::float,
               u.username, u.bio, m.title, m.poster_path, m.backdrop_path, m.release_date,
-              CAST(m.vote_average AS FLOAT) AS vote_average,
+              em.asset_path AS expression_image_path,
+              em.alt_text AS expression_image_alt,
               (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS reaction_count,
               CASE WHEN $2::int IS NULL THEN FALSE ELSE EXISTS(
                 SELECT 1 FROM entry_reactions er WHERE er.entry_id = de.id AND er.user_id = $2
@@ -142,6 +160,7 @@ export const getPersonProfile = async (req: AuthRequest, res: Response) => {
        FROM diary_entries de
        JOIN users u ON u.id = de.user_id
        JOIN movies m ON m.id = de.movie_id
+       LEFT JOIN entry_media em ON em.entry_id = de.id AND em.kind = 'expression_photo'
        WHERE de.visibility = 'public' AND u.id = $1
        ORDER BY de.watched_on DESC, de.created_at DESC LIMIT 80`,
       [person.rows[0].id, viewerId],

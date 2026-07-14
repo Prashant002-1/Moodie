@@ -1,33 +1,26 @@
-import 'dotenv/config';
+import './config/env';
 import app from './app';
-import { connectDB } from './config/database';
-
-if (!process.env.JWT_SECRET) {
-  console.error('ERROR: JWT_SECRET environment variable is required');
-  process.exit(1);
-}
-
-if (!process.env.DATABASE_URL) {
-  console.error('ERROR: DATABASE_URL environment variable is required');
-  process.exit(1);
-}
-
-const PORT = process.env.PORT || 3001;
+import database, { initializeDatabase } from './config/database';
+import { env } from './config/env';
 
 const startServer = async () => {
   try {
-    console.log('Starting EmotionFlix server...');
-    try {
-      await connectDB();
-    } catch {
-      console.warn('Database connection failed, continuing server startup');
-    }
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/api/health`);
+    console.log('Starting EmotionFlix...');
+    await initializeDatabase();
+
+    const server = app.listen(env.port, () => {
+      console.log(`EmotionFlix is ready at http://localhost:${env.port}`);
     });
+
+    const shutdown = () => {
+      server.close(() => {
+        void database.end().finally(() => process.exit(0));
+      });
+    };
+    process.once('SIGINT', shutdown);
+    process.once('SIGTERM', shutdown);
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('Failed to start EmotionFlix:', error);
     process.exit(1);
   }
 };

@@ -4,95 +4,122 @@
 
 EmotionFlix is an emotion-based social film discovery product. It is not a facial-expression detector with movie recommendations attached.
 
-The product records how a person responded to a film, learns patterns across that history, and connects the person with films found through people who respond in similar ways. Emotional input can come from several sources. No single source defines the product.
+The product saves how a person responded to a film, compares reviewed feelings on shared films, and uses that overlap to reveal what emotionally similar people watched next. No single input source defines the product.
 
 ## Four separate concepts
 
 ### Emotional evidence
 
-Evidence is any input that can contribute to an emotional record. It may be direct, written, or measured:
+Evidence is an input that can contribute to a feeling suggestion:
 
-- values set by the person through sliders, labels, or another direct control;
-- language in a diary note, review, or other text the person chooses to analyze;
+- values set directly through sliders or labels;
+- language in a note or other text the person explicitly chooses to analyze;
 - an optional expression estimate from a camera frame or uploaded image;
-- a future consented adapter that can return emotional values and provenance.
+- a future consented adapter that returns values and provenance.
 
-Evidence is not automatically true. It is an input to review.
+Evidence is not automatically true. It is presented for review.
 
-### Suggested emotional mix
+### Suggested feeling mix
 
-An adapter converts evidence into a proposed set of emotional values. A suggestion records its source, model or method version, confidence when applicable, and creation time.
+An adapter converts evidence into proposed feeling values. A suggestion records its source, method or model version, confidence when applicable, and creation time.
 
-Model confidence means confidence in the adapter output. It does not mean confidence that the product knows how the person felt. Direct human input has no model confidence and should not be stored as a fake `1.0` confidence score.
+Model confidence describes an adapter output. It does not say how certain the product is about the person's inner experience. Direct input has no model confidence and must not be stored with a fabricated confidence score.
 
-### Reviewed emotional record
+### Reviewed feeling mix
 
-The reviewed emotional record is the canonical mix attached to one diary entry. The person can accept a suggestion, edit it, replace it, or set the values directly. Recommendations use this reviewed record, not unreviewed evidence.
+The reviewed feeling mix is the canonical vector attached to one diary entry. The person can accept, edit, replace, or directly set every value. Matching uses only this reviewed mix, never unreviewed evidence.
 
-One viewing has one canonical emotional record at a time. Its edit history and contributing suggestions may be stored separately.
+One viewing has one current reviewed mix. Revision history and contributing suggestions may be stored separately.
 
-### Emotional pattern
+### Person-to-person overlap
 
-The emotional pattern is an aggregate learned across a diary. It relates films, ratings, notes, emotional records, genres, time, and repeated responses. It is not a diagnosis or a permanent personality profile.
+Overlap is calculated from films two people have both responded to. Each shared film provides a comparison between two reviewed feeling mixes. Several meaningful shared-film comparisons create a stronger connection than one coincidental match.
 
-A temporary discovery intent is separate from the diary pattern. It can shift current recommendations without rewriting the historical record.
+This connection is contextual, not a personality diagnosis. It means two people responded similarly to particular films. It may change as either diary grows.
+
+## Optional post media is separate
+
+A person may attach an expression photo to a public response. This photo is social media, not emotional evidence.
+
+- It is never analyzed automatically.
+- It is not required for a public post.
+- It does not affect matching or recommendation order.
+- Removing it does not alter the reviewed feeling mix.
+- It requires a separate, explicit attachment choice.
+
+The optional expression-analysis adapter is a different flow. If a person chooses it, the image remains local by default and produces an editable suggestion. Accepting that suggestion does not publish or attach the source image.
 
 ## Source hierarchy
 
 Direct input is the primary path because the person is the authority on their response.
 
-Text-derived input is the primary assisted path because a note or review can express context, contradiction, and meaning that a single expression cannot. The product may suggest an emotional mix from selected text, but the person reviews it before saving.
+Text-derived input is the primary assisted path because writing can express context, contradiction, and meaning that a single expression cannot. The person reviews any proposed values before saving.
 
-Facial-expression analysis is an optional secondary experiment. It estimates a visible expression in one frame. It must not be described as reading, detecting, or understanding how the person felt about a film. It must not lead the product overview or entry flow.
+Facial-expression analysis is an optional secondary experiment. It estimates visible expression in one frame. It must not be described as reading, detecting, or understanding how the person felt about a film.
 
-Future adapters use the same evidence-to-suggestion contract. Adding an adapter must not require redesigning the diary or recommendation model around that source.
+Future adapters use the same evidence-to-suggestion contract. Adding an adapter must not redesign the diary or recommendation model around that source.
 
-## Emotional vocabulary
+## Feeling vocabulary
 
 The current seven keys, `neutral`, `happy`, `sad`, `angry`, `fearful`, `disgusted`, and `surprised`, came from the face-api expression model. They are an implementation scaffold, not the final vocabulary for film response.
 
-The target vocabulary must support mixed and film-specific responses such as tenderness, melancholy, wonder, unease, tension, joy, amusement, grief, anger, and emotional distance. A person may feel several at once. Values do not need to sum to 100 percent.
+The target vocabulary should support mixed and film-specific responses such as tenderness, melancholy, wonder, unease, tension, joy, amusement, grief, anger, and emotional distance. A person may feel several at once. Values do not need to sum to 100 percent.
 
-The final taxonomy should be versioned. Historical entries must retain the vocabulary version they used, and migrations must not silently reinterpret a person's record.
+The vocabulary must be versioned. Historical entries retain the version they used; migrations must not silently reinterpret a person's response.
 
-## Recommendation rules
+## Recommendation model
 
-The engine learns relationships from a person's own history. It can use reviewed emotional values, ratings, films, genres, written responses, recency, and repeated patterns.
+### Primary people-led path
 
-The engine must not depend on a permanent universal map from an emotion to a genre. Rules such as sadness means drama or joy means comedy collapse personal taste into a stereotype. A cold-start fallback may use broad catalog quality or explicitly labeled temporary priors, but personal history must replace those priors as soon as evidence exists.
+1. Load the owner's diary entries with reviewed feeling mixes.
+2. Find other people with public responses to the same films.
+3. Compare the feeling mixes per shared film.
+4. Weight a connection by overlap quality, number of shared films, and enough evidence to avoid a one-film overfit.
+5. Gather unseen films from those people's public responses.
+6. Rank candidates by the strength of the human connection and the matched person's emotional engagement with that candidate.
+7. Return the people and shared films that explain each recommendation.
 
-Social discovery compares response patterns between people. A useful connection is not simply two people liking the same film. It can also be two people responding similarly to one set of films, followed by one person responding strongly to a film the other has not seen.
+The interface translates this into plain language, for example: “Maya felt something similar about *Past Lives*. This stayed with her too.” It does not expose a percentage as objective proof.
 
-Every personal recommendation needs a short explanation grounded in real records. It should name the relevant diary pattern, film relationship, or public diary connection. It should not display a pseudo-scientific match score as proof.
+### Exclusions
 
-## Product and interaction rules
+User ratings do not exist. TMDB ratings, vote counts, genres, and universal emotion-to-genre maps do not contribute to personal matching or recommendation rank. A person's note may later contribute semantic context after explicit review, but it cannot replace the saved feeling mix without consent.
 
-The public landing page is a product overview. It shows how one viewing becomes a record, how records become a pattern, and how patterns between people lead to another film. Product routes begin after sign-in or the one-step demo.
+### Cold start and browse
 
-The entry flow starts with the film, rating, date, note, and direct emotional input. After the person writes, the interface may offer to suggest feelings from that text. Optional expression inputs belong in a secondary area and never compete with the primary save path.
+When there is not enough shared-film evidence, the system may show a separate community or catalog fallback. That fallback must be labeled through placement and language, kept distinct from personal recommendations, and replaced as real people-led evidence grows.
 
-The interface uses terms such as emotional record, emotional mix, suggestion, source, and reviewed. It avoids emotion detection, face reading, mood scan, or any claim that the product understands the person.
+Private entries may help match their owner internally, but their film title, note, feelings, or existence must never appear to another person. Recommendation explanations may name only public responses.
+
+## Interaction rules
+
+The public landing page is a product overview. The signed-in home is the social feed.
+
+The composer starts with the film and then asks how it felt and what it meant. Direct controls and writing are sufficient. Optional adapters sit in a secondary disclosure. Publishing and optional photo attachment are separate choices.
+
+Use plain terms: feelings, response, suggestion, source, person, shared film. Avoid emotion detection, face reading, mood scan, taste DNA, emotional fingerprint, or any claim that the product understands the person.
 
 ## Privacy and consent
 
-Every derived source is opt-in. The person must know what input is being analyzed and what will be saved before analysis begins.
+Every derived source is opt-in. The person must know which input will be analyzed and what will be saved before analysis begins.
 
-Raw camera frames, uploaded images, audio, or other sensor data are not persisted by default. The saved record contains the reviewed emotional values and limited provenance. Written diary text is already part of the entry and is analyzed only after an explicit action or a clearly disclosed setting.
+Raw camera frames, uploaded analysis images, audio, or other sensor data are not persisted by default. The saved response contains the reviewed feeling values and limited provenance. A public media attachment is stored only after a separate explicit choice.
 
-Private entries remain private. Publishing a diary entry is a separate action from accepting an emotional suggestion.
+Private responses remain private. Publishing is independent from accepting a feeling suggestion.
 
 ## Current implementation boundary
 
-The current schema stores one seven-key vector with `capture_method` limited to `manual`, `webcam`, or `upload`, plus one numeric confidence value. The current UI supports sliders and optional face-api expression estimates. Text-derived suggestions are not implemented yet.
+The current schema stores one seven-key vector with `capture_method` limited to `manual`, `webcam`, or `upload`, plus one numeric confidence value. The current interface supports sliders and optional face-api expression estimates. Text-derived suggestions are not implemented yet.
 
-Before adding text or other adapters, the data model needs to separate reviewed emotional records from source observations. The likely model includes:
+Before adding text or other adapters, separate reviewed feeling mixes from source observations. The target model needs:
 
 - an extensible source identifier such as `direct`, `text`, `expression`, `imported`, or `combined`;
-- nullable model confidence rather than a forced confidence value for direct input;
+- nullable model confidence;
 - source and model versions;
-- the reviewed values and vocabulary version;
+- a vocabulary version;
 - review and revision timestamps;
-- optional observation rows when several sources contribute to one record;
-- an explicit retention policy for raw evidence.
+- optional observation rows when several sources contribute;
+- a retention policy for raw evidence;
+- optional post media stored outside emotional evidence.
 
-This migration should preserve `diary_entries` as the atomic viewing record while allowing source observations to evolve independently.
+This migration preserves `diary_entries` as the atomic viewing response while allowing input sources and social media to evolve independently.

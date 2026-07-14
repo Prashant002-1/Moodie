@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Check, Search, Star } from 'lucide-react';
+import { ArrowLeft, Check, ImagePlus, Search, X } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { EmotionCapture } from '../components/EmotionCapture';
 import { useDiary } from '../contexts/DiaryContext';
@@ -11,6 +11,32 @@ import { imageUrl, releaseYear } from '../utils/display';
 
 type Step = 'search' | 'entry' | 'done';
 
+const prepareExpressionPhoto = async (file: File): Promise<string> => {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Choose a JPEG, PNG, or WebP image.');
+  if (file.size > 8 * 1024 * 1024) throw new Error('Choose an image smaller than 8 MB.');
+
+  const source = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error('The image could not be read.'));
+    reader.readAsDataURL(file);
+  });
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const next = new window.Image();
+    next.onload = () => resolve(next);
+    next.onerror = () => reject(new Error('The image could not be opened.'));
+    next.src = source;
+  });
+  const scale = Math.min(1, 1200 / image.naturalWidth, 1500 / image.naturalHeight);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('The image could not be prepared.');
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.82);
+};
+
 const Log: React.FC = () => {
   const { createEntry } = useDiary();
   const [searchParams] = useSearchParams();
@@ -18,10 +44,11 @@ const Log: React.FC = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Movie[]>([]);
   const [selected, setSelected] = useState<Movie | null>(null);
-  const [rating, setRating] = useState<number | null>(null);
   const [note, setNote] = useState('');
   const [watchedOn, setWatchedOn] = useState(new Date().toISOString().slice(0, 10));
   const [visibility, setVisibility] = useState<DiaryVisibility>('private');
+  const [expressionImage, setExpressionImage] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState('');
   const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -55,7 +82,19 @@ const Log: React.FC = () => {
     setError('');
   };
 
-  const save = async (emotions: EmotionScores, method: CaptureMethod, confidence = 1) => {
+  const chooseExpressionPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setPhotoError('');
+    try {
+      setExpressionImage(await prepareExpressionPhoto(file));
+    } catch (caught) {
+      setPhotoError(caught instanceof Error ? caught.message : 'The image could not be prepared.');
+    }
+  };
+
+  const save = async (emotions: EmotionScores, method: CaptureMethod, confidence = 1, analyzedExpressionImage?: string) => {
     if (!selected) return;
     setSaving(true);
     setError('');
@@ -63,8 +102,8 @@ const Log: React.FC = () => {
       await createEntry({
         movieId: selected.id,
         watchedOn,
-        rating,
         note,
+        expressionImage: analyzedExpressionImage || expressionImage || undefined,
         visibility,
         emotions,
         captureMethod: method,
@@ -81,10 +120,11 @@ const Log: React.FC = () => {
   const reset = () => {
     setStep('search');
     setSelected(null);
-    setRating(null);
     setNote('');
     setWatchedOn(new Date().toISOString().slice(0, 10));
     setVisibility('private');
+    setExpressionImage(null);
+    setPhotoError('');
     setQuery('');
     setResults([]);
     setError('');
@@ -94,8 +134,7 @@ const Log: React.FC = () => {
     <div className="page-shell log-page">
       <header className="page-header">
         <div className="page-header__copy">
-          <h1 className="page-title">{step === 'search' ? 'Add a film to your diary.' : step === 'entry' ? `What did ${selected?.title} leave behind?` : 'Entry saved.'}</h1>
-          <p className="page-intro">{step === 'search' ? 'Start with the film. The date, rating, note, and emotional record stay together.' : step === 'entry' ? 'Write what stayed with you, then set or refine the emotional mix yourself. Optional inputs can offer a suggestion, but you decide what is saved.' : 'This viewing can now shape future recommendations.'}</p>
+          <h1 className="page-title">{step === 'search' ? 'Choose a film.' : step === 'entry' ? `How did ${selected?.title} make you feel?` : 'Response saved.'}</h1>
         </div>
       </header>
 
@@ -114,7 +153,7 @@ const Log: React.FC = () => {
               {results.map(movie => (
                 <button className="film-picker__row" key={movie.id} onClick={() => chooseMovie(movie)} type="button">
                   {imageUrl(movie.poster_path, 'w154') ? <img alt="" aria-hidden="true" src={imageUrl(movie.poster_path, 'w154')!} /> : <div className="film-picker__placeholder" />}
-                  <span><strong>{movie.title}</strong><small>{releaseYear(movie.release_date)} · {movie.vote_average.toFixed(1)} community rating</small></span>
+                  <span><strong>{movie.title}</strong><small>{releaseYear(movie.release_date)}</small></span>
                   <span className="text-link">Choose film</span>
                 </button>
               ))}
@@ -134,12 +173,27 @@ const Log: React.FC = () => {
           <div className="entry-composer__record">
             <div className="entry-fields">
               <div className="field"><label htmlFor="watched-on">Watched on</label><input id="watched-on" onChange={event => setWatchedOn(event.target.value)} type="date" value={watchedOn} /></div>
-              <div className="field"><label htmlFor="film-rating"><Star size={15} />Rating</label><select id="film-rating" onChange={event => setRating(event.target.value ? Number(event.target.value) : null)} value={rating ?? ''}><option value="">No rating</option>{Array.from({ length: 10 }, (_, index) => (index + 1) / 2).map(value => <option key={value} value={value}>{value.toFixed(1)} / 5</option>)}</select></div>
-              <div className="field field--full"><label htmlFor="entry-note">What stayed with you?</label><textarea id="entry-note" maxLength={2000} onChange={event => setNote(event.target.value)} placeholder="A scene, a feeling, a thought you kept returning to." value={note} /><span className="field__hint">{note.length} / 2000</span></div>
-              <fieldset className="visibility-control field--full"><legend>Visibility</legend><label><input checked={visibility === 'private'} name="visibility" onChange={() => setVisibility('private')} type="radio" />Private</label><label><input checked={visibility === 'public'} name="visibility" onChange={() => setVisibility('public')} type="radio" />Public</label><p>Public entries can appear in community discovery.</p></fieldset>
+              <div className="field field--full"><label htmlFor="entry-note">What did it mean to you?</label><textarea id="entry-note" maxLength={2000} onChange={event => setNote(event.target.value)} placeholder="I felt..." value={note} /><span className="field__hint">{note.length} / 2000</span></div>
+              <div className="field field--full">
+                <span className="field-label">Add a photo <small>Optional</small></span>
+                {expressionImage ? (
+                  <figure className="expression-photo-preview">
+                    <img alt="Optional expression photo preview" src={expressionImage} />
+                    <button aria-label="Remove attached photo" className="icon-button" onClick={() => setExpressionImage(null)} type="button"><X size={18} /></button>
+                  </figure>
+                ) : (
+                  <label className="expression-photo-picker">
+                    <ImagePlus aria-hidden="true" size={22} />
+                    <span><strong>Choose a photo</strong><small>Share the expression that stayed with you. Your feelings still come from you.</small></span>
+                    <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={chooseExpressionPhoto} type="file" />
+                  </label>
+                )}
+                {photoError && <span className="error-text" role="alert">{photoError}</span>}
+              </div>
+              <fieldset className="visibility-control field--full"><legend>Visibility</legend><label><input checked={visibility === 'private'} name="visibility" onChange={() => setVisibility('private')} type="radio" />Private</label><label><input checked={visibility === 'public'} name="visibility" onChange={() => setVisibility('public')} type="radio" />Public</label><p>Public responses appear in the feed.</p></fieldset>
             </div>
 
-            <div className="feeling-divider"><span>Emotional record</span><p>This is the pattern the recommendation engine learns from.</p></div>
+            <div className="feeling-divider"><span>Add your feelings</span></div>
             <EmotionCapture isLoading={saving} onEmotionsDetected={save} />
           </div>
         </div>
@@ -148,8 +202,8 @@ const Log: React.FC = () => {
       {step === 'done' && selected && (
         <div className="completion-state">
           <Check size={32} />
-          <div><h2>{selected.title} is in your diary.</h2><p>The film, your note, and the emotional record were saved together.</p></div>
-          <div className="completion-state__actions"><Link className="button button--primary" to="/diary">Open your diary</Link><Link className="button button--secondary" to="/recommendations">See updated recommendations</Link><button className="button button--quiet" onClick={reset} type="button">Log another film</button></div>
+          <div><h2>{selected.title} is in your diary.</h2></div>
+          <div className="completion-state__actions"><Link className="button button--primary" to="/feed">Open feed</Link><Link className="button button--secondary" to="/recommendations">Discover films</Link><button className="button button--quiet" onClick={reset} type="button">Add another film</button></div>
         </div>
       )}
     </div>

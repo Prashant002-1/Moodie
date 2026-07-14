@@ -12,12 +12,13 @@ import { ErrorBoundary, LoadingSpinner, ProtectedRoute } from './components/comm
 import { UserProvider } from './contexts/UserContext'
 import { DiaryProvider } from './contexts/DiaryContext'
 import Layout from './components/layout/Layout'
+import SmoothScroll from './components/motion/SmoothScroll'
 
 const Home = lazy(() => import('./pages/Home'))
 const UserProfile = lazy(() => import('./pages/UserProfile'))
 const Log = lazy(() => import('./pages/Log'))
 const Diary = lazy(() => import('./pages/Diary'))
-const Community = lazy(() => import('./pages/Community'))
+const Feed = lazy(() => import('./pages/Community'))
 const MemberProfile = lazy(() => import('./pages/MemberProfile'))
 const Recommendations = lazy(() => import('./pages/Recommendations'))
 const MovieDetails = lazy(() => import('./pages/MovieDetails'))
@@ -32,6 +33,7 @@ function App() {
             <UserProvider>
                     <DiaryProvider>
                         <BrowserRouter>
+                        <SmoothScroll />
                         <Suspense fallback={<LoadingSpinner message="Loading page" />}>
                             <Routes>
                                 <Route path="/" element={<Layout />}>
@@ -56,11 +58,12 @@ function App() {
                                             <Recommendations />
                                         </ProtectedRoute>
                                     } />
-                                    <Route path="community" element={
+                                    <Route path="feed" element={
                                         <ProtectedRoute>
-                                            <Community />
+                                            <Feed />
                                         </ProtectedRoute>
                                     } />
+                                    <Route path="community" element={<Navigate replace to="/feed" />} />
                                     <Route path="member/:username" element={
                                         <ProtectedRoute>
                                             <MemberProfile />

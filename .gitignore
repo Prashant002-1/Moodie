@@ -40,7 +40,6 @@ GEMINI.md
 .env.test.local
 .env.production.local
 !.env.example
-!server/.env.example
 
 # Coverage and testing
 coverage/
@@ -67,8 +66,8 @@ TESTING.md
 .vite/
 *.cache
 
-# Docker volumes
-postgres_data/
+# Embedded local database
+.data/
 
 *.mdc
 

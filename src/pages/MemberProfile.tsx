@@ -21,7 +21,7 @@ const entryMovie = (entry: CommunityEntry): Movie => ({
   backdrop_path: entry.backdrop_path,
   genre_ids: [],
   popularity: 0,
-  vote_average: entry.vote_average || 0,
+  vote_average: 0,
   vote_count: 0,
 });
 
@@ -74,7 +74,7 @@ const MemberProfile: React.FC = () => {
   };
 
   if (loading) return <div className="loading-state page-loading"><div className="loading-spinner" /><span>Opening public diary</span></div>;
-  if (error || !person) return <div className="page-shell"><div className="error-state"><h1>{error || 'Member not found'}</h1><Link className="button button--secondary" to="/community">Return to community</Link></div></div>;
+  if (error || !person) return <div className="page-shell"><div className="error-state"><h1>{error || 'Member not found'}</h1><Link className="button button--secondary" to="/feed">Return to feed</Link></div></div>;
 
   const emotion = dominantEmotion(person);
   const backdrop = entries.find(entry => entry.backdrop_path)?.backdrop_path;
@@ -86,21 +86,21 @@ const MemberProfile: React.FC = () => {
         <div className="member-hero__scrim" />
         <div className="member-hero__content">
           <div className="member-avatar">{person.username.charAt(0).toUpperCase()}</div>
-          <div><h1>@{person.username}</h1><p>{person.bio || `${person.entries} public diary entries.`}</p><div className="member-facts"><span>{person.entries} public {person.entries === 1 ? 'entry' : 'entries'}</span><span>{person.followers} {person.followers === 1 ? 'follower' : 'followers'}</span><span>{person.following_count} following</span>{emotion && <span><i style={{ background: emotionColors[emotion.emotion] }} />Often records {feelingName(emotion.emotion)}</span>}</div></div>
-          {user && user.id !== person.id && <button className="button button--primary" onClick={() => void toggleFollow()} type="button">{person.following ? <UserMinus size={18} /> : <UserPlus size={18} />}{person.following ? 'Unfollow diary' : 'Follow diary'}</button>}
+          <div><h1>@{person.username}</h1><p>{person.bio || `${person.entries} public responses.`}</p><div className="member-facts"><span>{person.entries} public {person.entries === 1 ? 'response' : 'responses'}</span><span>{person.followers} {person.followers === 1 ? 'follower' : 'followers'}</span><span>{person.following_count} following</span>{emotion && <span><i style={{ background: emotionColors[emotion.emotion] }} />Strongest public feeling: {feelingName(emotion.emotion)}</span>}</div></div>
+          {user && user.id !== person.id && <button className="button button--primary" onClick={() => void toggleFollow()} type="button">{person.following ? <UserMinus size={18} /> : <UserPlus size={18} />}{person.following ? 'Unfollow' : 'Follow'}</button>}
         </div>
       </header>
 
       <div className="page-shell member-content">
-        {films.length > 0 && <FilmRail description={`Films across @${person.username}'s public entries.`} movies={films.slice(0, 14)} title="Films in this diary" />}
+        {films.length > 0 && <FilmRail movies={films.slice(0, 14)} title="Films" />}
         <section className="member-entries" aria-labelledby="member-entries-title">
-          <header className="section-heading-row"><div><h2 id="member-entries-title">Public entries</h2><p>The record behind the pattern.</p></div></header>
+          <header className="section-heading-row"><div><h2 id="member-entries-title">Responses</h2></div></header>
           {entries.map(entry => {
             const entryEmotion = dominantEmotion(entry);
             return (
               <article className="public-entry" key={entry.id}>
                 <Link className="public-entry__art" to={`/movie/${entry.movie_id}`}>{entry.poster_path ? <img alt={`Poster for ${entry.title}`} loading="lazy" src={imageUrl(entry.poster_path, 'w342') || ''} /> : <div />}</Link>
-                <div className="public-entry__body"><p className="public-entry__meta">{new Date(`${entry.watched_on}T12:00:00`).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</p><Link to={`/movie/${entry.movie_id}`}><h3>{entry.title}</h3></Link><p className="public-entry__meta">{entry.rating ? `${entry.rating} / 5` : 'No rating'}{entryEmotion ? ` · ${feelingName(entryEmotion.emotion)}` : ''}</p><blockquote>{entry.note || 'No note on this viewing.'}</blockquote><button aria-pressed={entry.reacted} className={`reaction-button${entry.reacted ? ' reaction-button--active' : ''}`} disabled={!user} onClick={() => void toggleReaction(entry)} type="button"><Heart fill={entry.reacted ? 'currentColor' : 'none'} size={17} />{entry.reaction_count || 0}<span className="sr-only">Mark as resonant</span></button></div>
+                <div className="public-entry__body">{entry.expression_image_path && <img alt={entry.expression_image_alt || `Expression photo shared by ${entry.username}`} className="public-entry__expression" loading="lazy" src={entry.expression_image_path} />}<p className="public-entry__meta">{new Date(`${entry.watched_on}T12:00:00`).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</p><Link to={`/movie/${entry.movie_id}`}><h3>{entry.title}</h3></Link>{entryEmotion && <p className="public-entry__meta">{feelingName(entryEmotion.emotion)}</p>}<blockquote>{entry.note || 'No words added.'}</blockquote><button aria-pressed={entry.reacted} className={`reaction-button${entry.reacted ? ' reaction-button--active' : ''}`} disabled={!user} onClick={() => void toggleReaction(entry)} type="button"><Heart fill={entry.reacted ? 'currentColor' : 'none'} size={17} />{entry.reaction_count || 0}<span className="sr-only">React</span></button></div>
               </article>
             );
           })}

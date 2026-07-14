@@ -1,20 +1,32 @@
 # EmotionFlix
 
-EmotionFlix is emotion-based social film discovery, built on a personal film diary.
+EmotionFlix is emotion-based social film discovery.
 
-Each diary entry keeps the film, viewing date, rating, note, visibility, and reviewed emotional record together. The emotional record is source-agnostic. A person can set it directly, ask for suggestions from a note or review, or choose another consented input. Derived values remain editable suggestions until the person accepts them.
+A person shares what a film meant to them and the feelings that stayed with them. The product finds people who responded similarly to the same films, then reveals what stayed with those people next. The signed-in home is a social feed; the personal diary and film catalog support that experience without replacing it.
 
-Public entries form the community layer. Members can find people with familiar response patterns, follow their diaries, and discover films through what resonated with those people. Facial-expression analysis is an optional input experiment, not the product identity or primary entry path.
+Direct feeling controls and writing are the primary inputs. A public response may include an optional expression photo as attached media. Facial-expression analysis is a separate optional adapter whose output remains an editable suggestion. It is not the product identity.
 
-`PRODUCT.md` defines the product philosophy and journeys. [`docs/EMOTIONAL_SIGNAL_MODEL.md`](./docs/EMOTIONAL_SIGNAL_MODEL.md) defines the source-agnostic emotion model, recommendation rules, consent boundaries, and the gap between the current prototype and target architecture. `DESIGN.md` defines how those decisions appear in the interface.
+There are no user ratings. Genres, TMDB vote values, and universal emotion-to-genre rules do not power personal recommendations.
+
+[`PRODUCT.md`](./PRODUCT.md) defines the product philosophy and journeys. [`docs/EMOTIONAL_SIGNAL_MODEL.md`](./docs/EMOTIONAL_SIGNAL_MODEL.md) defines emotional evidence, people-led matching, media separation, and consent. [`DESIGN.md`](./DESIGN.md) defines the Matinee Archive interface system.
 
 ## Stack
 
-- React 19, TypeScript, Vite, React Router, and Oxygen
-- Express, PostgreSQL, JWT authentication, and Zod validation
+- React 19, TypeScript, Vite, React Router, Lenis, and Oxygen
+- Express, embedded PostgreSQL via PGlite, JWT authentication, and Zod validation
 - face-api.js for the current optional in-browser expression adapter
-- TMDB for film metadata and artwork, accessed only through the server
+- TMDB for server-side film metadata and artwork
 - Vitest, React Testing Library, Jest, and Supertest
+
+## Product routes
+
+- `/`: public product overview
+- `/feed`: signed-in social home
+- `/recommendations`: people-led discovery with catalog browse below
+- `/diary`: personal response history
+- `/log`: add a film response
+- `/movie/:id`: film details and public responses
+- `/member/:username`: public member responses
 
 ## Current APIs
 
@@ -36,50 +48,56 @@ Public entries form the community layer. Members can find people with familiar r
 - `POST|DELETE /api/discovery/entries/:entryId/reaction`
 - `GET|PATCH /api/auth/profile`
 
-The old `/api/user-movies` and `/api/emotion-mappings` routes have been removed. Legacy tables remain only so `database/schema.sql` can migrate existing records into `diary_entries` and `saved_films`.
-
 ## Current implementation boundary
 
-The current application supports direct sliders and optional camera or photo expression estimates. The database still uses seven face-api-derived emotion keys and a `manual|webcam|upload` source enum. Text-derived suggestions and the extensible source model are documented product requirements, not completed features. See [`docs/EMOTIONAL_SIGNAL_MODEL.md`](./docs/EMOTIONAL_SIGNAL_MODEL.md) before changing the diary schema, input flow, or recommendation engine.
+The current application supports direct sliders and optional camera or photo expression estimates. The database still uses seven face-api-derived feeling keys and a `manual|webcam|upload` source enum. Text-derived suggestions and the extensible source model are documented requirements, not completed features.
 
 ## Run locally
 
-Requirements: Node.js 20 or newer, PostgreSQL 15, and a TMDB API key.
+Requirement: Node.js 20 or newer. Docker and a system database are not needed.
 
 ```bash
 npm install
-npm --prefix server install
-```
-
-Create `server/.env`:
-
-```dotenv
-DATABASE_URL=postgresql://postgres:password@localhost:5432/emotionflix_dev
-JWT_SECRET=replace-with-a-long-random-value
-JWT_EXPIRES_IN=7d
-FRONTEND_URL=http://localhost:5173
-TMDB_API_KEY=your-tmdb-api-key
-PORT=3001
-```
-
-Create `.env.local` at the repository root:
-
-```dotenv
-VITE_API_URL=http://localhost:3001/api
-```
-
-Apply `database/schema.sql`, then run the API and frontend in separate terminals:
-
-```bash
-npm --prefix server run dev
+cp .env.example .env
 npm run dev
 ```
 
-The frontend runs at `http://localhost:5173`. The API runs at `http://localhost:3001`.
+Add a TMDB API key to `.env` to enable live film metadata:
+
+```dotenv
+TMDB_API_KEY=your-tmdb-api-key
+```
+
+Open `http://localhost:5173`. The root command runs the web app and API together. Vite proxies `/api` internally, so there is no frontend API URL to configure.
+
+The embedded database is created at `.data/emotionflix` and `database/schema.sql` is applied automatically. Delete `.data/emotionflix` only when you intentionally want a clean local database.
+
+## Production-style run
+
+```bash
+npm run build
+npm start
+```
+
+The Express process serves both the built frontend and `/api` from `http://localhost:3001`.
+
+## Runtime model
+
+- One root dependency install and lockfile
+- One root `.env` file
+- One embedded, persistent PostgreSQL-compatible database
+- One development command
+- One production process and origin
+- Automatic schema initialization on startup
 
 ## Seed data
 
-The application does not create demo or community content at startup. [`database/seed-contract.json`](./database/seed-contract.json) defines the complete contract for a separate seed-data task.
+The application does not create demo or community content at startup. [`database/seed-contract.json`](./database/seed-contract.json) defines the seed contract. The seed script and verifier are explicit tasks.
+
+```bash
+npm run seed
+npm run seed:verify
+```
 
 ## Verification
 
@@ -87,8 +105,7 @@ The application does not create demo or community content at startup. [`database
 npm run lint
 npm run build
 npm test
-npm --prefix server run build
-npm --prefix server test -- --runInBand
+npm --workspace server test -- --runInBand
 ```
 
-The product documents are source-of-truth constraints, not launch copy. When implementation and documentation differ, preserve user data and update the implementation toward the documented model deliberately.
+The product documents are source-of-truth constraints. When implementation and documentation differ, preserve user data and move the implementation toward the documented model deliberately.

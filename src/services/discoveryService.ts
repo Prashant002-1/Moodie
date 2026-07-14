@@ -11,10 +11,10 @@ export interface CommunityEntry extends EmotionScores {
   poster_path: string | null;
   backdrop_path: string | null;
   release_date: string;
-  vote_average: number;
   watched_on: string;
-  rating: number | null;
   note: string;
+  expression_image_path: string | null;
+  expression_image_alt: string | null;
   created_at: string;
   reaction_count: number;
   reacted: boolean;

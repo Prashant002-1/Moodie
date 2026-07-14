@@ -19,7 +19,6 @@ export interface User {
     diaryEntries: number;
     publicEntries: number;
     savedFilms: number;
-    averageRating: number | null;
   };
 }
 
@@ -68,7 +67,6 @@ const createUserFromAuth = (authUser: AuthUser): User => ({
     diaryEntries: 0,
     publicEntries: 0,
     savedFilms: 0,
-    averageRating: null,
   }
 });
 
@@ -98,7 +96,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           diaryEntries: stats.entries,
           publicEntries: stats.public_entries,
           savedFilms: stats.saved,
-          averageRating: stats.average_rating,
         }
       };
 

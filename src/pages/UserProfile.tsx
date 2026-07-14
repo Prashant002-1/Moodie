@@ -54,23 +54,22 @@ const UserProfile: React.FC = () => {
 
       <div className="account-grid">
         <section className="account-section">
-          <header><BookOpen size={21} /><div><h2>Diary</h2><p>The records attached to this account.</p></div></header>
+          <header><BookOpen size={21} /><div><h2>Diary</h2></div></header>
           <dl className="data-list">
             <div className="data-row"><dt>Entries</dt><dd>{summary?.entries ?? entries.length}</dd></div>
-            <div className="data-row"><dt>Public entries</dt><dd>{summary?.public_entries ?? entries.filter(entry => entry.visibility === 'public').length}</dd></div>
+            <div className="data-row"><dt>Public responses</dt><dd>{summary?.public_entries ?? entries.filter(entry => entry.visibility === 'public').length}</dd></div>
             <div className="data-row"><dt>Saved films</dt><dd>{summary?.saved ?? savedFilms.length}</dd></div>
-            <div className="data-row"><dt>Average rating</dt><dd>{summary?.average_rating ? `${summary.average_rating} / 5` : 'No ratings yet'}</dd></div>
           </dl>
           <Link className="button button--secondary" to="/diary">Open your diary</Link>
         </section>
 
         <section className="account-section">
-          <header><LockKeyhole size={21} /><div><h2>Account</h2><p>The identity used for private records and public entries.</p></div></header>
+          <header><LockKeyhole size={21} /><div><h2>Account</h2></div></header>
           <dl className="data-list">
             <div className="data-row"><dt>Username</dt><dd>@{user.username}</dd></div>
             <div className="data-row"><dt>Email</dt><dd>{user.email}</dd></div>
           </dl>
-          <form className="profile-bio-form" onSubmit={saveBio}><div className="field"><label htmlFor="profile-bio">Public bio</label><textarea id="profile-bio" maxLength={240} onChange={event => setBio(event.target.value)} placeholder="What tends to stay with you after a film?" value={bio} /><span className="field__hint">{bio.length} / 240. Shown beside public diary entries.</span></div>{bioStatus && <p className="metadata" role="status">{bioStatus}</p>}<button className="button button--secondary" disabled={savingBio} type="submit">{savingBio ? 'Saving profile' : 'Save public bio'}</button></form>
+          <form className="profile-bio-form" onSubmit={saveBio}><div className="field"><label htmlFor="profile-bio">Public bio</label><textarea id="profile-bio" maxLength={240} onChange={event => setBio(event.target.value)} placeholder="What tends to stay with you after a film?" value={bio} /><span className="field__hint">{bio.length} / 240. Shown beside public responses.</span></div>{bioStatus && <p className="metadata" role="status">{bioStatus}</p>}<button className="button button--secondary" disabled={savingBio} type="submit">{savingBio ? 'Saving profile' : 'Save public bio'}</button></form>
           {(summary?.public_entries || 0) > 0 && <Link className="text-link" to={`/member/${user.username}`}>View your public diary</Link>}
         </section>
 

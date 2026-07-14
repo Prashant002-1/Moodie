@@ -11,7 +11,6 @@ interface DiaryEntryEditorProps {
 
 const DiaryEntryEditor: React.FC<DiaryEntryEditorProps> = ({ entry, onCancel, onSave }) => {
   const [watchedOn, setWatchedOn] = useState(entry.watched_on.slice(0, 10));
-  const [rating, setRating] = useState<number | null>(entry.rating);
   const [note, setNote] = useState(entry.note);
   const [visibility, setVisibility] = useState<DiaryVisibility>(entry.visibility);
   const [emotions, setEmotions] = useState<EmotionScores>({
@@ -31,7 +30,7 @@ const DiaryEntryEditor: React.FC<DiaryEntryEditorProps> = ({ entry, onCancel, on
     setSaving(true);
     setError('');
     try {
-      await onSave({ watchedOn, rating, note, visibility, emotions, captureMethod: entry.capture_method, confidence: entry.confidence });
+      await onSave({ watchedOn, note, visibility, emotions, captureMethod: entry.capture_method, confidence: entry.confidence });
     } catch {
       setError('The diary entry could not be updated.');
     } finally {
@@ -43,8 +42,7 @@ const DiaryEntryEditor: React.FC<DiaryEntryEditorProps> = ({ entry, onCancel, on
     <form className="diary-editor" onSubmit={submit}>
       <div className="diary-editor__fields">
         <div className="field"><label htmlFor={`edit-date-${entry.id}`}>Watched on</label><input id={`edit-date-${entry.id}`} onChange={event => setWatchedOn(event.target.value)} type="date" value={watchedOn} /></div>
-        <div className="field"><label htmlFor={`edit-rating-${entry.id}`}>Rating</label><select id={`edit-rating-${entry.id}`} onChange={event => setRating(event.target.value ? Number(event.target.value) : null)} value={rating ?? ''}><option value="">No rating</option>{Array.from({ length: 10 }, (_, index) => (index + 1) / 2).map(value => <option key={value} value={value}>{value.toFixed(1)} / 5</option>)}</select></div>
-        <div className="field field--full"><label htmlFor={`edit-note-${entry.id}`}>What stayed with you?</label><textarea id={`edit-note-${entry.id}`} maxLength={2000} onChange={event => setNote(event.target.value)} value={note} /></div>
+        <div className="field field--full"><label htmlFor={`edit-note-${entry.id}`}>What did it mean to you?</label><textarea id={`edit-note-${entry.id}`} maxLength={2000} onChange={event => setNote(event.target.value)} value={note} /></div>
         <fieldset className="visibility-control field--full"><legend>Visibility</legend><label><input checked={visibility === 'private'} name={`visibility-${entry.id}`} onChange={() => setVisibility('private')} type="radio" />Private</label><label><input checked={visibility === 'public'} name={`visibility-${entry.id}`} onChange={() => setVisibility('public')} type="radio" />Public</label></fieldset>
       </div>
       <div className="diary-editor__emotions"><ManualEmotionInput initialScores={emotions} onEmotionChange={setEmotions} /></div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Pencil, Plus, Star, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FilmRail from '../components/features/movie/FilmRail';
 import DiaryEntryEditor from '../components/diary/DiaryEntryEditor';
@@ -23,17 +23,17 @@ const Diary: React.FC = () => {
   return (
     <div className="page-shell diary-page">
       <header className="page-header diary-header">
-        <div className="page-header__copy"><h1 className="page-title">Your film diary.</h1><p className="page-intro">A record of what you watched, what it left behind, and the patterns forming between films.</p></div>
-        <Link className="button button--primary" to="/log"><Plus size={18} />Log a film</Link>
+        <div className="page-header__copy"><h1 className="page-title">Diary</h1><p className="page-intro">The films you watched and what they meant to you.</p></div>
+        <Link className="button button--primary" to="/log"><Plus size={18} />Add film</Link>
       </header>
 
       {summary && summary.entries > 0 && (
         <section className="diary-pattern" aria-labelledby="pattern-title">
-          <div><h2 id="pattern-title">The pattern so far</h2><p>{summary.entries} {summary.entries === 1 ? 'entry' : 'entries'} · {summary.public_entries} public · {summary.saved} saved</p></div>
+          <div><h2 id="pattern-title">Your feelings</h2><p>{summary.entries} {summary.entries === 1 ? 'film' : 'films'} · {summary.public_entries} public · {summary.saved} saved</p></div>
           <dl>
-            <div><dt>Strongest trace</dt><dd>{summaryEmotion ? feelingName(summaryEmotion.emotion) : 'Still forming'}</dd></div>
-            <div><dt>Recurring genres</dt><dd>{summary.top_genres.slice(0, 3).map(genre => genre.name).join(', ') || 'Still forming'}</dd></div>
-            <div><dt>Average rating</dt><dd>{summary.average_rating ? `${summary.average_rating} / 5` : 'No ratings yet'}</dd></div>
+            <div><dt>Strongest feeling</dt><dd>{summaryEmotion ? feelingName(summaryEmotion.emotion) : 'Still forming'}</dd></div>
+            <div><dt>Public responses</dt><dd>{summary.public_entries}</dd></div>
+            <div><dt>Saved films</dt><dd>{summary.saved}</dd></div>
           </dl>
           <div className="emotion-spectrum" aria-label="Average emotional pattern">
             {(Object.keys(emotionColors) as (keyof EmotionScores)[]).map(key => {
@@ -63,9 +63,9 @@ const Diary: React.FC = () => {
                       <Link to={`/movie/${entry.movie_id}`}><h3>{entry.title}</h3></Link>
                       <div className="diary-entry__facts">
                         <span>{releaseYear(entry.release_date)}</span>
-                        {entry.rating && <span><Star size={15} />{entry.rating} / 5</span>}
                         {emotion && <span><i style={{ background: emotionColors[emotion.emotion] }} />{feelingName(emotion.emotion)}</span>}
                       </div>
+                      {entry.expression_image_path && <img alt={entry.expression_image_alt || 'Expression photo attached to this response'} className="diary-entry__expression" loading="lazy" src={entry.expression_image_path} />}
                       {entry.note ? <blockquote>{entry.note}</blockquote> : <p className="diary-entry__empty-note">No note on this viewing.</p>}
                     </>
                   )}
@@ -76,7 +76,7 @@ const Diary: React.FC = () => {
           })}
         </section>
       ) : (
-        <section className="diary-first-entry"><h2>Your diary is empty.</h2><p>Start with the last film that stayed with you. Add the date, your words, and the feeling it left behind.</p><Link className="button button--primary" to="/log">Log your first film</Link></section>
+        <section className="diary-first-entry"><h2>Your diary is empty.</h2><p>Start with the last film that moved you.</p><Link className="button button--primary" to="/log">Add your first film</Link></section>
       )}
 
       {savedFilms.length > 0 && <div className="diary-saved"><FilmRail description="Films you kept for later." movies={savedFilms.map(savedFilmMovie)} title="Saved films" /></div>}

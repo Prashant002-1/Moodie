@@ -1,219 +1,298 @@
 import pool from '../config/database';
-import { discoverMovies, getPopularMovies, TMDBMovie } from './tmdbService';
+import { TMDBMovie } from './tmdbService';
 
 export const EMOTION_KEYS = ['neutral', 'happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised'] as const;
 export type EmotionKey = typeof EMOTION_KEYS[number];
 export type EmotionScores = Record<EmotionKey, number>;
 
-// Temporary cold-start priors inherited from the prototype. They are not product
-// truth and must give way to learned personal relationships. See
-// docs/EMOTIONAL_SIGNAL_MODEL.md before extending this map.
-const EMOTION_GENRES: Record<EmotionKey, Record<number, number>> = {
-  neutral: { 18: 0.7, 99: 0.8, 36: 0.55, 9648: 0.4 },
-  happy: { 35: 0.95, 10402: 0.72, 16: 0.62, 10749: 0.58, 12: 0.42 },
-  sad: { 18: 0.92, 10749: 0.72, 36: 0.52, 99: 0.46 },
-  angry: { 80: 0.84, 53: 0.8, 28: 0.64, 37: 0.42 },
-  fearful: { 27: 0.9, 53: 0.82, 9648: 0.78, 878: 0.46 },
-  disgusted: { 80: 0.76, 27: 0.7, 99: 0.54, 53: 0.5 },
-  surprised: { 878: 0.88, 14: 0.82, 9648: 0.68, 12: 0.6 },
-};
-
-const EMOTION_NAMES: Record<EmotionKey, string> = {
-  neutral: 'stillness',
-  happy: 'joy',
-  sad: 'melancholy',
-  angry: 'friction',
-  fearful: 'tension',
-  disgusted: 'unease',
-  surprised: 'wonder',
-};
-
 interface DiarySignalRow extends EmotionScores {
-  rating: number | null;
-  watched_on: string;
-  genre_ids: number[];
   movie_id: number;
+  title: string;
 }
 
-interface WeightedGenre {
+export interface MatchedPerson {
   id: number;
-  name: string;
-  weight: number;
+  username: string;
+  bio: string;
+  similarity: number;
+  sharedFilms: number;
+  sharedFilmTitle: string;
+}
+
+export interface RecommendationConnection {
+  id: number;
+  username: string;
+  similarity: number;
+  shared_film_title: string;
 }
 
 export interface RecommendationProfile {
-  source: 'popular' | 'signal' | 'diary' | 'diary_and_signal';
+  source: 'people' | 'signal' | 'community';
   historySize: number;
+  connectedPeople: number;
   dominantEmotions: { key: EmotionKey; weight: number }[];
-  topGenres: WeightedGenre[];
 }
 
-export interface RankedMovie extends TMDBMovie {
-  recommendation_reason?: string;
+export type SocialMovie = Omit<TMDBMovie, 'vote_average' | 'vote_count' | 'popularity'>;
+
+export interface RankedMovie extends SocialMovie {
+  recommendation_reason: string;
+  recommended_by?: RecommendationConnection[];
 }
 
-const addGenreWeight = (weights: Map<number, number>, genreId: number, weight: number) => {
-  weights.set(genreId, (weights.get(genreId) || 0) + weight);
-};
+interface CandidateRow extends EmotionScores {
+  user_id: number;
+  username: string;
+  movie_id: number;
+  title: string;
+  overview: string;
+  release_date: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  tmdb_data: TMDBMovie | null;
+  created_at: string;
+}
+
+interface CandidateAccumulator {
+  movie: SocialMovie;
+  people: RecommendationConnection[];
+  score: number;
+  latest: number;
+}
 
 const normalizeScores = (scores: Partial<EmotionScores>): EmotionScores => {
-  const total = EMOTION_KEYS.reduce((sum, key) => sum + Math.max(0, scores[key] || 0), 0);
+  const total = EMOTION_KEYS.reduce((sum, key) => sum + Math.max(0, Number(scores[key]) || 0), 0);
   if (!total) return { neutral: 0, happy: 0, sad: 0, angry: 0, fearful: 0, disgusted: 0, surprised: 0 };
-  return Object.fromEntries(EMOTION_KEYS.map(key => [key, Math.max(0, scores[key] || 0) / total])) as EmotionScores;
+  return Object.fromEntries(
+    EMOTION_KEYS.map(key => [key, Math.max(0, Number(scores[key]) || 0) / total]),
+  ) as EmotionScores;
+};
+
+const emotionalSimilarity = (left: Partial<EmotionScores>, right: Partial<EmotionScores>): number => {
+  const a = normalizeScores(left);
+  const b = normalizeScores(right);
+  const distance = EMOTION_KEYS.reduce((sum, key) => sum + Math.abs(a[key] - b[key]), 0);
+  return Math.max(0, 1 - distance / 2);
+};
+
+const asSocialMovie = (row: CandidateRow): SocialMovie => {
+  const movie = row.tmdb_data || ({} as TMDBMovie);
+  return {
+    id: row.movie_id,
+    title: row.title,
+    overview: row.overview || movie.overview || '',
+    release_date: row.release_date || movie.release_date || '',
+    poster_path: row.poster_path ?? movie.poster_path ?? null,
+    backdrop_path: row.backdrop_path ?? movie.backdrop_path ?? null,
+    genre_ids: movie.genre_ids || movie.genres?.map(genre => genre.id) || [],
+    genres: movie.genres,
+    runtime: movie.runtime,
+    tagline: movie.tagline,
+    adult: movie.adult,
+    original_language: movie.original_language,
+    original_title: movie.original_title,
+    video: movie.video,
+  };
 };
 
 const loadDiarySignals = async (userId?: number): Promise<DiarySignalRow[]> => {
   if (!userId) return [];
   const result = await pool.query(
-    `SELECT de.movie_id, de.rating, de.watched_on,
+    `SELECT DISTINCT ON (de.movie_id) de.movie_id, m.title,
             de.neutral::float, de.happy::float, de.sad::float, de.angry::float,
-            de.fearful::float, de.disgusted::float, de.surprised::float,
-            COALESCE(ARRAY_AGG(mg.genre_id) FILTER (WHERE mg.genre_id IS NOT NULL), ARRAY[]::integer[]) AS genre_ids
+            de.fearful::float, de.disgusted::float, de.surprised::float
      FROM diary_entries de
-     LEFT JOIN movie_genres mg ON mg.movie_id = de.movie_id
+     JOIN movies m ON m.id = de.movie_id
      WHERE de.user_id = $1
-     GROUP BY de.id
-     ORDER BY de.watched_on DESC, de.created_at DESC
-     LIMIT 120`,
+     ORDER BY de.movie_id, de.watched_on DESC, de.created_at DESC`,
     [userId],
   );
   return result.rows;
 };
 
-const loadGenreNames = async (genreWeights: Map<number, number>): Promise<WeightedGenre[]> => {
-  const ranked = [...genreWeights.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
-  if (!ranked.length) return [];
-  const names = await pool.query('SELECT id, name FROM genres WHERE id = ANY($1::int[])', [ranked.map(([id]) => id)]);
-  const byId = new Map(names.rows.map(row => [row.id, row.name]));
-  const max = ranked[0][1] || 1;
-  return ranked.map(([id, weight]) => ({ id, name: byId.get(id) || `Genre ${id}`, weight: Number((weight / max).toFixed(3)) }));
+const loadMatchedPeople = async (userId?: number): Promise<MatchedPerson[]> => {
+  if (!userId) return [];
+  const result = await pool.query(
+    `WITH viewer_entries AS (
+       SELECT DISTINCT ON (movie_id)
+              movie_id, neutral, happy, sad, angry, fearful, disgusted, surprised
+       FROM diary_entries
+       WHERE user_id = $1
+       ORDER BY movie_id, watched_on DESC, created_at DESC
+     ), public_latest AS (
+       SELECT DISTINCT ON (de.user_id, de.movie_id)
+              de.user_id, de.movie_id, m.title,
+              de.neutral, de.happy, de.sad, de.angry, de.fearful, de.disgusted, de.surprised
+       FROM diary_entries de
+       JOIN movies m ON m.id = de.movie_id
+       WHERE de.visibility = 'public' AND de.user_id <> $1
+       ORDER BY de.user_id, de.movie_id, de.watched_on DESC, de.created_at DESC
+     ), comparisons AS (
+       SELECT candidate.user_id, candidate.title,
+              GREATEST(0, 1 - (
+                ABS(candidate.neutral - viewer.neutral) + ABS(candidate.happy - viewer.happy) +
+                ABS(candidate.sad - viewer.sad) + ABS(candidate.angry - viewer.angry) +
+                ABS(candidate.fearful - viewer.fearful) + ABS(candidate.disgusted - viewer.disgusted) +
+                ABS(candidate.surprised - viewer.surprised)
+              ) / 7)::float AS similarity
+       FROM public_latest candidate
+       JOIN viewer_entries viewer ON viewer.movie_id = candidate.movie_id
+     ), ranked AS (
+       SELECT user_id, COUNT(*)::int AS shared_films, AVG(similarity)::float AS similarity,
+              (ARRAY_AGG(title ORDER BY similarity DESC, title ASC))[1] AS shared_film_title
+       FROM comparisons
+       GROUP BY user_id
+       HAVING COUNT(*) >= 2
+     )
+     SELECT u.id, u.username, u.bio, ranked.shared_films,
+            ranked.similarity, ranked.shared_film_title
+     FROM ranked
+     JOIN users u ON u.id = ranked.user_id
+     ORDER BY ranked.similarity DESC, ranked.shared_films DESC, u.username ASC
+     LIMIT 12`,
+    [userId],
+  );
+  return result.rows.map(row => ({
+    id: Number(row.id),
+    username: row.username,
+    bio: row.bio || '',
+    similarity: Number(Number(row.similarity).toFixed(3)),
+    sharedFilms: Number(row.shared_films),
+    sharedFilmTitle: row.shared_film_title,
+  }));
 };
 
-export const buildRecommendationProfile = async (userId?: number, requestedSignal?: Partial<EmotionScores>) => {
-  const entries = await loadDiarySignals(userId);
-  const genreWeights = new Map<number, number>();
-  const personalEmotionGenres = Object.fromEntries(
-    EMOTION_KEYS.map(key => [key, new Map<number, number>()]),
-  ) as Record<EmotionKey, Map<number, number>>;
-  const emotionWeights: EmotionScores = { neutral: 0, happy: 0, sad: 0, angry: 0, fearful: 0, disgusted: 0, surprised: 0 };
+const loadCandidateRows = async (userId: number | undefined, personIds?: number[]): Promise<CandidateRow[]> => {
+  const values: unknown[] = [];
+  const clauses = ["de.visibility = 'public'", 'm.poster_path IS NOT NULL'];
+  if (userId) {
+    values.push(userId);
+    clauses.push(`de.movie_id NOT IN (SELECT movie_id FROM diary_entries WHERE user_id = $${values.length})`);
+    clauses.push(`de.user_id <> $${values.length}`);
+  }
+  if (personIds?.length) {
+    values.push(personIds);
+    clauses.push(`de.user_id = ANY($${values.length}::int[])`);
+  }
+  const result = await pool.query(
+    `SELECT de.user_id, u.username, de.movie_id, de.created_at,
+            de.neutral::float, de.happy::float, de.sad::float, de.angry::float,
+            de.fearful::float, de.disgusted::float, de.surprised::float,
+            m.title, m.overview, m.release_date::text, m.poster_path, m.backdrop_path, m.tmdb_data
+     FROM diary_entries de
+     JOIN users u ON u.id = de.user_id
+     JOIN movies m ON m.id = de.movie_id
+     WHERE ${clauses.join(' AND ')}
+     ORDER BY de.created_at DESC
+     LIMIT 240`,
+    values,
+  );
+  return result.rows;
+};
 
-  entries.forEach((entry, index) => {
-    const recency = Math.max(0.35, 1 - index * 0.012);
-    const rating = entry.rating ? 0.45 + (Number(entry.rating) / 5) * 0.75 : 0.7;
-    const normalized = normalizeScores(entry);
-    EMOTION_KEYS.forEach(key => { emotionWeights[key] += normalized[key] * recency * rating; });
-    entry.genre_ids.forEach(genreId => {
-      const emotionalSpecificity = 0.5 + Math.max(...EMOTION_KEYS.map(key => normalized[key]));
-      addGenreWeight(genreWeights, genreId, recency * rating * emotionalSpecificity);
-      EMOTION_KEYS.forEach(key => {
-        addGenreWeight(personalEmotionGenres[key], genreId, normalized[key] * recency * rating);
-      });
-    });
+const rankCandidateRows = (
+  rows: CandidateRow[],
+  matchedPeople: MatchedPerson[],
+  signal?: Partial<EmotionScores>,
+): RankedMovie[] => {
+  const matchById = new Map(matchedPeople.map(person => [person.id, person]));
+  const byMovie = new Map<number, CandidateAccumulator>();
+
+  rows.forEach(row => {
+    const person = matchById.get(Number(row.user_id));
+    const signalFit = signal ? emotionalSimilarity(row, signal) : 0;
+    const personScore = person?.similarity ?? 0.2;
+    const connection: RecommendationConnection | null = person ? {
+      id: person.id,
+      username: person.username,
+      similarity: person.similarity,
+      shared_film_title: person.sharedFilmTitle,
+    } : null;
+    const existing = byMovie.get(Number(row.movie_id)) || {
+      movie: asSocialMovie(row),
+      people: [],
+      score: 0,
+      latest: 0,
+    };
+    if (connection && !existing.people.some(item => item.id === connection.id)) existing.people.push(connection);
+    existing.score += personScore + signalFit * 0.25;
+    existing.latest = Math.max(existing.latest, new Date(row.created_at).getTime() || 0);
+    byMovie.set(Number(row.movie_id), existing);
   });
 
-  const signal = requestedSignal ? normalizeScores(requestedSignal) : null;
-  if (signal) {
-    EMOTION_KEYS.forEach(key => {
-      emotionWeights[key] += signal[key] * 2.2;
-      personalEmotionGenres[key].forEach((affinity, genreId) => {
-        addGenreWeight(genreWeights, genreId, signal[key] * affinity * 2.8);
-      });
-      Object.entries(EMOTION_GENRES[key]).forEach(([genreId, affinity]) => {
-        addGenreWeight(genreWeights, Number(genreId), signal[key] * affinity * (entries.length ? 0.8 : 2.4));
-      });
+  return [...byMovie.values()]
+    .sort((a, b) => b.score - a.score || b.people.length - a.people.length || b.latest - a.latest)
+    .map(({ movie, people }) => {
+      const lead = people[0];
+      const recommendationReason = lead
+        ? `They felt something similar about ${lead.shared_film_title}. This stayed with them too.`
+        : 'Shared by someone in the community.';
+      return {
+        ...movie,
+        recommendation_reason: recommendationReason,
+        ...(people.length ? { recommended_by: people.slice(0, 4) } : {}),
+      };
     });
-  }
+};
 
-  if (!genreWeights.size && entries.length) {
-    Object.entries(EMOTION_GENRES.neutral).forEach(([genreId, weight]) => addGenreWeight(genreWeights, Number(genreId), weight));
+const dominantEmotions = (entries: DiarySignalRow[], signal?: Partial<EmotionScores>) => {
+  const totals: EmotionScores = { neutral: 0, happy: 0, sad: 0, angry: 0, fearful: 0, disgusted: 0, surprised: 0 };
+  entries.forEach(entry => {
+    const normalized = normalizeScores(entry);
+    EMOTION_KEYS.forEach(key => { totals[key] += normalized[key]; });
+  });
+  if (signal) {
+    const normalized = normalizeScores(signal);
+    EMOTION_KEYS.forEach(key => { totals[key] += normalized[key]; });
   }
-
-  const totalEmotion = EMOTION_KEYS.reduce((sum, key) => sum + emotionWeights[key], 0) || 1;
-  const dominantEmotions = EMOTION_KEYS
-    .map(key => ({ key, weight: Number((emotionWeights[key] / totalEmotion).toFixed(3)) }))
+  const sum = EMOTION_KEYS.reduce((total, key) => total + totals[key], 0) || 1;
+  return EMOTION_KEYS
+    .map(key => ({ key, weight: Number((totals[key] / sum).toFixed(3)) }))
     .filter(item => item.weight > 0.04)
     .sort((a, b) => b.weight - a.weight)
     .slice(0, 3);
-  const topGenres = await loadGenreNames(genreWeights);
-  const source: RecommendationProfile['source'] = entries.length && signal
-    ? 'diary_and_signal'
-    : entries.length
-      ? 'diary'
-      : signal
-        ? 'signal'
-        : 'popular';
+};
 
+export const buildRecommendationProfile = async (userId?: number, signal?: Partial<EmotionScores>) => {
+  const [entries, matchedPeople] = await Promise.all([
+    loadDiarySignals(userId),
+    loadMatchedPeople(userId),
+  ]);
+  const source: RecommendationProfile['source'] = entries.length
+    ? 'people'
+    : signal
+      ? 'signal'
+      : 'community';
   return {
     entries,
-    genreWeights,
-    profile: { source, historySize: entries.length, dominantEmotions, topGenres } satisfies RecommendationProfile,
+    matchedPeople,
+    profile: {
+      source,
+      historySize: entries.length,
+      connectedPeople: matchedPeople.length,
+      dominantEmotions: dominantEmotions(entries, signal),
+    } satisfies RecommendationProfile,
   };
 };
 
-const scoreMovie = (movie: TMDBMovie, genreWeights: Map<number, number>): number => {
-  const maxGenreWeight = Math.max(...genreWeights.values(), 1);
-  const genreScore = (movie.genre_ids || []).reduce((sum, genreId) => sum + (genreWeights.get(genreId) || 0) / maxGenreWeight, 0);
-  const quality = Math.min(1, (movie.vote_average || 0) / 10) * Math.min(1, Math.log10((movie.vote_count || 0) + 10) / 4);
-  const discovery = Math.min(1, Math.log10((movie.popularity || 0) + 1) / 3.2);
-  return genreScore * 0.62 + quality * 0.28 + discovery * 0.1;
-};
-
-const withReason = (movie: TMDBMovie, profile: RecommendationProfile): RankedMovie => {
-  const matchingGenre = profile.topGenres.find(genre => movie.genre_ids?.includes(genre.id));
-  const emotion = profile.dominantEmotions[0]?.key;
-  const reason = matchingGenre && emotion
-    ? `${matchingGenre.name} has carried the strongest ${EMOTION_NAMES[emotion]} entries in your diary.`
-    : matchingGenre
-      ? `Your diary returns to ${matchingGenre.name}.`
-      : 'A well-rated step outside your usual pattern.';
-  return { ...movie, recommendation_reason: reason };
-};
-
-const loadCommunityFilms = async (userId?: number): Promise<RankedMovie[]> => {
-  const params: unknown[] = [];
-  const exclusion = userId
-    ? 'AND de.movie_id NOT IN (SELECT movie_id FROM diary_entries WHERE user_id = $1)'
-    : '';
-  if (userId) params.push(userId);
-  const result = await pool.query(
-    `SELECT m.tmdb_data, AVG(de.rating)::float AS community_rating, COUNT(*)::int AS entry_count
-     FROM diary_entries de JOIN movies m ON m.id = de.movie_id
-     WHERE de.visibility = 'public' ${exclusion}
-     GROUP BY m.id, m.tmdb_data
-     ORDER BY community_rating DESC NULLS LAST, entry_count DESC LIMIT 14`,
-    params,
-  );
-  return result.rows
-    .map(row => ({ ...(row.tmdb_data as TMDBMovie), recommendation_reason: `Shared publicly by ${row.entry_count} diar${row.entry_count === 1 ? 'ist' : 'ists'}.` }))
-    .filter(movie => movie.poster_path);
-};
-
 export const recommend = async (userId?: number, signal?: Partial<EmotionScores>) => {
-  const { entries, genreWeights, profile } = await buildRecommendationProfile(userId, signal);
-  if (!genreWeights.size) {
-    const popular = await getPopularMovies();
-    return { profile, forYou: popular.results.slice(0, 18), adjacent: popular.results.slice(6, 18), community: await loadCommunityFilms(userId) };
-  }
-
-  const genreIds = [...genreWeights.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([id]) => id);
-  const pages = await Promise.all([1, 2, 3].map(page => discoverMovies(genreIds, page).catch(() => null)));
-  const watched = new Set(entries.map(entry => entry.movie_id));
-  const unique = new Map<number, TMDBMovie>();
-  pages.flatMap(page => page?.results || []).forEach(movie => {
-    if (!watched.has(movie.id) && movie.poster_path) unique.set(movie.id, movie);
-  });
-
-  const ranked = [...unique.values()].sort((a, b) => scoreMovie(b, genreWeights) - scoreMovie(a, genreWeights));
-  const topGenreIds = new Set(genreIds.slice(0, 2));
-  const adjacent = ranked
-    .filter(movie => movie.genre_ids?.some(id => !topGenreIds.has(id)))
-    .slice(12, 26)
-    .map(movie => withReason(movie, profile));
+  const { entries, matchedPeople, profile } = await buildRecommendationProfile(userId, signal);
+  const matchedIds = matchedPeople.map(person => person.id);
+  const [matchedRows, communityRows] = await Promise.all([
+    matchedIds.length ? loadCandidateRows(userId, matchedIds) : Promise.resolve([]),
+    loadCandidateRows(userId),
+  ]);
+  const matched = rankCandidateRows(matchedRows, matchedPeople, signal);
+  const community = rankCandidateRows(communityRows, matchedPeople, signal);
+  const primary = matched.length ? matched : community;
+  const primaryIds = new Set(primary.slice(0, 18).map(movie => movie.id));
+  const adjacent = community.filter(movie => !primaryIds.has(movie.id)).slice(0, 14);
 
   return {
     profile,
-    forYou: ranked.slice(0, 18).map(movie => withReason(movie, profile)),
-    adjacent,
-    community: await loadCommunityFilms(userId),
+    forYou: primary.slice(0, 18),
+    adjacent: adjacent.length ? adjacent : primary.slice(6, 18),
+    community: community.slice(0, 18),
+    watchedCount: entries.length,
   };
 };

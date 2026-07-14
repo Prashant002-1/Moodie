@@ -6,13 +6,9 @@
  * shared test utilities and configuration across all test files.
  */
 
-import dotenv from 'dotenv';
 import { expect, jest, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
 import { setupTestDatabase, cleanupTestDatabase } from './setup-test-db';
 import pool from '../src/config/database';
-
-// Load test environment variables
-dotenv.config({ path: '.env.test' });
 
 // Global test setup
 beforeAll(async () => {

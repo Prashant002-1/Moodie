@@ -3,10 +3,10 @@ import { EmotionScores } from '../types/emotion';
 import { Movie } from '../types/movie';
 
 export interface RecommendationProfile {
-  source: 'popular' | 'signal' | 'diary' | 'diary_and_signal';
+  source: 'people' | 'signal' | 'community';
   historySize: number;
+  connectedPeople: number;
   dominantEmotions: { key: keyof EmotionScores; weight: number }[];
-  topGenres: { id: number; name: string; weight: number }[];
 }
 
 export interface RecommendationResponse {

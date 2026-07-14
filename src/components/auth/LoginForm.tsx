@@ -59,7 +59,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) 
       </form>
 
       <div className="demo-access">
-        <p>Want to look around first? Open a complete example diary and its recommendations.</p>
         <button className="button button--secondary" disabled={loading} onClick={() => void signIn(DEMO_EMAIL, DEMO_PASSWORD)} type="button">
           {loading ? 'Opening demo' : 'Enter demo'}
         </button>

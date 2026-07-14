@@ -56,6 +56,13 @@ export interface Movie {
   tagline?: string;
   /** Plain-language explanation returned by the recommendation API. */
   recommendation_reason?: string;
+  /** People whose same-film responses led to this recommendation. */
+  recommended_by?: {
+    id: number;
+    username: string;
+    similarity: number;
+    shared_film_title: string;
+  }[];
 }
 
 /**

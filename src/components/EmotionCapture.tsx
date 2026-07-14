@@ -5,7 +5,7 @@ import EmotionDisplay from './features/emotion/EmotionDisplay';
 import ManualEmotionInput from './features/emotion/ManualEmotionInput';
 
 interface EmotionCaptureProps {
-  onEmotionsDetected: (emotions: EmotionScores, method: 'webcam' | 'manual' | 'upload', confidence?: number) => void;
+  onEmotionsDetected: (emotions: EmotionScores, method: 'webcam' | 'manual' | 'upload', confidence?: number, expressionImage?: string) => void;
   onCancel?: () => void;
   isLoading?: boolean;
 }
@@ -20,6 +20,7 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({ onEmotionsDetect
   const [liveEmotions, setLiveEmotions] = useState<EmotionScores | null>(null);
   const [confidence, setConfidence] = useState(0);
   const [method, setMethod] = useState<'webcam' | 'upload'>('webcam');
+  const [attachPhoto, setAttachPhoto] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -49,6 +50,7 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({ onEmotionsDetect
     setDetectedEmotions(null);
     setLiveEmotions(null);
     setConfidence(0);
+    setAttachPhoto(false);
     setError('');
   };
 
@@ -130,12 +132,12 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({ onEmotionsDetect
       <div className="capture-shell">
         <div className="capture-copy">
           <h3>Set the emotional mix</h3>
-          <p>Direct input is the primary record. Expression estimates are optional suggestions that you review before saving.</p>
+          <p>Start with what you felt. Expression estimates are optional suggestions that you review before saving.</p>
         </div>
         {error && <div className="notice notice--error" role="alert"><AlertCircle size={18} /><span>{error}</span></div>}
         <button className="capture-primary-path" onClick={() => setStep('manual')} type="button">
           <span className="capture-primary-path__icon"><SlidersHorizontal size={23} /></span>
-          <span><strong>Set it yourself</strong><small>Use direct controls to record the emotional mix in your own terms.</small></span>
+          <span><strong>Set it yourself</strong><small>Use direct controls to describe the emotional mix in your own terms.</small></span>
           <ArrowLeft className="capture-primary-path__arrow" size={19} />
         </button>
         <details className="optional-sources">
@@ -147,7 +149,7 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({ onEmotionsDetect
             <button className="optional-source" onClick={() => void startCamera()} type="button"><Camera size={20} /><span><strong>Use camera</strong><small>Estimate from one expression frame.</small></span></button>
             <button className="optional-source" onClick={() => fileRef.current?.click()} type="button"><Upload size={20} /><span><strong>Use a photo</strong><small>Choose an image already on this device.</small></span></button>
           </div>
-          <p className="capture-privacy">Frames and photos are analyzed in this browser and are never attached to the diary entry.</p>
+          <p className="capture-privacy">The image stays in this browser unless you choose to attach it.</p>
         </details>
         <input accept="image/*" className="sr-only" onChange={uploadPhoto} ref={fileRef} type="file" />
         {onCancel && <button className="button button--ghost" onClick={onCancel} type="button">Cancel</button>}
@@ -193,9 +195,9 @@ export const EmotionCapture: React.FC<EmotionCaptureProps> = ({ onEmotionsDetect
         <p>This is an expression estimate. Keep it, try again, or replace it with your own input.</p>
       </div>
       {detectedEmotions && <EmotionDisplay emotions={detectedEmotions} />}
-      <p className="metadata">Estimate confidence: {Math.round(confidence * 100)}%</p>
+      {capturedImage && <label className="attach-expression"><input checked={attachPhoto} onChange={event => setAttachPhoto(event.target.checked)} type="checkbox" /><span><strong>Attach this photo</strong><small>It will appear with the response when the entry is public.</small></span></label>}
       <div className="capture-actions">
-        <button className="button button--primary" disabled={!detectedEmotions} onClick={() => detectedEmotions && onEmotionsDetected(detectedEmotions, method, confidence)} type="button"><Check size={17} />Use this feeling</button>
+        <button className="button button--primary" disabled={!detectedEmotions} onClick={() => detectedEmotions && onEmotionsDetected(detectedEmotions, method, confidence, attachPhoto ? capturedImage || undefined : undefined)} type="button"><Check size={17} />Use this feeling</button>
         <button className="button button--secondary" onClick={reset} type="button"><RotateCcw size={17} />Try again</button>
         <button className="button button--ghost" onClick={() => setStep('manual')} type="button"><SlidersHorizontal size={17} />Adjust manually</button>
       </div>

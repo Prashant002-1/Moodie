@@ -1,6 +1,6 @@
 ---
 name: EmotionFlix
-description: Emotion-based social film discovery built from personal film records.
+description: Emotion-based social film discovery.
 direction: "Matinee Archive"
 colors:
   mineral: "#D8D6D1"
@@ -19,7 +19,8 @@ layout:
   contentWidth: "1380px"
   readingWidth: "68ch"
   controlHeight: "50px"
-  navHeight: "82px"
+  navHeight: "68px"
+  footerHeight: "88px"
 rounded:
   control: "8px"
   surface: "14px"
@@ -31,214 +32,190 @@ rounded:
 
 **Matinee Archive**
 
-EmotionFlix should feel like leaving a repertory screening in the afternoon and opening a well-kept personal record while the film is still present. The product is warm, open, tactile, and culturally literate. Light carries the room. Saturated color carries meaning. Film artwork and human writing provide the life of the interface.
+EmotionFlix should feel like leaving a repertory screening in the afternoon while the film is still present. It is warm, tactile, culturally literate, and alive with other people. Daylight and quiet neutral surfaces make room for film art; saturated color marks shifts in feeling and social connection.
 
-The public landing page is allowed to be expressive. It uses large color fields, real film imagery, overlapping record objects, and a deliberate narrative rhythm. Authenticated pages become quieter and more task-focused while retaining the same material, color, type, and record grammar.
+The public page is expressive and narrative. The signed-in product is calmer, but the feed still feels inhabited: human writing, film artwork, emotional traces, and occasional expression photos establish the atmosphere. It must never resemble a streaming catalog, a film-review scorecard, a generic SaaS dashboard, or a facial-analysis demo.
 
-The interface is not a streaming catalog, a generic dark dashboard, an AI analysis product, a facial-expression product, a film magazine imitation, or an imitation of Letterboxd. Its visual grammar comes from the product model:
+The visual story follows the product:
 
-1. A film becomes a personal record.
-2. Repeated records reveal an emotional pattern.
-3. Related patterns connect people.
-4. Another person's film record becomes a recommendation with a visible reason.
-
-## Physical scene
-
-A person has just watched a film and is recording what remains while daylight still reaches the room. The interface should feel composed enough for serious film culture, warm enough for personal writing, and clear enough to use repeatedly without ceremony.
+1. A person watches a film.
+2. They say what it meant and how it felt.
+3. Someone who felt something similar becomes visible.
+4. What that person watched next becomes a recommendation.
 
 ## Logo slot
 
-The logo is unresolved and must remain replaceable.
+The logo is intentionally unresolved.
 
-- Navigation and footer use a stable `.brand-lockup` container with a dedicated `.brand-slot` followed by the EmotionFlix wordmark.
-- The current `BrandMark` is a placeholder only. Do not derive patterns, icons, motion, or layout motifs from it.
-- Reserve at least 36 by 36 pixels for the mark and enough horizontal room for a future lockup without moving the primary navigation.
-- The placeholder may inherit the current text color and Oxide accent. It must not be presented as a finalized logo in product copy or documentation.
-- Replacing the logo should require editing the mark component, not restructuring navigation or page layouts.
+- Keep a stable `.brand-lockup` container and replaceable `.brand-slot`.
+- Treat `BrandMark` as a placeholder only.
+- Do not derive patterns, icons, motion, or layout motifs from the placeholder.
+- Replacing the mark must not require restructuring navigation.
 
 ## Typography
 
-Oxygen remains the only family. The approved preview did not introduce a new font. It changed how Oxygen is used.
+Oxygen remains the only family. The design changes its scale and rhythm, not the font itself.
 
-- Weight 300 carries expressive landing-page display text and large cultural statements.
-- Weight 700 creates selective emphasis inside a light display line and handles product headings, actions, and labels.
-- Weight 400 carries body copy, notes, metadata, and controls.
-- Landing display text uses `clamp()` up to 6rem, line height near 0.96, and letter spacing no tighter than -0.04em.
-- Product page titles use a fixed responsive scale with a practical ceiling near 4.5rem.
-- Body copy remains between 65 and 72 characters per line with line height between 1.58 and 1.72.
-- Metadata is compact but never faint. Use Ink-derived color rather than neutral gray.
-- Short system labels may use modest tracking. Do not repeat tiny uppercase eyebrows as section scaffolding.
+- Weight 300 carries expressive display lines.
+- Weight 700 creates selective emphasis and functional headings.
+- Weight 400 carries body copy, posts, metadata, and controls.
+- Landing display text uses `clamp()` up to 6rem with a line height near 0.96.
+- Product titles remain practical, with a ceiling near 4.5rem.
+- Body copy stays between 65 and 72 characters per line with generous line height.
+- Metadata is compact but never faint.
+- Avoid repeated uppercase eyebrows as section scaffolding.
 
-The desktop root stays at 17px. Mobile returns to 16px. Controls remain at least 50px high and touch targets at least 44px.
+Desktop uses a 17px root. Mobile uses 16px. Controls remain at least 50px high and touch targets at least 44px.
 
-## Core palette
+## Palette
 
 ### Light fields
 
-- **Mineral `#D8D6D1`:** primary public canvas and secondary product field.
-- **Mist `#B9C4C0`:** connective surface, selected state, secondary panel, and social context.
-- **Chalk `#F4EFE9`:** primary reading surface, forms, diary notes, and high-clarity content fields.
+- **Mineral `#D8D6D1`:** public canvas and secondary product field.
+- **Mist `#B9C4C0`:** connective social surface and selected state.
+- **Chalk `#F4EFE9`:** reading, forms, posts, and high-clarity content.
 
 ### Depth fields
 
-- **Ink `#1D2B33`:** primary text, film-depth surface, footer, and high-contrast product state.
-- **Teal `#477B78`:** atmosphere, film-led fields, community context, and meaningful section transitions.
-- **Blue `#557890`:** secondary trace, informational state, and cool counterweight to the warm palette.
+- **Ink `#1D2B33`:** primary text, cinematic depth, and footer.
+- **Teal `#477B78`:** film atmosphere and meaningful transitions.
+- **Blue `#557890`:** melancholy, distance, and cool counterweight.
 
 ### Human accents
 
-- **Oxide `#D76358`:** primary action, selected control, important transition, and focal editorial field.
-- **Fig `#713B42`:** resonance, intimate human emphasis, reaction state, and occasional display emphasis.
+- **Oxide `#D76358`:** primary action and a major emotional field.
+- **Fig `#713B42`:** resonance, intimacy, and reaction state.
 
-### Contrast rules
-
-- Default body text is Ink on Mineral, Mist, or Chalk.
-- Oxide controls use a darker action ink `#132027`; ordinary Ink on Oxide is acceptable only for large or bold text.
-- Chalk body text is not used directly on Teal. Use `#FAF8F4` for small text on Teal or reserve Chalk for large text.
-- Chalk on Fig and Chalk on Ink are approved high-contrast pairs.
-- Muted copy uses an Ink-derived tone such as `#435258`, never low-contrast gray.
-- Oxide and Fig are not decorative confetti. Oxide indicates action or a major narrative field. Fig indicates human resonance or selective emphasis.
+Default text is Ink on Mineral, Mist, or Chalk. Small text on Teal uses `#FAF8F4`. Chalk on Fig and Ink is approved. Muted copy uses an Ink-derived color such as `#435258`. Oxide and Fig are not decorative confetti.
 
 ## Grain and material
 
-Texture is part of Matinee Archive, but it must behave like photographic grain rather than a visible pattern.
+Texture behaves like photographic grain, never a visible pattern.
 
-- Use a deterministic randomized monochrome raster tile, not CSS dots, `feTurbulence`, stripes, paper speckles, or fake distress.
-- The reference tile is 192 by 192 pixels and repeats at roughly 126 to 152 CSS pixels so the grain remains fine on high-density screens.
-- Blend with `soft-light`; the pixel distribution should center on middle gray so the texture adds density without tinting the field.
-- Global light fields use roughly 8 to 10 percent overlay opacity.
-- Saturated fields and generated artwork may use 14 to 20 percent depending on local contrast.
-- Grain is static. Do not animate it, scroll it independently, or use it as a loading effect.
-- Do not put grain between text and its background in a way that lowers readability. Texture sits at the page or artwork material layer, below content.
-- Real film images keep their own photographic texture. Add only a very light shared grain when it helps them belong to the page.
-- Paper fibers, torn edges, dust, registration errors, and faux aging are not default brand treatments.
+- Use the deterministic monochrome raster tile exposed through `--grain-image`.
+- Do not use CSS dots, stripes, paper speckles, fake distress, or animated noise.
+- Blend light fields at roughly 8 to 10 percent and saturated fields at 14 to 20 percent.
+- Grain sits below content and never reduces text clarity.
+- Keep it static.
 
-## Layout grammar
+Section transitions may use large soft radial shapes that overlap their edges like diluted ink spreading into adjacent paper. These edges should be irregular, layered, and quiet. They are not sharp waves, geometric dividers, or decorative blobs floating behind every section.
 
-### Public overview
+## Public overview
 
-The logged-out home page is a product overview, not a browse surface. It tells one continuous transformation: record, pattern, person, recommendation.
+The logged-out home is a product overview, not a browse surface.
 
-- The opening composition pairs a light reading field with a committed Teal film-and-record field.
-- One real film image and one complete human record prove the product in the first viewport.
-- The transformation sequence uses an Oxide field and ruled relationships rather than a grid of feature cards.
-- The social recommendation example uses Ink depth, real poster art, and a literal explanation tied to another person's diary.
-- The final invitation returns to a light field with one `Enter demo` action and a quieter sign-in option.
-- Public navigation contains overview anchors, Sign in, and Enter demo. Product destinations are not shown before authentication.
+- The opening composition pairs a clear statement with one convincing social response.
+- A real poster, first-person note, feelings, and optional expression photo prove the product in the first viewport.
+- The next section shows that writing and direct feeling controls are enough.
+- The social section keeps the line: “The social layer has a purpose.”
+- Do not repeat the same film in multiple examples.
+- The final invitation contains Enter demo and a quieter sign-in action without explaining what the demo does.
+- Public navigation contains overview anchors, Sign in, and a quiet Enter demo action.
 
-### Authenticated product
+## Signed-in product
 
-The product shell uses a light-first canvas with a stable top navigation. Pages alternate Chalk reading fields, Mineral background, Mist connective state, and selective Ink or Teal film-led scenes.
+### Feed
 
-The recurring structures are:
+The feed is the primary home. It follows the familiar rhythm of a social timeline while keeping film responses distinct from lifestyle content.
 
-1. **Film-led scene:** a real backdrop or poster establishes the film, with readable content placed beside or over a controlled color field.
-2. **Record row:** poster, date, visibility, title, rating, emotional trace, note, and actions form one scan path.
-3. **Film rail:** artwork scrolls horizontally with titles and metadata below. Recommendation reasons stay visible.
-4. **Pattern panel:** a bounded summary only where several records have genuinely produced aggregate state.
-5. **Person row:** identity, public-record count, recurring trace, overlap, and follow state remain readable without opening a profile.
+Each post keeps together:
 
-Cards are used only when a bounded object needs one: a diary record, a composer, a recommendation explanation, or an authentication dialog. Do not turn every section into an identical rounded card.
+- person and follow state;
+- first-person response;
+- reviewed feelings;
+- film poster and title;
+- optional expression photo;
+- reaction state.
 
-## Navigation and authentication
+The optional photo should feel candid and human. It is attached media, never presented as analysis or proof. Posts without photos must remain equally complete.
 
-- Logged-out navigation: logo slot, product-overview anchors, Sign in, Enter demo.
-- Logged-in navigation: logo slot, For you, Diary, Community, Log a film, and account control.
-- `Enter demo` signs in directly with the seeded demo account. Do not display the demo email or password in the interface.
-- Authentication uses one calm Chalk dialog with clear login and registration modes.
-- Protected product routes redirect signed-out visitors to the public overview.
-- The mobile navigation is an explicit full-width sheet with 48px targets and the same information priority.
+### Discover
 
-## Core surfaces
+Lead with films found through people who felt something similar about a shared film. Keep the person and shared film visible in the reason. Do not show ratings, genres, match percentages, or mechanical scoring explanations.
+
+Search and catalog browsing appear below people-led recommendations. Poster rails are allowed there because the hierarchy has already established the social source.
 
 ### Diary
 
-Show the aggregate pattern first, then complete chronological records. Notes, visibility, emotional trace, date, and rating remain visible. Editing occurs in place with the film identity fixed.
+Show chronological responses and a restrained summary of feelings, public responses, and saved films. Notes, visibility, date, and emotional trace remain visible. Do not show average ratings, genre taste, or scoring controls.
 
-### Recommendations
+### Member page
 
-Lead with the reason this shelf exists. Show history size, dominant traces, and recurring genres as a readable sentence. A temporary emotional direction is optional and secondary. Each recommendation reason stays attached to its film.
+Show a person's public responses, recurring feelings, and films. It should feel like a social diary, not a generic profile or compatibility report.
 
-### Community
+### Film page
 
-People and records share one surface. The people column establishes whose patterns are relevant. The public diary remains the primary reading area. Reactions mark resonance with a record rather than generic approval.
+The film is the visual anchor. “How people felt” follows the synopsis. Related catalog films remain secondary.
 
-### Public member diary
+### Composer
 
-Use one film backdrop to establish the person's public record, then show their recurring trace, connections, films, and full public notes. It should feel like a diary with a social edge, not a generic profile.
-
-### Film detail
-
-The film is the visual anchor. Product actions remain beside the synopsis. Public records for that film explain how different people experienced it. Similar films remain secondary.
-
-### Entry composer
-
-Film selection comes first. Date, rating, note, visibility, and reviewed emotional record remain together. Direct sliders are the default emotional-record path. Writing-assisted suggestions may follow. Camera and photo estimates live under secondary optional input.
+Film selection comes first. The next prompts are “How did it make you feel?” and “What did it mean to you?” Direct sliders and writing are primary. Camera and photo estimates live in a secondary disclosure. An expression photo can be attached through a separate explicit choice.
 
 ### Account
 
-Account state, public bio, password, and diary counts are task-focused. This page uses the quietest expression of the system.
+Account state, bio, password, and diary counts are task-focused. This page uses the quietest expression of the system.
 
-## Emotional record language
+## Navigation and footer
 
-The current seven expression-derived keys remain a temporary implementation constraint, not the permanent product vocabulary. Their colors are semantic data only:
-
-- Stillness: muted Mineral/Ink
-- Joy: Oxide
-- Melancholy: Blue
-- Friction: deep red derived from Oxide
-- Tension: Fig
-- Unease: Teal
-- Wonder: light Teal/Mist
-
-Do not encode universal emotion-to-genre rules. Do not use facial imagery, scanning graphics, camera frames, confidence scores, or the temporary emotion labels as brand motifs.
-
-## Components
-
-- **Primary button:** Oxide with dark action ink, 8px radius, 50px minimum height.
-- **Secondary button:** Ink or Mist depending on field, with no decorative wide shadow.
-- **Quiet button:** transparent at rest with a local surface hover.
-- **Surface:** 14px maximum radius for grouped state. Posters use 2 to 6px radii.
-- **Input:** Chalk or Mineral fill, visible Ink-derived border, 50px minimum height, readable placeholder.
-- **Focus:** 3px Fig outline with 3px offset on light fields; Chalk outline on Ink/Teal fields.
-- **Poster:** 2:3 crop. Flat at rest. Motion is limited to a small lift or image scale on hover and keyboard focus.
-- **Loading:** content-shaped skeletons for product lists; a compact spinner is acceptable only for short isolated transitions.
-- **Empty state:** explains the next useful action and its consequence.
-- **Errors:** specific message plus a retry or recovery action when one exists.
+- Navigation is 68px on desktop and visually lighter on mobile.
+- Logged-out: logo slot, overview anchors, Sign in, quiet Enter demo.
+- Logged-in: logo slot, Feed, Discover, Diary, Add film, account.
+- Enter demo signs in directly; never display credentials.
+- Protected routes return signed-out visitors to the public overview.
+- The footer is one compact 88px field with the TMDB mark and the required non-commercial attribution only.
 
 ## Motion
 
-- Public landing load may use one short staggered composition reveal.
-- Product pages load directly into the task. Motion communicates hover, selection, expansion, save, and disclosure state.
-- Standard transitions run 160 to 220ms with an exponential ease-out.
-- No scroll-jacking, particle fields, looping ornament, animated grain, autoplay carousels, or decorative product-page choreography.
-- Respect `prefers-reduced-motion` globally.
+Motion should make the page feel continuous and responsive, not staged.
+
+- Lenis supplies restrained smooth scrolling and anchor movement.
+- Large visual layers may move at subtly different scroll rates.
+- Content reveals once as it enters the viewport with short, low-distance motion.
+- Ink-spill edges may drift slowly, but grain never moves.
+- Hover motion is limited to a small lift, scale, or color change.
+- No scroll locking, autoplay carousels, particles, looping decoration, or long entrance sequences.
+- Respect `prefers-reduced-motion` globally; content must appear immediately when reduction is requested.
+
+## Feeling language and colors
+
+The current seven keys remain a temporary implementation constraint:
+
+- Stillness: Mineral and Ink
+- Joy: Oxide
+- Melancholy: Blue
+- Friction: deep Oxide
+- Tension: Fig
+- Unease: Teal
+- Wonder: light Teal and Mist
+
+Do not encode emotion-to-genre rules. Do not use scanning graphics, camera frames, confidence scores, or temporary labels as brand motifs.
+
+## Components
+
+- **Primary button:** Oxide, dark action text, 8px radius, 50px minimum height.
+- **Secondary button:** Ink or Mist according to the field.
+- **Quiet button:** transparent at rest with a local-surface hover.
+- **Surface:** 14px maximum radius for grouped state; posters use 2 to 6px.
+- **Input:** Chalk or Mineral, visible Ink-derived border, readable placeholder.
+- **Focus:** 3px Fig outline with 3px offset on light fields; Chalk on dark fields.
+- **Poster:** 2:3 crop, flat at rest, small lift on hover or focus.
+- **Loading:** content-shaped skeletons for lists; a compact spinner only for short isolated transitions.
+- **Empty state:** one useful next action.
+- **Errors:** a specific message and recovery action where possible.
 
 ## Copy rules
 
-Use film, diary, entry, feeling, emotional record, emotional mix, suggestion, source, public, private, saved, follow, reaction, pattern, and recommendation literally.
+Use film, response, feelings, note, person, feed, diary, public, private, saved, follow, reaction, and recommendation literally.
 
-Avoid invented feature names, generic trust slogans, security theater, technical architecture copy, marketing buzzwords, em dashes, and repeated rebuttal-shaped taglines. Never claim that EmotionFlix understands, reads, detects, or diagnoses how a person feels.
+Avoid invented feature names, technical architecture copy, privacy theater, marketing buzzwords, and mechanical explanations. Never claim that EmotionFlix understands, reads, detects, or diagnoses how a person feels.
 
-Use `expression estimate` for the optional facial adapter. Use `suggest feelings from this note` for text analysis, followed by an editable review state.
-
-## Do
-
-- Let real film art carry local color and specificity.
-- Keep the full record-to-pattern-to-person-to-film relationship visible on the public overview.
-- Make direct input and writing the obvious emotional-record paths.
-- Keep every derived suggestion editable and attributable to its source.
-- Use large committed fields on the public page and restrained color in product tasks.
-- Preserve readable notes, reasons, visibility, and emotional traces.
-- Keep the logo slot structurally stable and visually provisional.
+Use `expression estimate` for the optional analysis adapter. Use `attach photo` for post media. These are different actions.
 
 ## Do not
 
-- Reintroduce a midnight-first or generic black streaming shell.
-- Use purple fog, neon blobs, glassmorphism, gradient text, repeated feature-card grids, hero metrics, repeated eyebrows, or oversized radii.
-- Use visible dot patterns, fake paper speckles, faux aging, film-strip clichés, clapperboards, or decorative camera imagery.
-- Put camera capture, facial imagery, confidence, or privacy proof in the first screen.
-- Give camera and photo analysis equal prominence with direct input and writing.
-- Show logged-out visitors product navigation, catalog rails, or empty community state.
-- Display demo credentials.
-- Hide notes, recommendation reasons, visibility, or emotional traces behind hover.
+- Reintroduce a dark streaming shell or catalog-first home.
+- Add ratings, stars, genre profiles, compatibility percentages, or popularity-first recommendations.
+- Use glassmorphism, gradient text, repeated feature-card grids, oversized radii, purple fog, or neon blobs.
+- Use visible dot patterns, paper speckles, faux aging, film strips, clapperboards, or decorative camera imagery.
+- Put facial analysis, confidence, or privacy proof in the opening screen.
+- Hide first-person notes, feelings, recommendation sources, or visibility behind hover.

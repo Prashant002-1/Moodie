@@ -14,27 +14,61 @@ const emotionSchema = z.object({
   surprised: z.number().min(0).max(1),
 });
 
+const MAX_EXPRESSION_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_EXPRESSION_IMAGE_DATA_URL_LENGTH = 2_800_000;
+const EXPRESSION_IMAGE_PATTERN = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/;
+
+const hasExpectedImageSignature = (mime: string, bytes: Buffer) => {
+  if (mime === 'jpeg') return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (mime === 'png') return bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex'));
+  return bytes.length >= 12
+    && bytes.subarray(0, 4).toString('ascii') === 'RIFF'
+    && bytes.subarray(8, 12).toString('ascii') === 'WEBP';
+};
+
+const expressionImageSchema = z.string().max(MAX_EXPRESSION_IMAGE_DATA_URL_LENGTH).superRefine((value, ctx) => {
+  const match = EXPRESSION_IMAGE_PATTERN.exec(value);
+  if (!match) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Expression image must be a JPEG, PNG, or WebP data URL' });
+    return;
+  }
+  const bytes = Buffer.from(match[2], 'base64');
+  if (!bytes.length || bytes.length > MAX_EXPRESSION_IMAGE_BYTES) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Expression image must be no larger than 2 MiB' });
+    return;
+  }
+  if (!hasExpectedImageSignature(match[1], bytes)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Expression image bytes do not match the declared image type' });
+  }
+});
+
 const entrySchema = z.object({
   movieId: z.number().int().positive(),
   watchedOn: z.string().date(),
-  rating: z.number().min(0.5).max(5).multipleOf(0.5).nullable().optional(),
   note: z.string().trim().max(2000).default(''),
   visibility: z.enum(['private', 'public']).default('private'),
   emotions: emotionSchema,
   captureMethod: z.enum(['manual', 'webcam', 'upload']).default('manual'),
   confidence: z.number().min(0).max(1).default(1),
+  expressionImage: expressionImageSchema.nullable().optional(),
 });
 
 const entryUpdateSchema = entrySchema.omit({ movieId: true }).partial();
 
 const selectEntry = `
-  SELECT de.*, u.username, m.title, m.overview, m.release_date, m.poster_path, m.backdrop_path,
-         CAST(m.vote_average AS FLOAT) AS vote_average, CAST(m.popularity AS FLOAT) AS popularity,
+  SELECT de.id, de.user_id, de.movie_id, de.watched_on, de.note, de.visibility,
+         de.neutral::float, de.happy::float, de.sad::float, de.angry::float,
+         de.fearful::float, de.disgusted::float, de.surprised::float,
+         de.capture_method, de.confidence::float, de.created_at, de.updated_at,
+         u.username, m.title, m.overview, m.release_date, m.poster_path, m.backdrop_path,
          COALESCE((SELECT ARRAY_AGG(mg.genre_id ORDER BY mg.genre_id) FROM movie_genres mg WHERE mg.movie_id = m.id), ARRAY[]::integer[]) AS genre_ids,
-         (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS reaction_count
+         (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS reaction_count,
+         em.asset_path AS expression_image_path,
+         em.alt_text AS expression_image_alt
   FROM diary_entries de
   JOIN users u ON u.id = de.user_id
   JOIN movies m ON m.id = de.movie_id
+  LEFT JOIN entry_media em ON em.entry_id = de.id AND em.kind = 'expression_photo'
 `;
 
 const requireUser = (req: AuthRequest, res: Response): number | null => {
@@ -67,16 +101,27 @@ export const createEntry = async (req: AuthRequest, res: Response) => {
     const data = entrySchema.parse(req.body);
     await ensureMovie(data.movieId);
     const e = data.emotions;
-    const inserted = await pool.query(
-      `INSERT INTO diary_entries (
-        user_id, movie_id, watched_on, rating, note, visibility,
-        neutral, happy, sad, angry, fearful, disgusted, surprised, capture_method, confidence
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-       RETURNING id`,
-      [userId, data.movieId, data.watchedOn, data.rating ?? null, data.note, data.visibility,
-        e.neutral, e.happy, e.sad, e.angry, e.fearful, e.disgusted, e.surprised, data.captureMethod, data.confidence],
-    );
-    const result = await pool.query(`${selectEntry} WHERE de.id = $1`, [inserted.rows[0].id]);
+    const entryId = await pool.transaction(async client => {
+      const inserted = await client.query(
+        `INSERT INTO diary_entries (
+          user_id, movie_id, watched_on, rating, note, visibility,
+          neutral, happy, sad, angry, fearful, disgusted, surprised, capture_method, confidence
+         ) VALUES ($1,$2,$3,NULL,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+         RETURNING id`,
+        [userId, data.movieId, data.watchedOn, data.note, data.visibility,
+          e.neutral, e.happy, e.sad, e.angry, e.fearful, e.disgusted, e.surprised, data.captureMethod, data.confidence],
+      );
+      const insertedEntryId = Number(inserted.rows[0].id);
+      if (data.expressionImage) {
+        await client.query(
+          `INSERT INTO entry_media (entry_id, kind, asset_path, alt_text)
+           VALUES ($1, 'expression_photo', $2, $3)`,
+          [insertedEntryId, data.expressionImage, 'Expression photo shared with this response'],
+        );
+      }
+      return insertedEntryId;
+    });
+    const result = await pool.query(`${selectEntry} WHERE de.id = $1`, [entryId]);
     res.status(201).json({ entry: result.rows[0] });
   } catch (error) {
     if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid diary entry', details: error.errors });
@@ -99,19 +144,41 @@ export const updateEntry = async (req: AuthRequest, res: Response) => {
     };
 
     if (data.watchedOn !== undefined) add('watched_on', data.watchedOn);
-    if (data.rating !== undefined) add('rating', data.rating);
     if (data.note !== undefined) add('note', data.note);
     if (data.visibility !== undefined) add('visibility', data.visibility);
     if (data.captureMethod !== undefined) add('capture_method', data.captureMethod);
     if (data.confidence !== undefined) add('confidence', data.confidence);
     if (data.emotions) Object.entries(data.emotions).forEach(([key, value]) => add(key, value));
-    if (!updates.length) return res.status(400).json({ error: 'No diary changes supplied' });
+    if (!updates.length && data.expressionImage === undefined) return res.status(400).json({ error: 'No diary changes supplied' });
 
-    const updated = await pool.query(
-      `UPDATE diary_entries SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $1 AND user_id = $2 RETURNING id`,
-      values,
-    );
+    const updated = await pool.transaction(async client => {
+      const result = updates.length
+        ? await client.query(
+          `UPDATE diary_entries SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
+           WHERE id = $1 AND user_id = $2 RETURNING id`,
+          values,
+        )
+        : await client.query(
+          'UPDATE diary_entries SET updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND user_id = $2 RETURNING id',
+          [entryId, userId],
+        );
+      if (result.rowCount && data.expressionImage !== undefined) {
+        if (data.expressionImage === null) {
+          await client.query("DELETE FROM entry_media WHERE entry_id = $1 AND kind = 'expression_photo'", [entryId]);
+        } else {
+          await client.query(
+            `INSERT INTO entry_media (entry_id, kind, asset_path, alt_text)
+             VALUES ($1, 'expression_photo', $2, $3)
+             ON CONFLICT (entry_id, kind) DO UPDATE SET
+               asset_path = EXCLUDED.asset_path,
+               alt_text = EXCLUDED.alt_text,
+               updated_at = CURRENT_TIMESTAMP`,
+            [entryId, data.expressionImage, 'Expression photo shared with this response'],
+          );
+        }
+      }
+      return result;
+    });
     if (!updated.rowCount) return res.status(404).json({ error: 'Diary entry not found' });
     const result = await pool.query(`${selectEntry} WHERE de.id = $1`, [entryId]);
     res.json({ entry: result.rows[0] });
@@ -139,29 +206,17 @@ export const getSummary = async (req: AuthRequest, res: Response) => {
   const userId = requireUser(req, res);
   if (!userId) return;
   try {
-    const [summary, genres] = await Promise.all([
-      pool.query(
-        `SELECT COUNT(*)::int AS entries,
-                COUNT(*) FILTER (WHERE visibility = 'public')::int AS public_entries,
-                ROUND(AVG(rating)::numeric, 1) AS average_rating,
-                AVG(neutral)::float AS neutral, AVG(happy)::float AS happy, AVG(sad)::float AS sad,
-                AVG(angry)::float AS angry, AVG(fearful)::float AS fearful,
-                AVG(disgusted)::float AS disgusted, AVG(surprised)::float AS surprised,
-                (SELECT COUNT(*)::int FROM saved_films sf WHERE sf.user_id = $1) AS saved
-         FROM diary_entries WHERE user_id = $1`,
-        [userId],
-      ),
-      pool.query(
-        `SELECT g.id, g.name, COUNT(*)::int AS entries
-         FROM diary_entries de
-         JOIN movie_genres mg ON mg.movie_id = de.movie_id
-         JOIN genres g ON g.id = mg.genre_id
-         WHERE de.user_id = $1
-         GROUP BY g.id, g.name ORDER BY entries DESC, g.name ASC LIMIT 5`,
-        [userId],
-      ),
-    ]);
-    res.json({ ...summary.rows[0], top_genres: genres.rows });
+    const summary = await pool.query(
+      `SELECT COUNT(*)::int AS entries,
+              COUNT(*) FILTER (WHERE visibility = 'public')::int AS public_entries,
+              AVG(neutral)::float AS neutral, AVG(happy)::float AS happy, AVG(sad)::float AS sad,
+              AVG(angry)::float AS angry, AVG(fearful)::float AS fearful,
+              AVG(disgusted)::float AS disgusted, AVG(surprised)::float AS surprised,
+              (SELECT COUNT(*)::int FROM saved_films sf WHERE sf.user_id = $1) AS saved
+       FROM diary_entries WHERE user_id = $1`,
+      [userId],
+    );
+    res.json(summary.rows[0]);
   } catch {
     res.status(500).json({ error: 'Diary summary could not be loaded' });
   }
@@ -173,7 +228,6 @@ export const listSaved = async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(
       `SELECT sf.id, sf.movie_id, sf.created_at, m.title, m.overview, m.release_date, m.poster_path, m.backdrop_path,
-              CAST(m.vote_average AS FLOAT) AS vote_average, CAST(m.popularity AS FLOAT) AS popularity,
               COALESCE((SELECT ARRAY_AGG(mg.genre_id) FROM movie_genres mg WHERE mg.movie_id = m.id), ARRAY[]::integer[]) AS genre_ids
        FROM saved_films sf JOIN movies m ON m.id = sf.movie_id
        WHERE sf.user_id = $1 ORDER BY sf.created_at DESC`,

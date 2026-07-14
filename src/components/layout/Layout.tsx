@@ -26,9 +26,9 @@ const Layout: React.FC = () => {
   const accountRef = useRef<HTMLDivElement>(null);
 
   const productLinks = [
-    { path: '/recommendations', label: 'For you' },
+    { path: '/feed', label: 'Feed' },
+    { path: '/recommendations', label: 'Discover' },
     { path: '/diary', label: 'Diary' },
-    { path: '/community', label: 'Community' },
   ];
 
   useEffect(() => {
@@ -45,12 +45,6 @@ const Layout: React.FC = () => {
     return () => document.removeEventListener('mousedown', closeAccountMenu);
   }, []);
 
-  useEffect(() => {
-    if (location.pathname !== '/' || !location.hash) return;
-    const target = document.getElementById(location.hash.slice(1));
-    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [location.hash, location.pathname]);
-
   const openAuth = () => {
     setMobileOpen(false);
     setAuthOpen(true);
@@ -63,7 +57,7 @@ const Layout: React.FC = () => {
     try {
       await login(DEMO_EMAIL, DEMO_PASSWORD);
       setAuthOpen(false);
-      navigate('/recommendations');
+      navigate('/feed');
     } catch {
       setDemoError('The demo account is unavailable right now. Try again shortly.');
     } finally {
@@ -90,7 +84,7 @@ const Layout: React.FC = () => {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <header className={`nav-shell${user ? ' nav-shell--product' : ' nav-shell--public'}`}>
         <div className="nav-inner">
-          <Link aria-label="EmotionFlix home" className="brand-lockup" to={user ? '/recommendations' : '/'}>
+          <Link aria-label="EmotionFlix home" className="brand-lockup" to={user ? '/feed' : '/'}>
             <span className="brand-slot" aria-hidden="true"><BrandMark /></span>
             <span className="wordmark">EmotionFlix</span>
           </Link>
@@ -101,14 +95,13 @@ const Layout: React.FC = () => {
             </nav>
           ) : (
             <nav aria-label="Product overview" className="nav-links nav-links--public">
-              <a className="nav-link" href="#how-it-works">How it works</a>
-              <a className="nav-link" href="#records">The record</a>
+              <a className="nav-link" href="#feelings">Feelings</a>
               <a className="nav-link" href="#people">People</a>
             </nav>
           )}
 
           <div className="nav-actions">
-            {user && <Link className="button button--primary nav-log" to="/log"><Plus size={17} />Log a film</Link>}
+            {user && <Link className="button button--primary nav-log" to="/log"><Plus size={17} />Add film</Link>}
             {user ? (
               <div className="account-control" ref={accountRef}>
                 <button
@@ -132,7 +125,7 @@ const Layout: React.FC = () => {
             ) : !authLoading ? (
               <>
                 <button className="button button--quiet nav-sign-in" onClick={openAuth} type="button">Sign in</button>
-                <button className="button button--primary nav-demo" disabled={demoLoading} onClick={() => void enterDemo()} type="button">
+                <button className="button button--secondary nav-demo" disabled={demoLoading} onClick={() => void enterDemo()} type="button">
                   {demoLoading && <LoaderCircle className="loading-icon" size={16} />}
                   {demoLoading ? 'Opening demo' : 'Enter demo'}
                 </button>
@@ -158,15 +151,14 @@ const Layout: React.FC = () => {
             {user ? (
               <>
                 {productLinks.map(link => renderProductLink(link.path, link.label, true))}
-                <Link className="nav-link" to="/log">Log a film</Link>
+                <Link className="nav-link" to="/log">Add film</Link>
               </>
             ) : (
               <>
-                <a className="nav-link" href="#how-it-works">How it works</a>
-                <a className="nav-link" href="#records">The record</a>
+                <a className="nav-link" href="#feelings">Feelings</a>
                 <a className="nav-link" href="#people">People</a>
                 <button className="nav-link" onClick={openAuth} type="button">Sign in</button>
-                <button className="button button--primary" disabled={demoLoading} onClick={() => void enterDemo()} type="button">
+                <button className="button button--secondary" disabled={demoLoading} onClick={() => void enterDemo()} type="button">
                   {demoLoading ? 'Opening demo' : 'Enter demo'}
                 </button>
               </>
@@ -181,11 +173,12 @@ const Layout: React.FC = () => {
 
       <footer className={`footer${user ? ' footer--product' : ''}`}>
         <div className="footer__inner">
-          <Link className="brand-lockup" to={user ? '/recommendations' : '/'}>
-            <span className="brand-slot" aria-hidden="true"><BrandMark /></span>
-            <span className="wordmark">EmotionFlix</span>
-          </Link>
-          <p>Emotion-based social film discovery, built from how people respond. Film data and artwork from TMDB.</p>
+          <div className="footer__credits">
+            <a aria-label="Visit TMDB" className="tmdb-credit" href="https://www.themoviedb.org" rel="noreferrer" target="_blank">
+              <img alt="TMDB" src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" />
+            </a>
+            <p>Non-commercial project. This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+          </div>
         </div>
       </footer>
 
