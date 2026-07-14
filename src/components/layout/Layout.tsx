@@ -21,7 +21,6 @@ const Layout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
   const [demoError, setDemoError] = useState('');
-  const [navTone, setNavTone] = useState<'light' | 'dark'>('light');
 
   const productLinks = [
     { path: '/feed', label: 'Home', icon: Activity },
@@ -34,38 +33,6 @@ const Layout: React.FC = () => {
     setMobileOpen(false);
     setDemoError('');
   }, [location.pathname]);
-
-  useEffect(() => {
-    if (user || location.pathname !== '/') {
-      setNavTone('light');
-      return;
-    }
-
-    let frame = 0;
-    const updateTone = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        const sampleLine = Math.max(20, Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) * 0.5));
-        const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-nav-tone]'));
-        const current = sections.find(section => {
-          const bounds = section.getBoundingClientRect();
-          return bounds.top <= sampleLine && bounds.bottom > sampleLine;
-        });
-        setNavTone(current?.dataset.navTone === 'dark' ? 'dark' : 'light');
-      });
-    };
-
-    updateTone();
-    window.addEventListener('scroll', updateTone, { passive: true });
-    window.addEventListener('emotionflix:landing-scroll', updateTone);
-    window.addEventListener('resize', updateTone);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener('scroll', updateTone);
-      window.removeEventListener('emotionflix:landing-scroll', updateTone);
-      window.removeEventListener('resize', updateTone);
-    };
-  }, [location.pathname, user]);
 
   const openAuth = () => {
     setMobileOpen(false);
@@ -95,7 +62,7 @@ const Layout: React.FC = () => {
 
       {user ? (
         <aside className="product-rail" aria-label="Application navigation">
-          <Link aria-label="EmotionFlix home" className="product-rail__brand" to="/feed">EmotionFlix</Link>
+          <Link aria-label="Moodie home" className="product-rail__brand" to="/feed">Moodie</Link>
           <nav className="product-rail__nav">
             {productLinks.map(link => {
               const Icon = link.icon;
@@ -118,9 +85,13 @@ const Layout: React.FC = () => {
           </div>
         </aside>
       ) : (
-        <header className={`nav-shell nav-shell--public nav-shell--tone-${navTone}`}>
+        <header className="nav-shell nav-shell--public nav-shell--steady">
           <div className="nav-inner">
-            <Link aria-label="EmotionFlix home" className="brand-lockup" to="/"><span className="wordmark">EmotionFlix</span></Link>
+            <Link aria-label="Moodie home" className="brand-lockup" to="/"><span className="wordmark">Moodie</span></Link>
+            <nav aria-label="Overview" className="nav-overview-links">
+              <Link to="/#how-it-feels">How it feels</Link>
+              <Link to="/#people">People, not genres</Link>
+            </nav>
             <div className="nav-actions">
               {!authLoading ? (
                 <>
@@ -139,6 +110,8 @@ const Layout: React.FC = () => {
           {demoError && <p className="nav-status" role="alert">{demoError}</p>}
           {mobileOpen && (
             <nav aria-label="Mobile" className="mobile-sheet">
+              <Link className="nav-link" to="/#how-it-feels">How it feels</Link>
+              <Link className="nav-link" to="/#people">People, not genres</Link>
               <button className="nav-link" onClick={openAuth} type="button">Sign in</button>
               <button className="button button--secondary" disabled={demoLoading} onClick={() => void enterDemo()} type="button">{demoLoading ? 'Opening demo' : 'Enter demo'}</button>
             </nav>

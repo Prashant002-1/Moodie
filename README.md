@@ -1,6 +1,6 @@
-# EmotionFlix
+# Moodie
 
-EmotionFlix is emotion-based social film discovery.
+Moodie is emotion-based social film discovery.
 
 A person shares what a film meant to them and the feelings that stayed with them. The product finds people who responded similarly to the same films, then reveals what stayed with those people next. The signed-in home combines personal usage, active films, community activity, the diary, and saved films.
 

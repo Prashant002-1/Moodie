@@ -22,7 +22,7 @@ app.use((_req, res, next) => {
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'OK',
-    message: 'EmotionFlix diary API is running',
+    message: 'Moodie diary API is running',
     timestamp: new Date().toISOString(),
   });
 });

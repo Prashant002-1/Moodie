@@ -1,4 +1,4 @@
--- EmotionFlix Database Schema
+-- Moodie Database Schema
 -- A film diary whose emotional record drives personal and social discovery.
 
 -- Movies table for caching TMDB movie data

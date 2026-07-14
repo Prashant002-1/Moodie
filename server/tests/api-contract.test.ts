@@ -5,7 +5,7 @@ describe('Current HTTP contract', () => {
   it('exposes the diary API health boundary', async () => {
     const response = await request(app).get('/api/health');
     expect(response.status).toBe(200);
-    expect(response.body.message).toBe('EmotionFlix diary API is running');
+    expect(response.body.message).toBe('Moodie diary API is running');
   });
 
   it('does not expose the removed user-movie API', async () => {

@@ -2,11 +2,11 @@
 
 ## Product purpose
 
-EmotionFlix is emotion-based social film discovery.
+Moodie is emotion-based social film discovery.
 
 A person shares a film alongside what it meant to them and the feelings that stayed with them. Other people who responded similarly to the same film become a path to what to watch next. The signed-in home combines the person's own usage with recent film activity. The diary preserves a person's history, and the catalog remains available underneath discovery, but neither should displace people from the center of the experience.
 
-EmotionFlix is not a review platform. It does not ask people to judge a film, assign a score, or write criticism. It asks for a first-person response: how the film felt, what it brought up, and what remained afterward.
+Moodie is not a review platform. It does not ask people to judge a film, assign a score, or write criticism. It asks for a first-person response: how the film felt, what it brought up, and what remained afterward.
 
 Facial-expression analysis is one optional input adapter. It is not the product, the default path, or the definition of emotion. A face can only produce a narrow expression estimate at one moment. It cannot explain what a film meant to someone.
 

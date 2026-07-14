@@ -22,9 +22,9 @@ const SEED_EMAILS = [
 ];
 
 const EXPECTED_MEDIA = [
-  { username: 'ananya_sen', title: 'Whiplash', path: '/social/ananya-after-whiplash.webp' },
+  { username: 'ananya_sen', title: 'Whiplash', path: '/social/ananya-after-whiplash-natural.webp' },
   { username: 'devon_m', title: 'Past Lives', path: '/social/devon-after-past-lives.webp' },
-  { username: 'hiro_s', title: 'Cure', path: '/social/hiro-after-cure.webp' },
+  { username: 'hiro_s', title: 'Cure', path: '/social/hiro-after-cure-natural.webp' },
 ];
 
 const normalizeRows = (rows: Record<string, unknown>[]) => JSON.stringify(
@@ -98,7 +98,7 @@ const runVerification = async () => {
   let verifierUserId: number | null = null;
   try {
     await initializeDatabase();
-    console.log('Verifying EmotionFlix social seed contract...\n');
+    console.log('Verifying Moodie social seed contract...\n');
 
     const login = await request(app).post('/api/auth/login').send({ email: 'demo@demo.com', password: 'demo123!' });
     assert(login.status === 200 && login.body.token, `Demo login failed with ${login.status}`);
@@ -212,7 +212,7 @@ const runVerification = async () => {
     assert(cureMovie.rowCount, 'Cure is missing from the movie cache');
     const cureEntries = await request(app).get(`/api/discovery/films/${cureMovie.rows[0].id}`);
     const hiroCure = cureEntries.body.entries?.find((entry: { username: string }) => entry.username === 'hiro_s');
-    assert(hiroCure?.expression_image_path === '/social/hiro-after-cure.webp', 'Film entries must expose the flat expression image path');
+    assert(hiroCure?.expression_image_path === '/social/hiro-after-cure-natural.webp', 'Film entries must expose the flat expression image path');
     assert(hiroCure?.expression_image_alt, 'Film entries must expose expression image alt text');
     console.log('6. Optional expression photos are public attachments, not emotion evidence.');
 

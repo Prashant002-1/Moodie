@@ -71,8 +71,10 @@ const SmoothScroll = () => {
       if (!motionQuery.matches) {
         const lenis = new Lenis({
           anchors: { offset: -72 },
+          autoToggle: true,
           autoRaf: true,
           lerp: 0.075,
+          overscroll: false,
           smoothWheel: true,
           stopInertiaOnNavigate: true,
           syncTouch: false,
@@ -81,7 +83,6 @@ const SmoothScroll = () => {
         lenis.on('scroll', ({ scroll, limit }) => {
           document.documentElement.style.setProperty('--page-scroll', `${scroll}px`);
           document.documentElement.style.setProperty('--page-progress', String(limit > 0 ? scroll / limit : 0));
-          window.dispatchEvent(new Event('emotionflix:landing-scroll'));
         });
         lenisRef.current = lenis;
       }

@@ -5,11 +5,11 @@ import { env } from './config/env';
 
 const startServer = async () => {
   try {
-    console.log('Starting EmotionFlix...');
+    console.log('Starting Moodie...');
     await initializeDatabase();
 
     const server = app.listen(env.port, () => {
-      console.log(`EmotionFlix is ready at http://localhost:${env.port}`);
+      console.log(`Moodie is ready at http://localhost:${env.port}`);
     });
 
     const shutdown = () => {
@@ -20,7 +20,7 @@ const startServer = async () => {
     process.once('SIGINT', shutdown);
     process.once('SIGTERM', shutdown);
   } catch (error) {
-    console.error('Failed to start EmotionFlix:', error);
+    console.error('Failed to start Moodie:', error);
     process.exit(1);
   }
 };

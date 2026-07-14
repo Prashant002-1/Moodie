@@ -2,7 +2,7 @@
  * Legacy Emotion Mapping Utilities
  * 
  * @deprecated The current recommendation engine does not use this client utility.
- * EmotionFlix learns personal film-response relationships and must not treat
+ * Moodie learns personal film-response relationships and must not treat
  * universal emotion-to-genre associations as product truth.
  */
 

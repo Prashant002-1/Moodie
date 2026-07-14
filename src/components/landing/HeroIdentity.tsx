@@ -8,24 +8,21 @@ interface HeroIdentityProps {
 }
 
 const HeroIdentity: React.FC<HeroIdentityProps> = ({ demoLoading, onEnterDemo, onSignIn }) => (
-  <div className="hero-welcome">
-    <div className="hero-welcome__statement">
+  <div className="ef-hero-copy">
+    <p className="ef-hero-copy__eyebrow">Emotion-based film discovery</p>
+    <div className="ef-hero-copy__statement">
       <h1 id="landing-title">
-        No two people leave the{' '}
-        <span className="hero-welcome__register">
-          <span className="hero-welcome__register-main">same film.</span>
-          <span aria-hidden="true" className="hero-welcome__register-echo hero-welcome__register-echo--fig">same film.</span>
-          <span aria-hidden="true" className="hero-welcome__register-echo hero-welcome__register-echo--oxide">same film.</span>
-        </span>
+        <span className="ef-hero-copy__line">No two people</span>
+        <span className="ef-hero-copy__line">leave <span className="ef-hero-copy__changing">the same film.</span></span>
       </h1>
-      <p className="hero-welcome__conclusion">Find your next through people who felt something familiar.</p>
+      <p className="ef-hero-copy__conclusion">Find your next through people who felt something familiar.</p>
     </div>
 
-    <div className="landing-actions hero-welcome__actions">
-      <button className="button button--primary" disabled={demoLoading} onClick={onEnterDemo} type="button">
+    <div className="ef-hero-copy__actions">
+      <button className="ef-primary-action" disabled={demoLoading} onClick={onEnterDemo} type="button">
         {demoLoading ? 'Opening demo' : 'Enter demo'}<ArrowRight size={18} />
       </button>
-      <button className="landing-text-link" onClick={onSignIn} type="button">Sign in</button>
+      <button className="ef-text-action" onClick={onSignIn} type="button">Sign in</button>
     </div>
   </div>
 );

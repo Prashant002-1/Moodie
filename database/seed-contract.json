@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "contractVersion": "2.0.0",
-  "purpose": "Populate EmotionFlix as an emotion-based social film discovery product: people share what a film meant to them, find others who felt similarly about the same films, and discover what those people watched next.",
+  "purpose": "Populate Moodie as an emotion-based social film discovery product: people share what a film meant to them, find others who felt similarly about the same films, and discover what those people watched next.",
   "executionOwner": "The seed-data implementation owns only deterministic synthetic accounts and records identified by this contract. Seeding remains an explicit operator action.",
   "productFraming": {
     "primaryObject": "A response to a film, expressed in the viewer's own words and emotional sliders.",
     "socialObject": "A public response becomes a timeline post. A private response informs only its owner's experience.",
     "recommendationPrinciple": "Match people by how similarly they responded to the same films, then surface other public films from those people.",
-    "ratingRule": "EmotionFlix does not ask seeded people to rate films. Every active seeded diary rating is null.",
+    "ratingRule": "Moodie does not ask seeded people to rate films. Every active seeded diary rating is null.",
     "photoRule": "An expression photo is an optional social attachment. It is never evidence that the response was inferred from a face and never changes capture_method from manual. Active uploads accept bounded JPEG, PNG, or WebP data URLs; seed posts use approved app asset paths."
   },
   "sourceOfTruth": {

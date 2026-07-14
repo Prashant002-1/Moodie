@@ -2,7 +2,7 @@
 
 ## Decision
 
-EmotionFlix is an emotion-based social film discovery product. It is not a facial-expression detector with movie recommendations attached.
+Moodie is an emotion-based social film discovery product. It is not a facial-expression detector with movie recommendations attached.
 
 The product saves how a person responded to a film, compares reviewed feelings on shared films, and uses that overlap to reveal what emotionally similar people watched next. No single input source defines the product.
 

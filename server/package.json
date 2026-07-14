@@ -1,7 +1,7 @@
 {
   "name": "emotionflix-server",
   "version": "1.0.0",
-  "description": "EmotionFlix Backend API",
+  "description": "Moodie Backend API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/index.ts",

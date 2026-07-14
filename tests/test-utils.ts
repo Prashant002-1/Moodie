@@ -1,5 +1,5 @@
 /**
- * Test Utilities for EmotionFlix Frontend Tests
+ * Test Utilities for Moodie Frontend Tests
  * 
  * Provides mock data creators, test helper functions, and utility methods
  * for testing emotion detection, movie data, and UI interactions across

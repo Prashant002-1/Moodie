@@ -1,5 +1,5 @@
 ---
-name: EmotionFlix
+name: Moodie
 description: Emotion-based social film discovery.
 direction: "Matinee Archive"
 colors:
@@ -27,13 +27,13 @@ rounded:
   surface: "14px"
 ---
 
-# Design system: EmotionFlix
+# Design system: Moodie
 
 ## Creative direction
 
 **Matinee Archive**
 
-EmotionFlix should feel like leaving a repertory screening in the afternoon while the film is still present. It is warm, tactile, culturally literate, and alive with other people. Daylight and quiet neutral surfaces make room for film art; saturated color marks shifts in feeling and social connection.
+Moodie should feel like leaving a repertory screening in the afternoon while the film is still present. It is warm, tactile, culturally literate, and alive with other people. Daylight and quiet neutral surfaces make room for film art; saturated color marks shifts in feeling and social connection.
 
 The public page is expressive and narrative. The signed-in product is calmer, but the response stream still feels inhabited: human writing, film artwork, emotional traces, and occasional reaction photos establish the atmosphere. It must never resemble a streaming catalog, a film-review scorecard, a generic SaaS dashboard, an Instagram clone, or a facial-analysis demo.
 
@@ -206,7 +206,7 @@ Do not encode emotion-to-genre rules. Do not use scanning graphics, camera frame
 
 Use film, response, feelings, note, person, activity, diary, public, private, saved, follow, reaction, and recommendation literally. The `/feed` route remains an implementation detail; the interface calls it Home and labels the actual list Recent activity.
 
-Avoid invented feature names, technical architecture copy, privacy theater, marketing buzzwords, and mechanical explanations. Never claim that EmotionFlix understands, reads, detects, or diagnoses how a person feels.
+Avoid invented feature names, technical architecture copy, privacy theater, marketing buzzwords, and mechanical explanations. Never claim that Moodie understands, reads, detects, or diagnoses how a person feels.
 
 Use `expression estimate` for the optional analysis adapter. Use `attach photo` for post media. These are different actions.
 
