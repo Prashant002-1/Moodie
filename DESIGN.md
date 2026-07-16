@@ -3,12 +3,13 @@ name: Moodie
 description: Social film discovery through personal responses.
 direction: "Living Afterimage"
 colors:
-  night: "#090C11"
-  panel: "#11161D"
-  paper: "#F1EDE5"
-  coral: "#E17868"
-  teal: "#67A8A1"
-  blue: "#7592B2"
+  night: "#18172A"
+  panel: "#22223D"
+  paper: "#FFF8EF"
+  coral: "#FF7A7A"
+  violet: "#A58CFF"
+  blue: "#69A7FF"
+  yellow: "#FFD166"
 typography:
   display: "Newsreader, serif"
   interface: "Oxygen, sans-serif"
@@ -49,7 +50,7 @@ The hero is the product story in motion.
 - Poster, backdrop, reaction photo, response text, feeling trace, and context change together.
 - The paper response card stays physically anchored while its contents change.
 - Use the original paper-card behavior: warm paper, internal metadata divider, compact type, small feeling trace, modest radius, slight rotation, and a hard offset shadow.
-- A full loop lasts 30 seconds. Each film has room to register before the next crossfade.
+- A full loop lasts 25 seconds. Each film has room to register before the next crossfade.
 - The trail demonstrates a response being saved, reaching another person, creating common ground, satisfying a feeling request across genre, and continuing through another response.
 - Never label a card “public response.” Visibility is ordinary entry state, not a selling point.
 - Show film and human diversity through time, never as a pile of simultaneous posters.
@@ -58,15 +59,16 @@ The hero must not contain flying quotes, stars, particles, wavy lines, decorativ
 
 ## Ambient field
 
-The page uses one continuous Night field from hero to final call to action.
+The page uses one continuous indigo field from hero to final call to action.
 
-- Large coral, teal, blue, and warm projector light pools move slowly behind the page.
+- Large coral, violet, blue, and yellow projector light pools move slowly behind the page.
 - Motion is pronounced enough to make the page feel alive, but slow enough to remain peripheral.
 - Animate transform and opacity only. Do not animate blur or `backdrop-filter`.
-- Keep deterministic grain static and faint.
+- Keep deterministic grain static and visible across the header, landing page, and footer.
 - Color is atmospheric. It must not become neon fog, gradient text, or a set of disconnected matte backgrounds.
+- Do not use teal or coffee tones in the landing palette.
 
-One soft SVG ink bleed carries the hero into the product environment. It is an organic handoff, not a recurring divider. Keep its edges feathered and its colors close to the fields it joins.
+The hero and product environment share the same uninterrupted color and grain field. Do not insert an ink divider or decorative handoff between them.
 
 ## Product overview
 
@@ -127,7 +129,7 @@ Most product surfaces are dark, thin-bordered, and flat enough to scan. Depth is
 
 ## Navigation and footer
 
-- The public header is a stable 62px dark layer with Moodie, Product, How it works, Sign in, and Enter demo.
+- The public header is a stable 62px layer with Moodie, Sign in, and Enter demo.
 - It does not change color by section because the landing field is continuous.
 - The mobile header uses the same dark state and a compact menu.
 - The signed-in product keeps its own navigation rail and is not restyled by the landing page.
@@ -138,11 +140,11 @@ Most product surfaces are dark, thin-bordered, and flat enough to scan. Depth is
 Motion should express continuity and lived activity.
 
 - Lenis supplies restrained smooth scrolling on the public landing page only.
-- The hero uses one synchronized 30-second loop. Content changes in place through crossfades.
+- The hero uses one synchronized 25-second loop. Content changes in place through crossfades.
 - The ambient field and projector light move on separate 22 to 28 second cycles.
 - Do not stack entrance animations on the product demonstrations.
 - Hover motion is limited to a small lift or color change.
-- Ink diffusion and grain remain static.
+- Grain remains static and continuous across the public shell.
 - `prefers-reduced-motion` stops ambient motion and keeps the first complete hero state visible.
 
 ## Feeling language and color
@@ -154,8 +156,8 @@ The current seven keys remain a temporary implementation constraint:
 - Melancholy: Blue
 - Friction: deep Coral
 - Tension: Fig
-- Unease: Teal
-- Wonder: light Teal
+- Unease: Violet
+- Wonder: light Blue
 
 Color never stands alone. Every feeling trace has a text label or accessible name. Do not encode emotion-to-genre rules.
 

@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Navigate, useOutletContext } from 'react-router-dom';
 import HeroIdentity from '../components/landing/HeroIdentity';
-import InkBleed from '../components/landing/InkBleed';
 import { LayoutOutletContext } from '../components/layout/Layout';
 import { useUser } from '../contexts/UserContext';
 import { CommunityEntry, discoveryService } from '../services/discoveryService';
@@ -287,7 +286,6 @@ const Home: React.FC = () => {
   return (
     <div className="mf-landing">
       <div aria-hidden="true" className="mf-ambient-field" />
-      <div aria-hidden="true" className="mf-landing__grain" />
 
       <section className="mf-hero" aria-labelledby="landing-title" data-nav-tone="dark">
         <div aria-hidden="true" className="mf-hero__projector" />
@@ -312,7 +310,7 @@ const Home: React.FC = () => {
               <div
                 className="mf-cycle-frame mf-hero-media"
                 key={beat.film.title}
-                style={{ '--beat-delay': `${index * 6}s` } as React.CSSProperties}
+                style={{ '--beat-delay': `${index * 5}s` } as React.CSSProperties}
               >
                 {beat.film.backdrop && <img className="mf-hero__backdrop" src={beat.film.backdrop} alt="" />}
                 <div className="mf-hero__backdrop-wash" />
@@ -331,7 +329,7 @@ const Home: React.FC = () => {
               <div
                 className="mf-cycle-frame mf-hero-response__beat"
                 key={beat.context}
-                style={{ '--beat-delay': `${index * 6}s` } as React.CSSProperties}
+                style={{ '--beat-delay': `${index * 5}s` } as React.CSSProperties}
               >
                 <div className="mf-response-card__meta"><span>{beat.meta}</span><span>{beat.context}</span></div>
                 <blockquote>{beat.note}</blockquote>
@@ -346,7 +344,7 @@ const Home: React.FC = () => {
               <figure
                 className="mf-cycle-frame mf-hero__reaction"
                 key={`${beat.film.title}-reaction`}
-                style={{ '--beat-delay': `${index * 6}s` } as React.CSSProperties}
+                style={{ '--beat-delay': `${index * 5}s` } as React.CSSProperties}
               >
                 <img src={beat.reaction.src} alt="" />
                 <figcaption>{beat.reaction.caption}</figcaption>
@@ -356,13 +354,11 @@ const Home: React.FC = () => {
 
           <div aria-hidden="true" className="mf-hero__progress">
             {heroBeats.map((beat, index) => (
-              <span key={`${beat.film.title}-progress`} style={{ '--beat-delay': `${index * 6}s` } as React.CSSProperties} />
+              <span key={`${beat.film.title}-progress`} style={{ '--beat-delay': `${index * 5}s` } as React.CSSProperties} />
             ))}
           </div>
         </div>
       </section>
-
-      <InkBleed from="#12141a" to="#090c11" mix="#4b2932" seed={19} />
 
       <section className="mf-section mf-capture" id="product" aria-labelledby="capture-title" data-nav-tone="dark">
         <div className="mf-section__inner">
@@ -622,7 +618,6 @@ const Home: React.FC = () => {
           <button className="mf-primary-action" disabled={demoLoading} onClick={() => void enterDemo()} type="button">
             {demoLoading ? 'Opening demo' : 'Enter demo'}<ArrowRight size={18} />
           </button>
-          <button className="mf-text-action" onClick={openAuth} type="button">Sign in</button>
         </div>
       </section>
     </div>
