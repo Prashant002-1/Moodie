@@ -18,12 +18,13 @@
 }
 
 .app-shell--public > main {
-  padding-top: 62px;
+  padding-top: 0;
   background: #d8d6d1;
 }
 
 .app-shell--public .nav-shell--steady {
   min-height: 62px;
+  isolation: isolate;
   border: 0;
   background: transparent;
   color: #1d2b33;
@@ -33,24 +34,63 @@
 
 .app-shell--public .nav-shell--steady::before {
   position: absolute;
-  z-index: -1;
-  inset: 0 0 -26px;
+  z-index: 0;
+  inset: 0 0 -118px;
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(216, 214, 209, 0.96) 0%,
-    rgba(216, 214, 209, 0.8) 48%,
+    rgba(216, 214, 209, 0.84) 0%,
+    rgba(216, 214, 209, 0.64) 34%,
+    rgba(216, 214, 209, 0.32) 60%,
+    rgba(216, 214, 209, 0.1) 82%,
     rgba(216, 214, 209, 0) 100%
   );
   content: '';
 }
 
+.app-shell--public .nav-shell--steady::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 -118px;
+  pointer-events: none;
+  background: rgba(216, 214, 209, 0.01);
+  backdrop-filter: blur(18px) saturate(1.04);
+  -webkit-backdrop-filter: blur(18px) saturate(1.04);
+  mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 30%,
+    rgba(0, 0, 0, 0.82) 48%,
+    rgba(0, 0, 0, 0.45) 68%,
+    rgba(0, 0, 0, 0.16) 84%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 30%,
+    rgba(0, 0, 0, 0.82) 48%,
+    rgba(0, 0, 0, 0.45) 68%,
+    rgba(0, 0, 0, 0.16) 84%,
+    transparent 100%
+  );
+  content: '';
+}
+
 .nav-shell--steady .nav-inner {
+  position: relative;
+  z-index: 1;
   width: min(100%, 1440px);
   min-height: 62px;
   padding-inline: clamp(20px, 4vw, 64px);
   grid-template-columns: minmax(140px, 1fr) auto;
   gap: 24px;
+}
+
+.nav-shell--steady .nav-status,
+.nav-shell--steady .mobile-sheet {
+  position: relative;
+  z-index: 1;
 }
 
 .nav-shell--steady .wordmark {
@@ -185,9 +225,9 @@
   z-index: 1;
   display: grid;
   width: min(100%, 1440px);
-  min-height: calc(100svh - 62px);
+  min-height: 100svh;
   margin: 0 auto;
-  padding: clamp(20px, 2vw, 28px) clamp(24px, 4.4vw, 68px) clamp(80px, 8vw, 122px);
+  padding: calc(62px + clamp(20px, 2vw, 28px)) clamp(24px, 4.4vw, 68px) clamp(80px, 8vw, 122px);
   grid-template-columns: minmax(360px, 0.73fr) minmax(600px, 1.27fr);
   align-items: start;
   gap: clamp(36px, 5vw, 78px);
@@ -2074,7 +2114,7 @@
 
 @media (max-width: 560px) {
   .app-shell--public > main {
-    padding-top: 56px;
+    padding-top: 0;
   }
 
   .app-shell--public .nav-shell--steady,
@@ -2118,7 +2158,7 @@
   }
 
   .mf-hero {
-    padding: 64px 17px 82px;
+    padding: 120px 17px 82px;
   }
 
   .mf-hero-copy__eyebrow {
