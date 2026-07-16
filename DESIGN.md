@@ -3,12 +3,14 @@ name: Moodie
 description: Social film discovery through personal responses.
 direction: "Living Afterimage"
 colors:
-  night: "#090C11"
-  panel: "#11161D"
-  paper: "#F1EDE5"
-  coral: "#E17868"
-  teal: "#67A8A1"
-  blue: "#7592B2"
+  mineral: "#D8D6D1"
+  mist: "#B9C4C0"
+  ink: "#1D2B33"
+  chalk: "#F4EFE9"
+  oxide: "#D76358"
+  fig: "#713B42"
+  blue: "#557890"
+  teal: "#477B78"
 typography:
   display: "Newsreader, serif"
   interface: "Oxygen, sans-serif"
@@ -58,9 +60,9 @@ The hero must not contain flying quotes, stars, particles, wavy lines, decorativ
 
 ## Ambient field
 
-The page uses one continuous Night field from hero to final call to action.
+The page uses one continuous Mineral and Mist field from hero to final call to action. Dark Ink product frames carry the application demonstrations without turning the public canvas into a night theme.
 
-- Large coral, teal, blue, and warm projector light pools move slowly behind the page.
+- Large Oxide, Fig, Teal, and Blue light pools move slowly behind the page.
 - Motion is pronounced enough to make the page feel alive, but slow enough to remain peripheral.
 - Animate transform and opacity only. Do not animate blur or `backdrop-filter`.
 - Keep deterministic grain static and visible across the header, landing page, and footer.
@@ -149,13 +151,13 @@ Motion should express continuity and lived activity.
 
 The current seven keys remain a temporary implementation constraint:
 
-- Stillness: neutral and Ink
-- Joy: Coral
+- Stillness: Mineral and Ink
+- Joy: Oxide
 - Melancholy: Blue
-- Friction: deep Coral
+- Friction: deep Oxide
 - Tension: Fig
 - Unease: Teal
-- Wonder: light Teal
+- Wonder: Mist
 
 Color never stands alone. Every feeling trace has a text label or accessible name. Do not encode emotion-to-genre rules.
 
