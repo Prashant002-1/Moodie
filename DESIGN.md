@@ -3,13 +3,12 @@ name: Moodie
 description: Social film discovery through personal responses.
 direction: "Living Afterimage"
 colors:
-  night: "#18172A"
-  panel: "#22223D"
-  paper: "#FFF8EF"
-  coral: "#FF7A7A"
-  violet: "#A58CFF"
-  blue: "#69A7FF"
-  yellow: "#FFD166"
+  night: "#090C11"
+  panel: "#11161D"
+  paper: "#F1EDE5"
+  coral: "#E17868"
+  teal: "#67A8A1"
+  blue: "#7592B2"
 typography:
   display: "Newsreader, serif"
   interface: "Oxygen, sans-serif"
@@ -59,14 +58,13 @@ The hero must not contain flying quotes, stars, particles, wavy lines, decorativ
 
 ## Ambient field
 
-The page uses one continuous indigo field from hero to final call to action.
+The page uses one continuous Night field from hero to final call to action.
 
-- Large coral, violet, blue, and yellow projector light pools move slowly behind the page.
+- Large coral, teal, blue, and warm projector light pools move slowly behind the page.
 - Motion is pronounced enough to make the page feel alive, but slow enough to remain peripheral.
 - Animate transform and opacity only. Do not animate blur or `backdrop-filter`.
 - Keep deterministic grain static and visible across the header, landing page, and footer.
 - Color is atmospheric. It must not become neon fog, gradient text, or a set of disconnected matte backgrounds.
-- Do not use teal or coffee tones in the landing palette.
 
 The hero and product environment share the same uninterrupted color and grain field. Do not insert an ink divider or decorative handoff between them.
 
@@ -156,8 +154,8 @@ The current seven keys remain a temporary implementation constraint:
 - Melancholy: Blue
 - Friction: deep Coral
 - Tension: Fig
-- Unease: Violet
-- Wonder: light Blue
+- Unease: Teal
+- Wonder: light Teal
 
 Color never stands alone. Every feeling trace has a text label or accessible name. Do not encode emotion-to-genre rules.
 

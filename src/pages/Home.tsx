@@ -303,8 +303,6 @@ const Home: React.FC = () => {
             reaches Devon, and the trail continues.
           </p>
 
-          <div aria-hidden="true" className="mf-hero__demo-label"><i />Live response trail</div>
-
           <div aria-hidden="true" className="mf-hero-media-cycle">
             {heroBeats.map((beat, index) => (
               <div
