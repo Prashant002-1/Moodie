@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import appModule from '../server/src/app';
-import { seed } from '../server/src/scripts/seedData';
+import appModule from '../server/src/app.js';
+import { seed } from '../server/src/scripts/seedData.js';
 
 const app = ((appModule as unknown as { default?: typeof appModule }).default || appModule) as typeof appModule;
 
