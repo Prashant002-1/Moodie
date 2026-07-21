@@ -1,16 +1,20 @@
 import type { Application, Request, Response } from 'express';
-import appModule from '../server/src/app.js';
-import { seed } from '../server/src/scripts/seedData.js';
 
-const app = (
-  (appModule as unknown as { default?: Application }).default ||
-  (appModule as unknown as Application)
-);
-
-let preparation: Promise<void> | undefined;
+let preparation: Promise<Application> | undefined;
 
 const prepareDemo = () => {
-  preparation ||= seed().catch((error) => {
+  preparation ||= (async () => {
+    const [{ default: appModule }, { seed }] = await Promise.all([
+      import('../server/src/app.js'),
+      import('../server/src/scripts/seedData.js'),
+    ]);
+    const app = (
+      (appModule as unknown as { default?: Application }).default ||
+      (appModule as unknown as Application)
+    );
+    await seed();
+    return app;
+  })().catch((error) => {
     preparation = undefined;
     throw error;
   });
@@ -19,13 +23,16 @@ const prepareDemo = () => {
 
 export default async function handler(request: Request, response: Response) {
   try {
-    await prepareDemo();
+    const app = await prepareDemo();
     return app(request, response);
   } catch (error) {
     console.error('Failed to prepare the Moodie demo:', error);
     response.statusCode = 503;
     response.setHeader('content-type', 'application/json');
-    response.end(JSON.stringify({ error: 'Moodie is still preparing the demo. Please try again.' }));
+    response.end(JSON.stringify({
+      error: 'Moodie is still preparing the demo. Please try again.',
+      detail: error instanceof Error ? error.message : String(error),
+    }));
     return response;
   }
 }
