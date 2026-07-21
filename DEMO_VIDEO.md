@@ -1,6 +1,6 @@
 # Moodie demo video draft
 
-Status: Draft for Prashant's review. Keep the final video under three minutes, upload it publicly to YouTube, and add the URL to `DEVPOST_SUBMISSION.md` and Devpost before submission.
+Status: Published at [YouTube](https://youtu.be/OOV0_9EMOUk). Final duration: 2:24.
 
 ## 0:00 to 0:20
 

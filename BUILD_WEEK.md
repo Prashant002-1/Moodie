@@ -67,7 +67,7 @@ The work happened across multiple Codex sessions rather than one generated pass.
 | `Test heuristic recommendations` | Proved the people-led algorithm separately, integrated it, expanded and verified the seed world, generated response imagery, and kept the engine simple. |
 | `Create project design skill` | Reviewed the project history and turned repeated feedback into the local Moodie skill. |
 
-The `/feedback` session used for the submission will be selected by Prashant before submission.
+The submitted `/feedback` session ID is `019f5988-6dab-7d61-8a00-322092de9a3b` from `Redesign minimal product page`.
 
 ## Commit evidence
 

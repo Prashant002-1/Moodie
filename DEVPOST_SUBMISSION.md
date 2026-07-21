@@ -1,6 +1,6 @@
 # Moodie Devpost submission packet
 
-Status: Draft for Prashant's review. Do not submit yet.
+Status: Submitted to OpenAI Build Week on July 21, 2026. Submission ID: `1111680`.
 
 ## Required form values
 
@@ -10,9 +10,10 @@ Status: Draft for Prashant's review. Do not submit yet.
 - Submitter type: `Individual`
 - Country of residence: `United States`
 - Repository: `https://github.com/Prashant002-1/Moodie`
+- Live project: `https://moodie-server-mauve.vercel.app/`
 - License: `MIT`
-- Demo video URL: pending
-- `/feedback` session ID: pending Prashant's selection
+- Demo video URL: `https://youtu.be/OOV0_9EMOUk`
+- `/feedback` session ID: `019f5988-6dab-7d61-8a00-322092de9a3b`
 - Built with: React, TypeScript, Vite, Express, PGlite, Codex, GPT-5.6 Sol, TMDB API
 
 ## Project description draft
@@ -87,12 +88,14 @@ The repository includes setup instructions, demo credentials, the seed contract,
 
 ### Testing instructions
 
-Run `npm install`, copy `.env.example` to `.env`, add a TMDB API key, run `npm run seed`, then run `npm run dev`. Open `http://localhost:5173` and choose `Enter demo`. Direct credentials are `demo@demo.com` and `demo123!`.
+Open `https://moodie-server-mauve.vercel.app/` for the hosted project. For the complete local demo, run `npm install`, copy `.env.example` to `.env`, add a TMDB API key, run `npm run seed`, then run `npm run dev`. Open `http://localhost:5173` and choose `Enter demo`. Direct credentials are `demo@demo.com` and `demo123!`.
 
 ### `/feedback` session
 
-Prashant will provide the final session ID. The session title he is reviewing is `Redesign minimal product page`.
+`019f5988-6dab-7d61-8a00-322092de9a3b`
+
+Session title: `Redesign minimal product page`
 
 ### Video URL
 
-Pending. Use [`DEMO_VIDEO.md`](./DEMO_VIDEO.md) as the recording draft.
+`https://youtu.be/OOV0_9EMOUk`

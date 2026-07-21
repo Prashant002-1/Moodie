@@ -4,6 +4,8 @@ Moodie is emotion-based social film discovery.
 
 > Moodie uses the TMDB API for non-commercial purposes and is not endorsed or certified by TMDB.
 
+[Open the live Moodie demo](https://moodie-server-mauve.vercel.app/)
+
 No two people feel the same. Moodie starts there. A person records what a film meant to them and the feelings that stayed. The product finds people who responded similarly to the same films, then opens a path to what moved those people next.
 
 It does not treat a person as a rating, genre profile, or point in a recommendation system. The person, the shared film, and the response behind each recommendation remain visible.

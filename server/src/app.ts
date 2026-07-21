@@ -34,7 +34,7 @@ app.use('/api/discovery', discoveryRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
   const webRoot = path.resolve(__dirname, '../../dist');
   app.use(express.static(webRoot));
   app.use((req, res, next) => {

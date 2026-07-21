@@ -761,7 +761,7 @@ export const seed = async () => {
   }
 };
 
-if (require.main === module) {
+if (typeof require !== 'undefined' && require.main === module) {
   void seed()
     .catch(() => {
       process.exitCode = 1;
