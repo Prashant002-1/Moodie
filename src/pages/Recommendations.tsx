@@ -135,7 +135,7 @@ const Recommendations: React.FC = () => {
         <div className="error-state"><p>{error}</p><button className="button button--secondary" onClick={() => setRequestVersion(version => version + 1)} type="button">Try again</button></div>
       ) : data && leadRecommendation ? (
         <div className="recommendation-story" data-reveal>
-          <RecommendationSpotlight movie={leadRecommendation} requestedFeelings={selectedFeelingKeys} showAllLink={false} />
+          <RecommendationSpotlight compact movie={leadRecommendation} requestedFeelings={selectedFeelingKeys} showAllLink={false} />
           {otherRecommendations.length > 0 && <section className="home-section" aria-labelledby="other-recommendations-title"><header><h2 id="other-recommendations-title">Recommended films</h2></header><div className="path-grid">{otherRecommendations.map(movie => <DiscoveryPathCard key={movie.id} movie={movie} requestedFeelings={selectedFeelingKeys} />)}</div></section>}
         </div>
       ) : data ? (

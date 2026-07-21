@@ -40,7 +40,7 @@ A response belongs to one viewing. It contains:
 - a reviewed feeling mix;
 - private or public visibility;
 - an optional photo;
-- reactions from other people.
+- likes and comments from other people.
 
 ### Connection
 
@@ -61,7 +61,7 @@ The interface can reveal both written responses to the shared film for compariso
 
 ### Reaction
 
-A reaction means that another person's response resonated. It is not a film rating.
+A like means that another person's response resonated. It is not a film rating. A comment keeps the conversation attached to the response that started it.
 
 ### Saved film
 
@@ -75,7 +75,7 @@ The person searches for a film, writes what it meant, sets the feelings, chooses
 
 ### Return through people
 
-The person opens Moodie and sees responses from people they follow, reactions to their own responses, new followers, and films moving through their circle. Any event can lead to a person, response, or film.
+The person opens Moodie and sees responses from people they follow, likes and comments on their own responses, new followers, and films moving through their circle. Any event can lead to a person, response, or film.
 
 ### Explore a path
 
@@ -126,11 +126,11 @@ The leading film path owns the strongest hierarchy. The remaining modules are de
 
 #### Following
 
-A chronological stream of complete responses from followed people. Each response keeps the person, poster, note, feelings, optional photo, reaction, and film action together.
+A chronological stream of complete responses from followed people. Each response keeps the person, poster, note, feelings, optional photo, likes, comments, and film action together.
 
 #### Everyone
 
-The same response format across the public community. Following and reaction actions work in place.
+The same response format across the public community. Following, like, and comment actions work in place.
 
 ### Search
 
@@ -167,7 +167,7 @@ The person page adds their public responses, films, shared-film context, and fol
 
 Activity is a chronological return trail. It includes:
 
-- reactions to the person's responses;
+- likes and comments on the person's responses;
 - new followers;
 - recent responses from followed people.
 
@@ -255,7 +255,7 @@ Account contains profile, account, and password views. Profile includes diary co
 ### Return after someone reacts
 
 1. Open Activity.
-2. See who reacted and which film response caused it.
+2. See who liked or commented and which film response caused it.
 3. Open that response's film.
 4. Visit the reacting person.
 5. Follow them or discover another film through their responses.
@@ -281,6 +281,6 @@ Account contains profile, account, and password views. Profile includes diary co
 
 ## Current delivery boundary
 
-This application includes the complete prototype loop: account access, film search, response capture, diary management, public responses, follows, reactions, people discovery, people-led film paths, saved films, film pages, member pages, and return activity.
+This application includes the complete prototype loop: account access, film search, response capture, diary management, public responses, follows, likes, comments, people discovery, people-led film paths, saved films, film pages, member pages, and return activity.
 
 Future work can add comments, private sharing, invitations, blocks, moderation, notification read state, custom lists, collaborative lists, import, and richer feeling language. Those features should extend the same response-to-person-to-film loop rather than sit beside it as unrelated social furniture.

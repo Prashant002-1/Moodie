@@ -27,6 +27,15 @@ type SeedEntry = {
   visibility: 'private' | 'public';
   emotions: EmotionScores;
   expressionPhoto?: { assetPath: string; altText: string };
+  /** A deterministic recent day for a public stream post. */
+  streamDay?: number;
+};
+
+type SeedComment = {
+  author: string;
+  entryOwner: string;
+  entryKey: string;
+  body: string;
 };
 
 const emos = (
@@ -49,6 +58,16 @@ const post = (
   expressionPhoto?: SeedEntry['expressionPhoto'],
 ): SeedEntry => ({ key, title, year, note, visibility, emotions, expressionPhoto });
 
+const recentPost = (
+  key: string,
+  title: string,
+  year: number,
+  note: string,
+  emotions: EmotionScores,
+  streamDay: number,
+  expressionPhoto?: SeedEntry['expressionPhoto'],
+): SeedEntry => ({ ...post(key, title, year, note, 'public', emotions, expressionPhoto), streamDay });
+
 const SEED_USERS = [
   { email: 'demo@demo.com', username: 'demo', password: 'demo123!', bio: 'I keep films close when they help me name a feeling I could not explain on my own.' },
   { email: 'clara@seed.emotionflix.com', username: 'clara_valdez', password: 'seed123!', bio: 'I return to films that make loneliness feel shared, especially when tenderness survives the ending.' },
@@ -66,7 +85,7 @@ const SEED_USERS = [
 
 export const SEED_EMAILS = SEED_USERS.map(user => user.email);
 
-const DIARY_SEED_ENTRIES: Record<string, SeedEntry[]> = {
+const BASE_DIARY_SEED_ENTRIES: Record<string, SeedEntry[]> = {
   demo: [
     post('eternal-sunshine', 'Eternal Sunshine of the Spotless Mind', 2004, 'I watched this after finding an old message I thought I had deleted. I wanted the clean relief of forgetting, but the film left me protective of even the painful parts. They are still evidence that I loved someone, even if love was not enough to stop us repeating the same wounds.', 'public', emos(0.08, 0.08, 0.72, 0.03, 0.03, 0.02, 0.12)),
     post('inception', 'Inception', 2010, 'I expected the rush of a big puzzle and got it, but the feeling that stayed was smaller and harder to shake. I kept wondering how much of what I call certainty is only a story I have rehearsed for so long that it feels like mine.', 'private', emos(0.12, 0.06, 0.03, 0.02, 0.12, 0.02, 0.72)),
@@ -141,7 +160,7 @@ const DIARY_SEED_ENTRIES: Record<string, SeedEntry[]> = {
     post('hereditary', 'Hereditary', 2018, 'I planned to be frightened and ended up much sadder than scared. Grief had already made everyone unreachable before anything supernatural arrived. What stayed was the loneliness of needing comfort from people who were broken in the same place.', 'private', emos(0.04, 0.01, 0.71, 0.08, 0.43, 0.09, 0.03)),
   ],
   devon_m: [
-    post('past-lives', 'Past Lives', 2023, 'I watched this beside someone I love and felt exposed by how quietly grief can live inside a good life. Missing another path did not mean wanting the present to disappear. That contradiction stayed with me, and the photo caught the part I could not quite put into the note.', 'public', emos(0.16, 0.08, 0.77, 0.01, 0.03, 0.01, 0.06), { assetPath: '/social/devon-after-past-lives.webp', altText: 'Devon reflecting after watching Past Lives' }),
+    post('past-lives', 'Past Lives', 2023, 'I watched this beside someone I love and felt exposed by how quietly grief can live inside a good life. Missing another path did not mean wanting the present to disappear. That contradiction stayed with me, and the photo caught the part I could not quite put into the note.', 'public', emos(0.16, 0.08, 0.77, 0.01, 0.03, 0.01, 0.06), { assetPath: '/social/devon-after-past-lives-natural.webp', altText: 'Devon listening to his partner after watching Past Lives' }),
     post('hereditary', 'Hereditary', 2018, 'We chose this for a loud horror night, but the room got quieter as it went on. I felt grief curdle into fear because nobody in that family could reach anyone else before it was too late. The loneliness stayed longer than any scare.', 'public', emos(0.03, 0.01, 0.46, 0.08, 0.77, 0.14, 0.04)),
     post('get-out', 'Get Out', 2017, 'Every friendly smile made me angrier because it asked a frightened person to doubt what he already knew. The fear came from watching danger hide inside manners. If someone wants a horror film that feels like being trapped by everyone else\'s version of reality, this was that experience for me.', 'public', emos(0.04, 0.01, 0.05, 0.61, 0.68, 0.17, 0.06)),
     post('cure', 'Cure', 1997, 'I expected violence to arrive with heat and rage. Instead, it entered so calmly that I began to distrust every ordinary pause. The film left a cold residue in my apartment afterward. I could not stop thinking about harm that does not announce itself as harm.', 'public', emos(0.27, 0.01, 0.04, 0.11, 0.74, 0.25, 0.03)),
@@ -208,10 +227,155 @@ const DIARY_SEED_ENTRIES: Record<string, SeedEntry[]> = {
   ],
 };
 
+// These additional viewings widen the world without inventing a separate
+// persona for every feeling. They deliberately vary public/private balance,
+// note length, and the kinds of moments people bring to a film.
+const ENRICHED_DIARY_SEED_ENTRIES: Record<string, SeedEntry[]> = {
+  demo: [
+    post('handmaiden', 'The Handmaiden', 2016, 'I expected to be pulled along by the twists, but I kept feeling protective of every private signal between the two women. The relief I felt was not simple happiness. It was the thrill of watching care become a way out.', 'public', emos(0.06, 0.62, 0.12, 0.18, 0.21, 0.08, 0.66)),
+    post('farewell-demo', 'The Farewell', 2019, 'I laughed more than I expected, then felt guilty for how familiar the careful pretending was. Love was everywhere here, but so was the loneliness of deciding what another person is allowed to know.', 'public', emos(0.12, 0.32, 0.63, 0.04, 0.05, 0.01, 0.11)),
+    post('iron-giant', 'The Iron Giant', 1999, 'I put this on after a long day and thought I wanted nostalgia. What I needed was the small, stubborn idea that gentleness can be chosen even when fear is asking for something easier.', 'private', emos(0.11, 0.58, 0.24, 0.02, 0.08, 0.01, 0.18)),
+    post('lobster-demo', 'The Lobster', 2015, 'I kept laughing and then felt uneasy about why. It made loneliness look absurd enough that I could finally recognize some of the rules I accept just to avoid being alone.', 'private', emos(0.19, 0.27, 0.24, 0.09, 0.38, 0.12, 0.47)),
+  ],
+  clara_valdez: [
+    post('frances-ha', 'Frances Ha', 2013, 'I watched this while feeling behind everyone I know, and it made that comparison feel less final. I was happy for her messiness, then sad about how quickly friendship can become something you only remember by its old routines.', 'public', emos(0.18, 0.58, 0.46, 0.01, 0.03, 0.01, 0.24)),
+    post('return-to-seoul', 'Return to Seoul', 2022, 'I did not always agree with her, which made the loneliness harder to turn into something tidy. I felt defensive, then protective, then ashamed of needing her grief to look more familiar before I could sit with it.', 'public', emos(0.17, 0.03, 0.64, 0.22, 0.09, 0.05, 0.19)),
+    post('petite-maman', 'Petite Maman', 2021, 'This made me miss the version of my mother I never got to meet. The gentleness did not erase the sadness. It gave it somewhere soft to rest for a while.', 'private', emos(0.39, 0.22, 0.66, 0.01, 0.02, 0.01, 0.17)),
+  ],
+  marcus_k: [
+    post('sorry-to-bother-you', 'Sorry to Bother You', 2018, 'I laughed until the laughter started feeling like an alarm. The film made ambition look thrilling and humiliating at the same time, and I kept wondering how often I change my own voice before anyone has to ask.', 'public', emos(0.07, 0.33, 0.11, 0.44, 0.18, 0.28, 0.54)),
+    post('contact', 'Contact', 1997, 'Her experience stayed real even when nobody else could verify it. That hit me harder than the aliens did.', 'public', emos(0.42, 0.28, 0.17, 0.02, 0.05, 0.01, 0.68)),
+    post('coherence', 'Coherence', 2014, 'I watched this with the lights still on and kept losing track of which small choice had changed everything. The fear was real, but the stranger feeling was how quickly I wanted one version of myself to win.', 'private', emos(0.12, 0.02, 0.08, 0.16, 0.61, 0.08, 0.57)),
+    post('first-reformed-marcus', 'First Reformed', 2018, 'I expected heaviness and got something more restless. I felt angry at how easily concern can become a private performance when action would ask more of me than feeling bad.', 'private', emos(0.25, 0.01, 0.42, 0.53, 0.12, 0.09, 0.11)),
+  ],
+  elena_r: [
+    post('fallen-leaves', 'Fallen Leaves', 2023, 'I loved that tiny, awkward hope. Nothing grand, just two people trying again without pretending they know how.', 'public', emos(0.34, 0.62, 0.24, 0.01, 0.03, 0.01, 0.16)),
+    post('enough-said', 'Enough Said', 2013, 'I felt relieved by how imperfect everyone was allowed to be. The tenderness came from people admitting that they had already made mistakes and still wanted to try being known.', 'private', emos(0.36, 0.51, 0.29, 0.03, 0.05, 0.01, 0.09)),
+  ],
+  hiro_s: [
+    post('night-house', 'The Night House', 2021, 'I felt frightened by the idea that grief can make a room feel occupied even when nobody is there. The film left me watching corners longer than I meant to, but the sadness was what made the fear feel personal.', 'public', emos(0.12, 0.01, 0.53, 0.08, 0.72, 0.12, 0.17)),
+    post('kaguya', 'The Tale of the Princess Kaguya', 2013, 'I was surprised by how angry the beauty made me. Everyone kept calling a life precious while making it smaller and smaller. I felt grief, wonder, and a wish to protect the freedom that had already been taken.', 'public', emos(0.17, 0.08, 0.64, 0.43, 0.07, 0.04, 0.58)),
+    post('burning', 'Burning', 2018, 'The uncertainty stayed too close to ordinary life for me. I kept looking for a clean answer, then realized that wanting certainty might be part of what made the tension work.', 'private', emos(0.23, 0.01, 0.12, 0.18, 0.57, 0.09, 0.34)),
+  ],
+  chloe_d: [
+    post('paddington-2', 'Paddington 2', 2017, 'I watched this when I wanted something easy and ended up crying at how seriously it took the effort of being kind. The joy was not sugary. It came from seeing care make a real difference without needing to become grand.', 'public', emos(0.18, 0.82, 0.14, 0.01, 0.02, 0.01, 0.23)),
+    post('totoro', 'My Neighbor Totoro', 1988, 'That bus-stop wait felt like care, not filler. I was calmer by the time the catbus arrived.', 'public', emos(0.72, 0.49, 0.17, 0.01, 0.02, 0.01, 0.33)),
+    post('sing-street', 'Sing Street', 2016, 'I was happy for the reckless energy of making something before you feel ready. It reminded me that a little embarrassment can be worth surviving if it gets you closer to the life you actually want.', 'public', emos(0.18, 0.75, 0.08, 0.02, 0.12, 0.01, 0.48)),
+    post('iron-giant-chloe', 'The Iron Giant', 1999, 'I remembered the big feeling, but not how quietly it earns it. I felt sad, then steadier. It made bravery seem less like force and more like choosing what you refuse to become.', 'private', emos(0.21, 0.44, 0.53, 0.03, 0.06, 0.01, 0.19)),
+  ],
+  devon_m: [
+    post('invisible-man', 'The Invisible Man', 2020, 'I felt tense because the danger kept asking to be explained before it could be believed. The anger arrived when every reasonable response became another way to make her look unreasonable.', 'public', emos(0.04, 0.01, 0.16, 0.69, 0.73, 0.12, 0.1)),
+    post('ghost-story', 'A Ghost Story', 2017, 'This was much quieter than I expected, which made the grief harder to avoid. I felt impatient with time at first, then strangely grateful that love can leave a mark even after it no longer has anyone to answer it.', 'private', emos(0.48, 0.08, 0.72, 0.01, 0.03, 0.01, 0.21)),
+  ],
+  ananya_sen: [
+    recentPost('scream', 'Scream', 1996, 'I watched this at a friend\'s birthday and expected to be scared. Mostly I felt delighted by how suspicion became a shared game in the room. I was laughing, jumping, and genuinely happy to be surprised with other people instead of alone.', emos(0.08, 0.86, 0.03, 0.03, 0.17, 0.01, 0.49), 1, { assetPath: '/social/ananya-after-scream-natural.webp', altText: 'Ananya laughing with friends after watching Scream' }),
+    post('sorry-we-missed-you', 'Sorry We Missed You', 2019, 'I felt angry at how every promise of flexibility became another way to make a family carry a system\'s failures privately. The film did not let work stay abstract, and I was grateful for that even while it hurt.', 'public', emos(0.12, 0.01, 0.54, 0.78, 0.18, 0.12, 0.04)),
+    post('lobster-ananya', 'The Lobster', 2015, 'I laughed at the rules until I recognized how much cruelty can hide inside a rule that everyone agrees to call normal. The absurdity made me angry, but it also made the loneliness easier to see.', 'private', emos(0.21, 0.18, 0.33, 0.47, 0.17, 0.14, 0.46)),
+  ],
+  lucas_v: [
+    post('fall', 'The Fall', 2006, 'I expected spectacle and felt unexpectedly close to the child\'s imagination holding the story together. The beauty made me happy, but it also made the sadness harder to ignore because so much of it was a way of asking someone not to leave.', 'public', emos(0.09, 0.48, 0.55, 0.03, 0.04, 0.01, 0.71)),
+    post('holdovers', 'The Holdovers', 2023, 'Three people being terrible at caring, then doing it anyway. I laughed a lot and got embarrassingly warm about it.', 'public', emos(0.27, 0.67, 0.27, 0.04, 0.02, 0.01, 0.22)),
+    post('conversation', 'The Conversation', 1974, 'I felt less scared by the uncertainty than by the pressure to turn another person into something I could fully know. The film made listening feel close to theft when care was not part of it.', 'private', emos(0.24, 0.01, 0.17, 0.19, 0.63, 0.14, 0.35)),
+  ],
+  sarah_m: [
+    post('half-of-it', 'The Half of It', 2020, 'The letters felt tender and a little unfair. I loved them, but kept noticing who disappeared inside whose words.', 'public', emos(0.22, 0.44, 0.52, 0.02, 0.05, 0.01, 0.21)),
+    post('paterson', 'Paterson', 2016, 'I felt protective of the ordinary life in this. Nothing huge had to happen for attention to matter. It made me want to notice what someone I love repeats without realizing it.', 'private', emos(0.67, 0.32, 0.16, 0.01, 0.02, 0.01, 0.19)),
+  ],
+  tariq_a: [
+    post('drive-my-car', 'Drive My Car', 2021, 'I felt the relief of two people making room for a truth without demanding it arrive quickly. The sadness stayed, but it was less lonely once someone else could sit beside it without trying to fix it.', 'public', emos(0.54, 0.14, 0.68, 0.01, 0.04, 0.01, 0.18)),
+    post('green-knight', 'The Green Knight', 2021, 'I thought I wanted a clear test of courage. Instead, I felt uneasy about how badly I wanted someone to become heroic in a way that would excuse everything before it.', 'public', emos(0.24, 0.05, 0.16, 0.11, 0.41, 0.06, 0.62)),
+    post('first-reformed', 'First Reformed', 2018, 'I left this feeling the difference between despair and responsibility without knowing how to hold either one. The quiet made me listen to my own excuses more closely.', 'private', emos(0.39, 0.01, 0.58, 0.36, 0.16, 0.08, 0.13)),
+    post('octopus-teacher', 'My Octopus Teacher', 2020, 'I felt embarrassed by how quickly I wanted the connection to prove something about me. What moved me was smaller: attention changing the shape of an ordinary day.', 'private', emos(0.45, 0.42, 0.19, 0.01, 0.02, 0.01, 0.44)),
+  ],
+  rachel_g: [
+    post('minari', 'Minari', 2021, 'I felt how much love can sound like criticism inside a family that is tired and scared. The small acts of care mattered because nobody was very good at asking for them directly.', 'public', emos(0.23, 0.39, 0.58, 0.06, 0.08, 0.01, 0.18)),
+    post('quiet-girl', 'The Quiet Girl', 2022, 'Being expected back. That tiny detail got me. I felt sad for what she had missed and relieved she could recognize care.', 'public', emos(0.42, 0.52, 0.61, 0.01, 0.03, 0.01, 0.16)),
+    post('single-man', 'A Single Man', 2009, 'I felt the effort of moving through a normal day when grief has made every ordinary task feel staged. The beauty did not make the pain easier. It made me notice how carefully a person can keep going while almost disappearing.', 'private', emos(0.37, 0.08, 0.73, 0.03, 0.05, 0.01, 0.12)),
+  ],
+};
+
+// One current public response from every community member keeps the signed-in
+// streams alive while preserving the older viewing history that powers overlap.
+// These are deliberately all films the demo has not logged, so they become
+// legible person-led paths rather than duplicate recommendations.
+const CURRENT_PUBLIC_RESPONSES: Record<string, SeedEntry[]> = {
+  clara_valdez: [
+    recentPost('worst-person-world', 'The Worst Person in the World', 2021, 'I expected a story about indecision and felt something kinder. I recognized how a life can keep changing shape before you have the language to defend it. The uncertainty made me sad, but it also gave me permission to stop treating every unfinished choice as a failure.', emos(0.24, 0.2, 0.58, 0.04, 0.03, 0.01, 0.18), 4, { assetPath: '/social/clara-after-worst-person-world-natural.webp', altText: 'Clara pulling on a scarf while talking with friends after The Worst Person in the World' }),
+  ],
+  marcus_k: [
+    recentPost('after-yang', 'After Yang', 2022, 'I kept waiting for the loss to announce itself, but it arrived through ordinary routines that no longer had anyone inside them. I felt curious about memory and then quietly sad about how much of a person lives in the attention they give a household. The gentleness stayed with me.', emos(0.34, 0.14, 0.61, 0.02, 0.03, 0.01, 0.24), 4, { assetPath: '/social/marcus-after-after-yang-natural.webp', altText: 'Marcus pausing over a family photo after watching After Yang' }),
+  ],
+  elena_r: [
+    recentPost('perfect-days', 'Perfect Days', 2023, 'I watched this on a day that had felt too repetitive and left noticing my own routines differently. The film made a small life feel spacious without pretending it was easy. I felt calm, then grateful for the ordinary moments I usually rush past before I can see them.', emos(0.68, 0.36, 0.11, 0.01, 0.02, 0.01, 0.27), 4, { assetPath: '/social/elena-after-perfect-days-natural.webp', altText: 'Elena watering plants after watching Perfect Days' }),
+  ],
+  hiro_s: [
+    recentPost('others', 'The Others', 2001, 'I knew the house was wrong before I knew why. Quiet fear, then a sadness I was not ready for.', emos(0.23, 0.01, 0.28, 0.06, 0.74, 0.14, 0.08), 3, { assetPath: '/social/hiro-after-others-natural.webp', altText: 'Hiro reaching for the hallway light after watching The Others' }),
+  ],
+  chloe_d: [
+    recentPost('kikis-delivery-service', "Kiki's Delivery Service", 1989, 'I was tired of making everything urgent. Kiki did not fix me, but she made rest feel less like failure.', emos(0.18, 0.73, 0.13, 0.01, 0.04, 0.01, 0.32), 3, { assetPath: '/social/chloe-after-kikis-delivery-service-natural.webp', altText: 'Chloe closing her sketchbook while a cat crosses the couch after Kiki\'s Delivery Service' }),
+  ],
+  devon_m: [
+    recentPost('babadook', 'The Babadook', 2014, 'I thought I was ready for a frightening film and mostly felt grief refusing to stay private. The fear worked because it made exhaustion visible. I left unsettled, but also relieved by the idea that love can remain present even when it does not make pain disappear.', emos(0.09, 0.02, 0.62, 0.1, 0.67, 0.11, 0.05), 3, { assetPath: '/social/devon-after-babadook-natural.webp', altText: 'Devon sitting on the floor after watching The Babadook' }),
+  ],
+  ananya_sen: [
+    recentPost('hidden-life', 'A Hidden Life', 2019, 'I felt angry at how much harm could be made to look ordinary when everyone around it asks for obedience. The silence was not empty. It was full of people being asked to carry what they were never allowed to name. I finished wanting attention to become a form of refusal.', emos(0.16, 0.01, 0.31, 0.78, 0.12, 0.18, 0.04), 2),
+  ],
+  lucas_v: [
+    recentPost('truman-show', 'The Truman Show', 1998, 'I was amused at first and then felt unexpectedly protective of someone whose whole life had been turned into other people\'s comfort. The escape mattered, but the feeling I kept was the right to have a private thought without an audience waiting to use it.', emos(0.15, 0.18, 0.19, 0.18, 0.24, 0.08, 0.64), 2, { assetPath: '/social/lucas-after-truman-show-natural.webp', altText: 'Lucas pulling on his jacket while talking with friends after The Truman Show' }),
+  ],
+  sarah_m: [
+    recentPost('columbus', 'Columbus', 2017, 'I felt close to the way a place can hold a conversation that people are not ready to have directly. The stillness gave every small choice room to matter. I left with a tender kind of hope about two people being honest without needing to solve each other.', emos(0.44, 0.34, 0.26, 0.01, 0.03, 0.01, 0.22), 2, { assetPath: '/social/sarah-after-columbus-natural.webp', altText: 'Sarah listening at an open balcony door after watching Columbus' }),
+  ],
+  tariq_a: [
+    recentPost('lives-of-others', 'The Lives of Others', 2006, 'I expected the surveillance to make me only afraid, but I kept thinking about the private cost of witnessing another person closely enough to care. The film left me tense and sad, then moved by the possibility that attention can become a choice to protect someone.', emos(0.26, 0.08, 0.43, 0.11, 0.54, 0.09, 0.16), 2, { assetPath: '/social/tariq-after-lives-of-others-natural.webp', altText: 'Tariq holding a notebook during a conversation after The Lives of Others' }),
+  ],
+  rachel_g: [
+    recentPost('farewell', 'The Farewell', 2019, 'I recognized the strange ache of a family trying to protect someone while also protecting itself from saying what hurts. I laughed, then felt the sadness underneath every careful gesture. The love was real, but so was the loneliness of carrying it indirectly.', emos(0.19, 0.24, 0.63, 0.03, 0.04, 0.01, 0.12), 1, { assetPath: '/social/rachel-after-farewell-natural.webp', altText: 'Rachel wiping her eye while family clears the table after The Farewell' }),
+  ],
+};
+
+const DIARY_SEED_ENTRIES: Record<string, SeedEntry[]> = Object.fromEntries(
+  Object.entries(BASE_DIARY_SEED_ENTRIES).map(([username, entries]) => [
+    username,
+    [...entries, ...(ENRICHED_DIARY_SEED_ENTRIES[username] || []), ...(CURRENT_PUBLIC_RESPONSES[username] || [])],
+  ]),
+);
+
+// The schema keeps comments intentionally flat. Adjacent comments on a response
+// therefore form a legible conversational exchange without adding artificial
+// reply machinery to the product just for the seed world.
+const SEED_COMMENTS: SeedComment[] = [
+  { author: 'demo', entryOwner: 'ananya_sen', entryKey: 'scream', body: 'You making the fear feel shared rather than isolating explains why I want to watch this with people instead of saving it for a night alone.' },
+  { author: 'ananya_sen', entryOwner: 'ananya_sen', entryKey: 'scream', body: 'Exactly. Nobody had to prove they could handle it. We just kept laughing and jumping together.' },
+  { author: 'elena_r', entryOwner: 'clara_valdez', entryKey: 'frances-ha', body: 'The sadness around friendship changing shape stayed with me. I like that you did not make the unfinished part sound like a personal failure.' },
+  { author: 'clara_valdez', entryOwner: 'clara_valdez', entryKey: 'frances-ha', body: 'That is what I needed too. I can be grateful for who someone was to me without pretending the old version of us is still waiting somewhere.' },
+  { author: 'ananya_sen', entryOwner: 'devon_m', entryKey: 'invisible-man', body: 'The demand for a perfect explanation before belief is exactly what made me angry. Your response kept the harm from becoming an abstract idea.' },
+  { author: 'devon_m', entryOwner: 'devon_m', entryKey: 'invisible-man', body: 'I kept thinking about how exhaustion becomes evidence against someone when they are already being asked to explain the impossible with perfect calm.' },
+  { author: 'sarah_m', entryOwner: 'chloe_d', entryKey: 'paddington-2', body: 'I needed your distinction between kindness and sugariness. The care works because people actually risk being inconvenienced by one another.' },
+  { author: 'chloe_d', entryOwner: 'chloe_d', entryKey: 'paddington-2', body: 'Exactly. Kindness costs them time, which is why it lands.' },
+  { author: 'rachel_g', entryOwner: 'tariq_a', entryKey: 'drive-my-car', body: 'The permission not to make sadness arrive quickly was what I felt too. It made listening seem more active than finding the right response.' },
+  { author: 'tariq_a', entryOwner: 'tariq_a', entryKey: 'drive-my-car', body: 'I am still trying to learn that difference.' },
+  { author: 'clara_valdez', entryOwner: 'hiro_s', entryKey: 'kaguya', body: 'Your anger at a life being called precious while it is narrowed made the sadness sharper for me. I had been feeling only the loss.' },
+  { author: 'hiro_s', entryOwner: 'hiro_s', entryKey: 'kaguya', body: 'I felt that split too. The beauty kept making the confinement more visible, which was hard but also why I could not stop thinking about it.' },
+  { author: 'marcus_k', entryOwner: 'lucas_v', entryKey: 'fall', body: 'The child holding the story together changed the scale for me. It made the bright images feel less like escape and more like someone trying to keep another person close.' },
+  { author: 'lucas_v', entryOwner: 'lucas_v', entryKey: 'fall', body: 'That is exactly it. I was enjoying the size of it until I noticed how much of the imagination was asking for care in a language adults could miss.' },
+  { author: 'sarah_m', entryOwner: 'rachel_g', entryKey: 'minari', body: 'The way love sounds like criticism in a tired family felt painfully familiar. Your note made me think about how care can arrive wearing the wrong voice.' },
+  { author: 'rachel_g', entryOwner: 'rachel_g', entryKey: 'minari', body: 'That phrasing helps. I think I was moved because nobody had a clean way to love one another, but the trying was still there in the mess.' },
+  { author: 'ananya_sen', entryOwner: 'demo', entryKey: 'whiplash', body: 'Same. I hated how thrilled I was. That rush felt like evidence against me.' },
+  { author: 'clara_valdez', entryOwner: 'demo', entryKey: 'eternal-sunshine', body: 'That protectiveness got me too. Even the memories I want gone still prove I cared.' },
+  { author: 'lucas_v', entryOwner: 'marcus_k', entryKey: 'contact', body: 'Yes. Her experience stayed real even when nobody else could certify it.' },
+  { author: 'clara_valdez', entryOwner: 'sarah_m', entryKey: 'half-of-it', body: 'That line about disappearing inside someone else\'s words got me. Tender, but not harmless.' },
+  { author: 'rachel_g', entryOwner: 'ananya_sen', entryKey: 'sorry-we-missed-you', body: 'The family carrying the system privately is exactly it. I was furious.' },
+  { author: 'sarah_m', entryOwner: 'elena_r', entryKey: 'fallen-leaves', body: 'Embarrassingly small is perfect. Big hope would have broken the spell for me.' },
+  { author: 'demo', entryOwner: 'chloe_d', entryKey: 'totoro', body: 'That bus-stop wait. I never thought of it as care, but now I cannot unsee it.' },
+  { author: 'tariq_a', entryOwner: 'rachel_g', entryKey: 'quiet-girl', body: 'Being expected back. Yep. That tiny detail wrecked me.' },
+];
+
 const SAVED_FILMS: Record<string, { title: string; year: number }[]> = Object.fromEntries(
   Object.entries(DIARY_SEED_ENTRIES).map(([username, entries]) => [
     username,
-    entries.slice(username === 'demo' ? 0 : 3, username === 'demo' ? 8 : 7).map(entry => ({ title: entry.title, year: entry.year })),
+    [...new Map(entries.map(entry => [`${entry.title}|||${entry.year}`, { title: entry.title, year: entry.year }])).values()]
+      .slice(username === 'demo' ? 0 : 2, username === 'demo' ? 10 : 7 + (username.length % 2)),
   ]),
 );
 
@@ -220,19 +384,21 @@ const FOLLOW_PLAN = [
   ['clara_valdez', 'elena_r'], ['clara_valdez', 'ananya_sen'],
   ['marcus_k', 'hiro_s'], ['marcus_k', 'chloe_d'], ['marcus_k', 'lucas_v'],
   ['elena_r', 'clara_valdez'], ['elena_r', 'chloe_d'],
-  ['hiro_s', 'devon_m'],
-  ['chloe_d', 'marcus_k'], ['chloe_d', 'lucas_v'],
-  ['devon_m', 'hiro_s'], ['devon_m', 'lucas_v'],
+  ['hiro_s', 'devon_m'], ['hiro_s', 'tariq_a'],
+  ['chloe_d', 'marcus_k'], ['chloe_d', 'lucas_v'], ['chloe_d', 'sarah_m'],
+  ['devon_m', 'hiro_s'], ['devon_m', 'lucas_v'], ['devon_m', 'ananya_sen'],
   ['ananya_sen', 'clara_valdez'], ['ananya_sen', 'elena_r'], ['ananya_sen', 'lucas_v'],
   ['lucas_v', 'chloe_d'], ['lucas_v', 'devon_m'],
-  ['sarah_m', 'elena_r'], ['sarah_m', 'chloe_d'],
-  ['tariq_a', 'clara_valdez'], ['tariq_a', 'ananya_sen'],
-  ['rachel_g', 'ananya_sen'], ['rachel_g', 'tariq_a'],
+  ['sarah_m', 'elena_r'], ['sarah_m', 'chloe_d'], ['sarah_m', 'rachel_g'],
+  ['tariq_a', 'clara_valdez'], ['tariq_a', 'ananya_sen'], ['tariq_a', 'hiro_s'],
+  ['rachel_g', 'ananya_sen'], ['rachel_g', 'tariq_a'], ['rachel_g', 'sarah_m'],
 ] as const;
 
 const ensureSocialSchema = async (client: ConnectedDatabaseClient) => {
   await client.query('ALTER TABLE diary_entries ADD COLUMN IF NOT EXISTS seed_key VARCHAR(160)');
   await client.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_diary_entries_seed_key ON diary_entries(seed_key) WHERE seed_key IS NOT NULL');
+  await client.query('ALTER TABLE entry_comments ADD COLUMN IF NOT EXISTS seed_key VARCHAR(200)');
+  await client.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_entry_comments_seed_key ON entry_comments(seed_key) WHERE seed_key IS NOT NULL');
   await client.query(`
     CREATE TABLE IF NOT EXISTS entry_media (
       entry_id BIGINT NOT NULL REFERENCES diary_entries(id) ON DELETE CASCADE,
@@ -254,7 +420,7 @@ const resolveMovieByTitleAndYear = async (client: ConnectedDatabaseClient, title
   );
   if (existing.rowCount && existing.rows[0].tmdb_data) return existing.rows[0].tmdb_data;
 
-  const search = await axios.get<{ results: Array<{ id: number; title: string; release_date?: string }> }>(`${TMDB_BASE_URL}/search/movie`, {
+  const search = await axios.get<{ results: Array<{ id: number; title: string; release_date?: string; vote_count?: number; popularity?: number }> }>(`${TMDB_BASE_URL}/search/movie`, {
     params: { api_key: TMDB_API_KEY, query: title, primary_release_year: year },
   });
   const results = search.data.results || [];
@@ -263,10 +429,13 @@ const resolveMovieByTitleAndYear = async (client: ConnectedDatabaseClient, title
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '');
-  const exact = results.filter(movie => comparableTitle(movie.title) === comparableTitle(title)
-    && Number(movie.release_date?.slice(0, 4)) === year);
-  const match = exact.length === 1 ? exact[0] : undefined;
-  if (!match) throw new Error(`No unambiguous TMDB result for "${title}" (${year})`);
+  const exact = results
+    .filter(movie => comparableTitle(movie.title) === comparableTitle(title)
+      && Number(movie.release_date?.slice(0, 4)) === year)
+    .sort((left, right) => (right.vote_count || 0) - (left.vote_count || 0)
+      || (right.popularity || 0) - (left.popularity || 0));
+  const match = exact[0];
+  if (!match) throw new Error(`No exact TMDB result for "${title}" (${year})`);
 
   const detailsResponse = await axios.get<Record<string, any>>(`${TMDB_BASE_URL}/movie/${match.id}`, { params: { api_key: TMDB_API_KEY } });
   const details = detailsResponse.data;
@@ -293,17 +462,27 @@ const resolveMovieByTitleAndYear = async (client: ConnectedDatabaseClient, title
   return { ...details, genre_ids: genreIds };
 };
 
-const seedDate = (position: number) => {
+const seedDate = (position: number, streamDay?: number) => {
   const date = new Date(`${SEED_REFERENCE_DATE}T12:00:00.000Z`);
+  if (streamDay) {
+    date.setUTCDate(date.getUTCDate() - streamDay);
+    return date.toISOString().slice(0, 10);
+  }
   date.setUTCDate(date.getUTCDate() - (5 + ((position * 37) % 520)));
   return date.toISOString().slice(0, 10);
 };
 
-const seedTimestamp = (position: number) => {
-  const date = seedDate(position);
+const seedTimestamp = (position: number, streamDay?: number) => {
+  const date = seedDate(position, streamDay);
   const hour = 8 + (position * 7) % 12;
   const minute = (position * 17) % 60;
   return `${date} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+};
+
+const seedCommentTimestamp = (position: number) => {
+  const date = new Date(`${SEED_REFERENCE_DATE}T21:10:00.000Z`);
+  date.setUTCMinutes(date.getUTCMinutes() + position * 3);
+  return date.toISOString().slice(0, 19).replace('T', ' ');
 };
 
 const stableOrder = (value: string) => {
@@ -372,7 +551,9 @@ export const seed = async () => {
     }
 
     const publicEntryIds: number[] = [];
+    const publicSeedKeysByEntryId = new Map<number, string>();
     const activeSeedKeys: string[] = [];
+    const entryIdsBySeedKey = new Map<string, number>();
     for (const [username, entries] of Object.entries(DIARY_SEED_ENTRIES)) {
       const userId = usernameToId.get(username);
       if (!userId) throw new Error(`Missing seed user ${username}`);
@@ -404,11 +585,11 @@ export const seed = async () => {
                note = $5, visibility = $6,
                neutral = $7, happy = $8, sad = $9, angry = $10,
                fearful = $11, disgusted = $12, surprised = $13,
-               capture_method = 'manual', confidence = 1
+               capture_method = 'manual', confidence = 1, created_at = $14
              WHERE id = $1`,
-            [entryId, seedKey, movie.id, seedDate(globalPosition), plan.note, plan.visibility,
+            [entryId, seedKey, movie.id, seedDate(globalPosition, plan.streamDay), plan.note, plan.visibility,
               plan.emotions.neutral, plan.emotions.happy, plan.emotions.sad, plan.emotions.angry,
-              plan.emotions.fearful, plan.emotions.disgusted, plan.emotions.surprised],
+              plan.emotions.fearful, plan.emotions.disgusted, plan.emotions.surprised, seedTimestamp(globalPosition, plan.streamDay)],
           );
         } else {
           const inserted = await client.query(
@@ -418,12 +599,14 @@ export const seed = async () => {
                capture_method, confidence, created_at, updated_at
              ) VALUES ($1,$2,$3,$4,NULL,$5,$6,$7,$8,$9,$10,$11,$12,$13,'manual',1,$14,$14)
              RETURNING id`,
-            [seedKey, userId, movie.id, seedDate(globalPosition), plan.note, plan.visibility,
+            [seedKey, userId, movie.id, seedDate(globalPosition, plan.streamDay), plan.note, plan.visibility,
               plan.emotions.neutral, plan.emotions.happy, plan.emotions.sad, plan.emotions.angry,
-              plan.emotions.fearful, plan.emotions.disgusted, plan.emotions.surprised, seedTimestamp(globalPosition)],
+              plan.emotions.fearful, plan.emotions.disgusted, plan.emotions.surprised, seedTimestamp(globalPosition, plan.streamDay)],
           );
           entryId = Number(inserted.rows[0].id);
         }
+
+        entryIdsBySeedKey.set(seedKey, entryId);
 
         if (plan.expressionPhoto) {
           await client.query(
@@ -437,7 +620,10 @@ export const seed = async () => {
         } else {
           await client.query("DELETE FROM entry_media WHERE entry_id = $1 AND kind = 'expression_photo'", [entryId]);
         }
-        if (plan.visibility === 'public') publicEntryIds.push(entryId);
+        if (plan.visibility === 'public') {
+          publicEntryIds.push(entryId);
+          publicSeedKeysByEntryId.set(entryId, seedKey);
+        }
       }
 
       await client.query(
@@ -473,6 +659,41 @@ export const seed = async () => {
     }
 
     const seedUserIds = [...emailToId.values()];
+    const activeCommentSeedKeys = SEED_COMMENTS.map((comment, index) => `${SEED_PREFIX}comment:${index}:${comment.author}`);
+    // Versions before 2.3 did not mark seed-owned comments. Their timestamps
+    // were intentionally reserved, so this one-time reconciliation removes
+    // only those synthetic legacy rows without touching a real person's words.
+    await client.query(
+      `DELETE FROM entry_comments
+       WHERE seed_key IS NULL
+         AND user_id = ANY($1::int[])
+         AND created_at >= $2::timestamp
+         AND created_at < ($2::timestamp + INTERVAL '1 day')`,
+      [seedUserIds, `${SEED_REFERENCE_DATE} 00:00:00`],
+    );
+    await client.query(
+      `DELETE FROM entry_comments
+       WHERE seed_key LIKE $1 AND NOT (seed_key = ANY($2::text[]))`,
+      [`${SEED_PREFIX}comment:%`, activeCommentSeedKeys],
+    );
+    for (let index = 0; index < SEED_COMMENTS.length; index += 1) {
+      const comment = SEED_COMMENTS[index];
+      const authorId = usernameToId.get(comment.author);
+      const entryId = entryIdsBySeedKey.get(`${SEED_PREFIX}${comment.entryOwner}:${comment.entryKey}`);
+      const createdAt = seedCommentTimestamp(index);
+      const commentSeedKey = activeCommentSeedKeys[index];
+      if (!authorId || !entryId) throw new Error(`Invalid seed comment target ${comment.author} -> ${comment.entryOwner}:${comment.entryKey}`);
+
+      await client.query(
+        `INSERT INTO entry_comments (seed_key, user_id, entry_id, body, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$5)
+         ON CONFLICT (seed_key) WHERE seed_key IS NOT NULL DO UPDATE SET
+           user_id = EXCLUDED.user_id, entry_id = EXCLUDED.entry_id,
+           body = EXCLUDED.body, created_at = EXCLUDED.created_at,
+           updated_at = entry_comments.updated_at`,
+        [commentSeedKey, authorId, entryId, comment.body, createdAt],
+      );
+    }
     await client.query(
       `DELETE FROM entry_reactions
        WHERE user_id = ANY($1::int[])
@@ -490,7 +711,7 @@ export const seed = async () => {
       const entryId = publicEntryIds[index];
       const author = await client.query('SELECT user_id FROM diary_entries WHERE id = $1', [entryId]);
       const possible = seedUserIds.filter(id => id !== Number(author.rows[0].user_id));
-      const reactionTotal = 1 + stableOrder(String(entryId)) % 5;
+      const reactionTotal = 1 + stableOrder(publicSeedKeysByEntryId.get(entryId) || String(index)) % 5;
       for (let offset = 0; offset < reactionTotal; offset += 1) {
         const reactorId = possible[(index * 3 + offset * 5) % possible.length];
         await client.query(
@@ -512,11 +733,12 @@ export const seed = async () => {
          COUNT(em.entry_id)::int AS expression_photos,
          (SELECT COUNT(*)::int FROM saved_films WHERE user_id = ANY($1::int[])) AS saved_films,
          (SELECT COUNT(*)::int FROM follows WHERE follower_id = ANY($1::int[])) AS follows,
-         (SELECT COUNT(*)::int FROM entry_reactions WHERE user_id = ANY($1::int[])) AS reactions
+         (SELECT COUNT(*)::int FROM entry_reactions WHERE user_id = ANY($1::int[])) AS likes,
+         (SELECT COUNT(*)::int FROM entry_comments WHERE seed_key LIKE $4 AND entry_id = ANY($3::bigint[])) AS comments
        FROM diary_entries de
        LEFT JOIN entry_media em ON em.entry_id = de.id AND em.kind = 'expression_photo'
        WHERE de.seed_key = ANY($2::text[])`,
-      [seedUserIds, activeSeedKeys],
+      [seedUserIds, activeSeedKeys, publicEntryIds, `${SEED_PREFIX}comment:%`],
     );
     const result = counts.rows[0];
     console.log('\nSocial seed complete');
@@ -527,7 +749,8 @@ export const seed = async () => {
     console.log(`Expression photos: ${result.expression_photos}`);
     console.log(`Saved films: ${result.saved_films}`);
     console.log(`Follows: ${result.follows}`);
-    console.log(`Reactions: ${result.reactions}`);
+    console.log(`Likes: ${result.likes}`);
+    console.log(`Comments: ${result.comments}`);
     console.log('Run npm run seed:verify to verify the social seed contract.');
   } catch (error) {
     await client.query('ROLLBACK');

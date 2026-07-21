@@ -1814,7 +1814,9 @@ textarea::placeholder {
 }
 
 .diary-list {
+  display: grid;
   margin-top: 20px;
+  gap: 12px;
 }
 
 .diary-entry {
@@ -1824,12 +1826,13 @@ textarea::placeholder {
   padding: 26px 58px 26px 26px;
   grid-template-columns: 132px minmax(0, 1fr);
   gap: clamp(26px, 4vw, 46px);
-  border-top: 1px solid var(--color-line-strong);
+  border: 0;
+  border-radius: 10px;
   background: rgba(244, 239, 233, 0.44);
 }
 
 .diary-entry:last-child {
-  border-bottom: 1px solid var(--color-line-strong);
+  border-bottom: 0;
 }
 
 .diary-entry__poster {
@@ -1868,7 +1871,7 @@ textarea::placeholder {
 }
 
 .diary-entry__topline {
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .diary-entry__topline span,
@@ -1898,6 +1901,10 @@ textarea::placeholder {
   margin-top: 13px;
 }
 
+.diary-entry__visibility {
+  color: rgba(29, 43, 51, 0.66);
+}
+
 .diary-entry blockquote {
   max-width: 70ch;
   margin-top: 24px;
@@ -1915,9 +1922,9 @@ textarea::placeholder {
 .diary-entry__actions {
   position: absolute;
   top: 20px;
-  right: 12px;
+  right: 18px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 4px;
 }
 
@@ -2356,7 +2363,7 @@ textarea::placeholder {
   line-height: 1.64;
 }
 
-.reaction-button {
+.like-button {
   display: inline-flex;
   min-width: 58px;
   min-height: 40px;
@@ -2371,7 +2378,7 @@ textarea::placeholder {
   font-size: 0.72rem;
 }
 
-.reaction-button--active {
+.like-button--active {
   background: var(--color-fig);
   color: var(--color-chalk);
 }
@@ -2979,7 +2986,7 @@ textarea::placeholder {
   }
 
   .diary-entry {
-    padding: 22px 50px 22px 0;
+    padding: 22px 58px 22px 18px;
   }
 
   .public-entry {
@@ -5469,7 +5476,7 @@ html {
   font-size: 0.65rem;
 }
 
-.feed-post__footer .reaction-button {
+.feed-post__footer .like-button {
   min-height: 42px;
   padding: 9px 11px;
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Check, ImagePlus, Search, X } from 'lucide-react';
+import { ArrowLeft, ImagePlus, Search, X } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ManualEmotionInput from '../components/features/emotion/ManualEmotionInput';
 import { RecommendationSpotlight } from '../components/recommendations/RecommendationSpotlight';
@@ -233,7 +233,7 @@ const Log: React.FC = () => {
 
       {step === 'done' && selected && (
         <div className="completion-journey">
-          <div className="completion-journey__saved"><Check size={20} /><p><strong>{selected.title}</strong> is in your diary.</p></div>
+          <div className="completion-journey__saved"><p><strong>{selected.title}</strong> is in your diary.</p></div>
           {nextFilm ? <RecommendationSpotlight movie={nextFilm} /> : <div className="completion-journey__waiting"><p>Your response is saved. A path will appear when it connects with someone else's.</p></div>}
           <div className="completion-state__actions"><Link className="button button--secondary" to="/feed">Return home</Link><button className="button button--quiet" onClick={reset} type="button">Add another film</button></div>
         </div>

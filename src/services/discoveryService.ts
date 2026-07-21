@@ -16,8 +16,9 @@ export interface CommunityEntry extends EmotionScores {
   expression_image_path: string | null;
   expression_image_alt: string | null;
   created_at: string;
-  reaction_count: number;
-  reacted: boolean;
+  like_count: number;
+  liked: boolean;
+  comment_count: number;
   following: boolean;
 }
 
@@ -43,8 +44,14 @@ export interface MemberProfile extends Omit<CommunityPerson, 'pattern_overlap' |
   pattern_overlap?: number | null;
 }
 
+export interface MemberConnection {
+  id: number;
+  username: string;
+  bio: string;
+}
+
 export interface ActivityEvent {
-  kind: 'reaction' | 'follow';
+  kind: 'like' | 'comment' | 'follow';
   created_at: string;
   actor_id: number;
   username: string;
@@ -53,6 +60,17 @@ export interface ActivityEvent {
   title: string | null;
   poster_path: string | null;
   note: string | null;
+  comment_body: string | null;
+}
+
+export interface EntryComment {
+  id: number;
+  entry_id: number;
+  user_id: number;
+  username: string;
+  body: string;
+  created_at: string;
+  own: boolean;
 }
 
 export interface CommunityFilm {
@@ -82,7 +100,7 @@ export const discoveryService = {
     const response = await apiClient.get('/discovery/people');
     return response.data.people;
   },
-  async profile(username: string): Promise<{ person: MemberProfile; entries: CommunityEntry[] }> {
+  async profile(username: string): Promise<{ person: MemberProfile; entries: CommunityEntry[]; followers: MemberConnection[]; following: MemberConnection[] }> {
     const response = await apiClient.get(`/discovery/people/${encodeURIComponent(username)}`);
     return response.data;
   },
@@ -100,10 +118,21 @@ export const discoveryService = {
   async unfollow(personId: number): Promise<void> {
     await apiClient.delete(`/discovery/people/${personId}/follow`);
   },
-  async react(entryId: number): Promise<void> {
-    await apiClient.post(`/discovery/entries/${entryId}/reaction`);
+  async like(entryId: number): Promise<void> {
+    await apiClient.post(`/discovery/entries/${entryId}/like`);
   },
-  async unreact(entryId: number): Promise<void> {
-    await apiClient.delete(`/discovery/entries/${entryId}/reaction`);
+  async unlike(entryId: number): Promise<void> {
+    await apiClient.delete(`/discovery/entries/${entryId}/like`);
+  },
+  async comments(entryId: number): Promise<EntryComment[]> {
+    const response = await apiClient.get(`/discovery/entries/${entryId}/comments`);
+    return response.data.comments;
+  },
+  async addComment(entryId: number, body: string): Promise<EntryComment> {
+    const response = await apiClient.post(`/discovery/entries/${entryId}/comments`, { body });
+    return response.data.comment;
+  },
+  async deleteComment(commentId: number): Promise<void> {
+    await apiClient.delete(`/discovery/comments/${commentId}`);
   },
 };

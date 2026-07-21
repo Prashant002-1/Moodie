@@ -181,7 +181,7 @@ Its background carries the broadcast identity through warm mineral, oxide, slate
 - Diary keeps chronological responses editable and saved films in a separate view.
 - Diary supports search, visibility filters, rewatches, chronological grouping, and a recent-viewing feeling summary.
 - People cards keep the latest film and response beside the person, and name a shared film when one exists.
-- Search covers films, desired feelings, and people without becoming a streaming grid. Desired-feeling results stay people-led and keep genre open. Activity links reactions and follows back to their source.
+- Search covers films, desired feelings, and people without becoming a streaming grid. Desired-feeling results stay people-led and keep genre open. Activity links likes, comments, and follows back to their source.
 - Member pages use separate Responses and Films views. They do not assign a compatibility score or a defining feeling to a person.
 - Film pages lead with the film, carry the person and shared-film context when reached through a recommendation, then separate human responses from related catalog browsing.
 - Account settings use local tabs so profile, account, and password controls are never presented as one long settings dashboard.
@@ -190,7 +190,7 @@ The landing page may preview these surfaces, but it must not force the full prod
 
 ## Copy rules
 
-Use film, response, feelings, note, person, feed, diary, follow, reaction, and recommendation literally.
+Use film, response, feelings, note, person, feed, diary, follow, like, comment, and recommendation literally. Reserve reaction for the optional expression photo attached to a viewing.
 
 Describe what the product does before explaining its philosophy. Use plain specifications where they help a visitor evaluate the product. Keep people and source films visible in recommendation reasons.
 

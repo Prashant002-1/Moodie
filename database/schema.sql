@@ -175,6 +175,19 @@ CREATE TABLE IF NOT EXISTS entry_reactions (
     PRIMARY KEY (user_id, entry_id)
 );
 
+-- Comments belong to a saved response, not to the film in the abstract.
+CREATE TABLE IF NOT EXISTS entry_comments (
+    id BIGSERIAL PRIMARY KEY,
+    seed_key VARCHAR(200),
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    entry_id BIGINT NOT NULL REFERENCES diary_entries(id) ON DELETE CASCADE,
+    body TEXT NOT NULL CHECK (char_length(trim(body)) BETWEEN 1 AND 1000),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE entry_comments ADD COLUMN IF NOT EXISTS seed_key VARCHAR(200);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_emotions_user_id ON emotions(user_id);
 CREATE INDEX IF NOT EXISTS idx_emotions_session_id ON emotions(session_id);
@@ -196,6 +209,9 @@ CREATE INDEX IF NOT EXISTS idx_diary_entries_movie ON diary_entries(movie_id);
 CREATE INDEX IF NOT EXISTS idx_entry_media_kind ON entry_media(kind);
 CREATE INDEX IF NOT EXISTS idx_saved_films_user ON saved_films(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_follows_followed ON follows(followed_id);
+CREATE INDEX IF NOT EXISTS idx_entry_comments_entry ON entry_comments(entry_id, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_entry_comments_user ON entry_comments(user_id, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_entry_comments_seed_key ON entry_comments(seed_key) WHERE seed_key IS NOT NULL;
 
 -- Insert initial genre data (TMDB standard genres)
 INSERT INTO genres (id, name) VALUES 

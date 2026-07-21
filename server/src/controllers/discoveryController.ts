@@ -3,6 +3,8 @@ import { z } from 'zod';
 import pool from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 
+const commentBodySchema = z.object({ body: z.string().trim().min(1).max(1000) });
+
 export const getFeed = async (req: AuthRequest, res: Response) => {
   try {
     const limit = z.coerce.number().int().min(1).max(60).default(24).parse(req.query.limit);
@@ -14,10 +16,11 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
               u.username, u.bio, m.title, m.poster_path, m.backdrop_path, m.release_date,
               em.asset_path AS expression_image_path,
               em.alt_text AS expression_image_alt,
-              (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS reaction_count,
+              (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS like_count,
               CASE WHEN $1::int IS NULL THEN FALSE ELSE EXISTS(
                 SELECT 1 FROM entry_reactions er WHERE er.entry_id = de.id AND er.user_id = $1
-              ) END AS reacted,
+              ) END AS liked,
+              (SELECT COUNT(*)::int FROM entry_comments ec WHERE ec.entry_id = de.id) AS comment_count,
               CASE WHEN $1::int IS NULL THEN FALSE ELSE EXISTS(
                 SELECT 1 FROM follows f WHERE f.follower_id = $1 AND f.followed_id = de.user_id
               ) END AS following
@@ -26,7 +29,7 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
        JOIN movies m ON m.id = de.movie_id
        LEFT JOIN entry_media em ON em.entry_id = de.id AND em.kind = 'expression_photo'
        WHERE de.visibility = 'public'
-       ORDER BY following DESC, de.created_at DESC
+       ORDER BY de.created_at DESC, de.id DESC
        LIMIT $2`,
       [viewerId, limit],
     );
@@ -48,10 +51,11 @@ export const getFilmEntries = async (req: AuthRequest, res: Response) => {
               u.username, u.bio, m.title, m.poster_path, m.backdrop_path, m.release_date,
               em.asset_path AS expression_image_path,
               em.alt_text AS expression_image_alt,
-              (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS reaction_count,
+              (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS like_count,
               CASE WHEN $2::int IS NULL THEN FALSE ELSE EXISTS(
                 SELECT 1 FROM entry_reactions er WHERE er.entry_id = de.id AND er.user_id = $2
-              ) END AS reacted,
+              ) END AS liked,
+              (SELECT COUNT(*)::int FROM entry_comments ec WHERE ec.entry_id = de.id) AS comment_count,
               CASE WHEN $2::int IS NULL THEN FALSE ELSE EXISTS(
                 SELECT 1 FROM follows f WHERE f.follower_id = $2 AND f.followed_id = de.user_id
               ) END AS following
@@ -60,7 +64,7 @@ export const getFilmEntries = async (req: AuthRequest, res: Response) => {
        JOIN movies m ON m.id = de.movie_id
        LEFT JOIN entry_media em ON em.entry_id = de.id AND em.kind = 'expression_photo'
        WHERE de.visibility = 'public' AND de.movie_id = $1
-       ORDER BY reaction_count DESC, de.created_at DESC LIMIT 24`,
+       ORDER BY like_count DESC, de.created_at DESC LIMIT 24`,
       [movieId, viewerId],
     );
     res.json({ entries: result.rows });
@@ -196,10 +200,11 @@ export const getPersonProfile = async (req: AuthRequest, res: Response) => {
               u.username, u.bio, m.title, m.poster_path, m.backdrop_path, m.release_date,
               em.asset_path AS expression_image_path,
               em.alt_text AS expression_image_alt,
-              (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS reaction_count,
+              (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS like_count,
               CASE WHEN $2::int IS NULL THEN FALSE ELSE EXISTS(
                 SELECT 1 FROM entry_reactions er WHERE er.entry_id = de.id AND er.user_id = $2
-              ) END AS reacted,
+              ) END AS liked,
+              (SELECT COUNT(*)::int FROM entry_comments ec WHERE ec.entry_id = de.id) AS comment_count,
               FALSE AS following
        FROM diary_entries de
        JOIN users u ON u.id = de.user_id
@@ -210,7 +215,24 @@ export const getPersonProfile = async (req: AuthRequest, res: Response) => {
       [person.rows[0].id, viewerId],
     );
 
-    res.json({ person: person.rows[0], entries: entries.rows });
+    const followers = await pool.query(
+      `SELECT u.id, u.username, u.bio
+       FROM follows f
+       JOIN users u ON u.id = f.follower_id
+       WHERE f.followed_id = $1
+       ORDER BY u.username ASC`,
+      [person.rows[0].id],
+    );
+    const following = await pool.query(
+      `SELECT u.id, u.username, u.bio
+       FROM follows f
+       JOIN users u ON u.id = f.followed_id
+       WHERE f.follower_id = $1
+       ORDER BY u.username ASC`,
+      [person.rows[0].id],
+    );
+
+    res.json({ person: person.rows[0], entries: entries.rows, followers: followers.rows, following: following.rows });
   } catch (error) {
     if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid member name' });
     res.status(500).json({ error: 'Member profile could not be loaded' });
@@ -223,13 +245,25 @@ export const getActivity = async (req: AuthRequest, res: Response) => {
     const limit = z.coerce.number().int().min(1).max(80).default(40).parse(req.query.limit);
     const result = await pool.query(
       `SELECT * FROM (
-         SELECT 'reaction'::text AS kind, er.created_at,
+         SELECT 'like'::text AS kind, er.created_at,
                 actor.id AS actor_id, actor.username,
                 de.id AS entry_id, m.id AS movie_id, m.title, m.poster_path,
-                de.note
+                de.note, NULL::text AS comment_body
          FROM entry_reactions er
          JOIN users actor ON actor.id = er.user_id
          JOIN diary_entries de ON de.id = er.entry_id
+         JOIN movies m ON m.id = de.movie_id
+         WHERE de.user_id = $1 AND actor.id <> $1
+
+         UNION ALL
+
+         SELECT 'comment'::text AS kind, ec.created_at,
+                actor.id AS actor_id, actor.username,
+                de.id AS entry_id, m.id AS movie_id, m.title, m.poster_path,
+                de.note, ec.body AS comment_body
+         FROM entry_comments ec
+         JOIN users actor ON actor.id = ec.user_id
+         JOIN diary_entries de ON de.id = ec.entry_id
          JOIN movies m ON m.id = de.movie_id
          WHERE de.user_id = $1 AND actor.id <> $1
 
@@ -239,7 +273,7 @@ export const getActivity = async (req: AuthRequest, res: Response) => {
                 actor.id AS actor_id, actor.username,
                 NULL::bigint AS entry_id, NULL::integer AS movie_id,
                 NULL::varchar AS title, NULL::varchar AS poster_path,
-                NULL::varchar AS note
+                NULL::text AS note, NULL::text AS comment_body
          FROM follows f
          JOIN users actor ON actor.id = f.follower_id
          WHERE f.followed_id = $1
@@ -314,21 +348,21 @@ export const unfollowPerson = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const reactToEntry = async (req: AuthRequest, res: Response) => {
+export const likeEntry = async (req: AuthRequest, res: Response) => {
   if (!req.user) return res.status(401).json({ error: 'Authentication required' });
   try {
     const entryId = z.coerce.number().int().positive().parse(req.params.entryId);
     const entry = await pool.query("SELECT 1 FROM diary_entries WHERE id = $1 AND visibility = 'public'", [entryId]);
     if (!entry.rowCount) return res.status(404).json({ error: 'Entry not found' });
     await pool.query('INSERT INTO entry_reactions (user_id, entry_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [req.user.id, entryId]);
-    res.status(201).json({ reacted: true });
+    res.status(201).json({ liked: true });
   } catch (error) {
     if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid entry ID' });
-    res.status(500).json({ error: 'Reaction could not be saved' });
+    res.status(500).json({ error: 'Like could not be saved' });
   }
 };
 
-export const removeReaction = async (req: AuthRequest, res: Response) => {
+export const removeLike = async (req: AuthRequest, res: Response) => {
   if (!req.user) return res.status(401).json({ error: 'Authentication required' });
   try {
     const entryId = z.coerce.number().int().positive().parse(req.params.entryId);
@@ -336,6 +370,66 @@ export const removeReaction = async (req: AuthRequest, res: Response) => {
     res.status(204).send();
   } catch (error) {
     if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid entry ID' });
-    res.status(500).json({ error: 'Reaction could not be removed' });
+    res.status(500).json({ error: 'Like could not be removed' });
+  }
+};
+
+export const getEntryComments = async (req: AuthRequest, res: Response) => {
+  try {
+    const entryId = z.coerce.number().int().positive().parse(req.params.entryId);
+    const viewerId = req.user?.id || null;
+    const entry = await pool.query("SELECT 1 FROM diary_entries WHERE id = $1 AND visibility = 'public'", [entryId]);
+    if (!entry.rowCount) return res.status(404).json({ error: 'Response not found' });
+    const comments = await pool.query(
+      `SELECT ec.id, ec.entry_id, ec.user_id, ec.body, ec.created_at,
+              u.username, ($2::int IS NOT NULL AND ec.user_id = $2) AS own
+       FROM entry_comments ec
+       JOIN users u ON u.id = ec.user_id
+       WHERE ec.entry_id = $1
+       ORDER BY ec.created_at ASC
+       LIMIT 100`,
+      [entryId, viewerId],
+    );
+    res.json({ comments: comments.rows });
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid response ID' });
+    res.status(500).json({ error: 'Comments could not be loaded' });
+  }
+};
+
+export const addEntryComment = async (req: AuthRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+  try {
+    const entryId = z.coerce.number().int().positive().parse(req.params.entryId);
+    const { body } = commentBodySchema.parse(req.body);
+    const entry = await pool.query("SELECT 1 FROM diary_entries WHERE id = $1 AND visibility = 'public'", [entryId]);
+    if (!entry.rowCount) return res.status(404).json({ error: 'Response not found' });
+    const created = await pool.query(
+      `WITH inserted AS (
+         INSERT INTO entry_comments (user_id, entry_id, body)
+         VALUES ($1, $2, $3)
+         RETURNING id, user_id, entry_id, body, created_at
+       )
+       SELECT inserted.*, u.username, TRUE AS own
+       FROM inserted JOIN users u ON u.id = inserted.user_id`,
+      [req.user.id, entryId, body],
+    );
+    res.status(201).json({ comment: created.rows[0] });
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Write a comment between 1 and 1000 characters' });
+    res.status(500).json({ error: 'Comment could not be added' });
+  }
+};
+
+export const deleteEntryComment = async (req: AuthRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+  try {
+    const commentId = z.coerce.number().int().positive().parse(req.params.commentId);
+    const deleted = await pool.query('DELETE FROM entry_comments WHERE id = $1 AND user_id = $2 RETURNING id', [commentId, req.user.id]);
+    if (!deleted.rowCount) return res.status(404).json({ error: 'Comment not found' });
+    res.status(204).send();
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid comment ID' });
+    res.status(500).json({ error: 'Comment could not be removed' });
   }
 };

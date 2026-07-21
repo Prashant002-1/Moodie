@@ -1,4 +1,4 @@
-import { Bookmark, Check, Search as SearchIcon } from 'lucide-react';
+import { Bookmark, Search as SearchIcon } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CommunityFilmCard } from '../components/discovery/CommunityFilmCard';
@@ -143,7 +143,7 @@ const Search = () => {
           return (
             <article className="search-film" key={movie.id}>
               <Link to={`/movie/${movie.id}`}>{poster ? <img alt={`Poster for ${movie.title}`} loading="lazy" src={poster} /> : <span />}</Link>
-              <div><Link to={`/movie/${movie.id}`}><h2>{movie.title}</h2></Link><p className="metadata">{releaseYear(movie.release_date)}</p><p>{movie.overview || 'No synopsis is available.'}</p><div className="search-film__actions"><Link className="text-link" to={`/movie/${movie.id}`}>Open film</Link><button aria-pressed={saved} onClick={() => void (saved ? unsaveFilm(movie.id) : saveFilm(movie.id))} type="button">{saved ? <Check size={15} /> : <Bookmark size={15} />}{saved ? 'Saved' : 'Save'}</button><Link to={`/log?movieId=${movie.id}`}>Add response</Link></div></div>
+              <div><Link to={`/movie/${movie.id}`}><h2>{movie.title}</h2></Link><p className="metadata">{releaseYear(movie.release_date)}</p><p>{movie.overview || 'No synopsis is available.'}</p><div className="search-film__actions"><Link className="text-link" to={`/movie/${movie.id}`}>Open film</Link><button aria-pressed={saved} onClick={() => void (saved ? unsaveFilm(movie.id) : saveFilm(movie.id))} type="button"><Bookmark fill={saved ? 'currentColor' : 'none'} size={15} />{saved ? 'Saved' : 'Save'}</button><Link to={`/log?movieId=${movie.id}`}>Add response</Link></div></div>
             </article>
           );
         })}</section> : <div className="product-empty"><p>No films found.</p></div>

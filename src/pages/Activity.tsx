@@ -1,10 +1,10 @@
-import { Heart, UserPlus } from 'lucide-react';
+import { Heart, MessageCircle, UserPlus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ActivityEvent, CommunityEntry, discoveryService } from '../services/discoveryService';
 import { imageUrl } from '../utils/display';
 
-type ActivityView = 'all' | 'reactions' | 'follows';
+type ActivityView = 'all' | 'likes' | 'comments' | 'follows';
 
 const Activity = () => {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
@@ -28,7 +28,8 @@ const Activity = () => {
   }, []);
 
   const visibleEvents = useMemo(() => events.filter(event => {
-    if (view === 'reactions') return event.kind === 'reaction';
+    if (view === 'likes') return event.kind === 'like';
+    if (view === 'comments') return event.kind === 'comment';
     if (view === 'follows') return event.kind === 'follow';
     return true;
   }), [events, view]);
@@ -38,7 +39,8 @@ const Activity = () => {
       <header className="activity-toolbar">
         <div aria-label="Filter activity" className="product-section-tabs" role="group">
           <button aria-pressed={view === 'all'} onClick={() => setView('all')} type="button">All</button>
-          <button aria-pressed={view === 'reactions'} onClick={() => setView('reactions')} type="button">Reactions</button>
+          <button aria-pressed={view === 'likes'} onClick={() => setView('likes')} type="button">Likes</button>
+          <button aria-pressed={view === 'comments'} onClick={() => setView('comments')} type="button">Comments</button>
           <button aria-pressed={view === 'follows'} onClick={() => setView('follows')} type="button">Follows</button>
         </div>
       </header>
@@ -54,11 +56,11 @@ const Activity = () => {
                 <article className="activity-event" key={`${event.kind}-${event.actor_id}-${event.entry_id || 'follow'}-${event.created_at}`}>
                   <Link className="activity-event__avatar" to={`/member/${event.username}`}>{event.username.charAt(0).toUpperCase()}</Link>
                   <div className="activity-event__body">
-                    <p><Link to={`/member/${event.username}`}><strong>@{event.username}</strong></Link> {event.kind === 'reaction' ? <>reacted to your response to <Link to={`/movie/${event.movie_id}#response-${event.entry_id}`}><strong>{event.title}</strong></Link>.</> : 'followed you.'}</p>
-                    {event.kind === 'reaction' && event.note && <blockquote>“{event.note}”</blockquote>}
+                    <p><Link to={`/member/${event.username}`}><strong>@{event.username}</strong></Link> {event.kind === 'like' ? <>liked your response to <Link to={`/movie/${event.movie_id}#response-${event.entry_id}`}><strong>{event.title}</strong></Link>.</> : event.kind === 'comment' ? <>commented on your response to <Link to={`/movie/${event.movie_id}#response-${event.entry_id}`}><strong>{event.title}</strong></Link>.</> : 'followed you.'}</p>
+                    {event.kind === 'comment' && event.comment_body && <blockquote>“{event.comment_body}”</blockquote>}
                     <time dateTime={event.created_at}>{eventDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>
                   </div>
-                  <div className="activity-event__mark">{event.kind === 'reaction' ? <Heart aria-hidden="true" size={17} /> : <UserPlus aria-hidden="true" size={17} />}</div>
+                  <div className="activity-event__mark">{event.kind === 'like' ? <Heart aria-hidden="true" size={17} /> : event.kind === 'comment' ? <MessageCircle aria-hidden="true" size={17} /> : <UserPlus aria-hidden="true" size={17} />}</div>
                 </article>
               );
             }) : <div className="product-empty"><p>No activity here yet.</p></div>}

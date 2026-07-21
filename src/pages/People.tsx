@@ -76,7 +76,7 @@ const People: React.FC = () => {
                   <div><Link to={`/member/${person.username}`}><h2>@{person.username}</h2></Link><p>{person.bio || `${person.entries} public ${person.entries === 1 ? 'response' : 'responses'}.`}</p>{person.follows_you && <span className="people-row__follows-you">Follows you</span>}</div>
                 </div>
                 {person.shared_film_title && <p className="people-row__connection">You both responded to <strong>{person.shared_film_title}</strong>.</p>}
-                <Link className="people-row__latest" to={`/movie/${person.latest_movie_id}`}><span>Recently watched</span><strong>{person.latest_title}</strong>{person.latest_note && <q>{person.latest_note}</q>}</Link>
+                <Link aria-label={`Open ${person.latest_title}`} className="people-row__latest" to={`/movie/${person.latest_movie_id}`}><strong>{person.latest_title}</strong>{person.latest_note && <q>{person.latest_note}</q>}</Link>
                 <div className="people-row__bottom">
                   <span>{person.entries} responses · {person.followers} followers</span>
                   <button aria-pressed={person.following} className={`people-row__follow${person.following ? ' people-row__follow--active' : ''}`} onClick={() => void toggleFollow(person)} type="button">{person.following ? 'Following' : 'Follow'}</button>

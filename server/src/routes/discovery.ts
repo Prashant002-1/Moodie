@@ -1,5 +1,5 @@
 import express from 'express';
-import { getActivity, getCommunityPulse, getFeed, getFilmEntries, getPeople, getPersonProfile, followPerson, reactToEntry, removeReaction, unfollowPerson } from '../controllers/discoveryController';
+import { addEntryComment, deleteEntryComment, getActivity, getCommunityPulse, getEntryComments, getFeed, getFilmEntries, getPeople, getPersonProfile, followPerson, likeEntry, removeLike, unfollowPerson } from '../controllers/discoveryController';
 import { authenticateToken, optionalAuthentication } from '../middleware/auth';
 
 const router = express.Router();
@@ -11,7 +11,10 @@ router.get('/people', optionalAuthentication, getPeople);
 router.get('/people/:username', optionalAuthentication, getPersonProfile);
 router.post('/people/:personId/follow', authenticateToken, followPerson);
 router.delete('/people/:personId/follow', authenticateToken, unfollowPerson);
-router.post('/entries/:entryId/reaction', authenticateToken, reactToEntry);
-router.delete('/entries/:entryId/reaction', authenticateToken, removeReaction);
+router.post('/entries/:entryId/like', authenticateToken, likeEntry);
+router.delete('/entries/:entryId/like', authenticateToken, removeLike);
+router.get('/entries/:entryId/comments', optionalAuthentication, getEntryComments);
+router.post('/entries/:entryId/comments', authenticateToken, addEntryComment);
+router.delete('/comments/:commentId', authenticateToken, deleteEntryComment);
 
 export default router;

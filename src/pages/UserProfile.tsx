@@ -52,7 +52,10 @@ const UserProfile: React.FC = () => {
   return (
     <div className="page-shell account-page">
       <header className="page-header account-header">
-        <div className="page-header__copy"><h1 className="page-title">{user.displayName}</h1><p className="page-intro">@{user.username}</p></div>
+        <div className="page-header__copy account-identity">
+          <div aria-label={`${user.displayName}'s profile picture`} className="account-profile-picture" role="img">{user.username.charAt(0).toUpperCase()}</div>
+          <div><h1 className="page-title">{user.displayName}</h1><p className="page-intro">@{user.username}</p></div>
+        </div>
         <div className="account-header__actions">
           <div aria-label="Choose account view" className="product-section-tabs" role="group">
             <button aria-pressed={view === 'profile'} onClick={() => setView('profile')} type="button">Profile</button>
@@ -70,7 +73,7 @@ const UserProfile: React.FC = () => {
             <div className="data-row"><dt>Public responses</dt><dd>{summary?.public_entries ?? entries.filter(entry => entry.visibility === 'public').length}</dd></div>
             <div className="data-row"><dt>Saved films</dt><dd>{summary?.saved ?? savedFilms.length}</dd></div>
           </dl>
-          <form className="profile-bio-form" onSubmit={saveBio}><div className="field"><label htmlFor="profile-bio">Public bio</label><textarea id="profile-bio" maxLength={240} onChange={event => setBio(event.target.value)} placeholder="What tends to stay with you after a film?" value={bio} /><span className="field__hint">{bio.length} / 240. Shown beside public responses.</span></div>{bioStatus && <p className="metadata" role="status">{bioStatus}</p>}<button className="button button--secondary" disabled={savingBio} type="submit">{savingBio ? 'Saving profile' : 'Save public bio'}</button></form>
+          <form className="profile-bio-form" onSubmit={saveBio}><div className="field"><label htmlFor="profile-bio">Bio</label><textarea id="profile-bio" maxLength={240} onChange={event => setBio(event.target.value)} placeholder="What tends to stay with you after a film?" rows={3} value={bio} />{bio.length >= 240 && <span className="field__hint">240 character limit reached.</span>}</div>{bioStatus && <p className="metadata" role="status">{bioStatus}</p>}<button className="button button--secondary" disabled={savingBio} type="submit">{savingBio ? 'Saving profile' : 'Save bio'}</button></form>
           <div className="account-section__links"><Link className="text-link" to="/diary">Open diary</Link>{(summary?.public_entries || 0) > 0 && <Link className="text-link" to={`/member/${user.username}`}>View public profile</Link>}</div>
         </section>}
 

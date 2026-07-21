@@ -15,7 +15,7 @@ const setupTestDatabase = async () => {
 
 const cleanupTestDatabase = async () => {
   await pool.query(
-    'TRUNCATE entry_reactions, follows, entry_media, diary_entries, saved_films, users RESTART IDENTITY CASCADE',
+    'TRUNCATE entry_comments, entry_reactions, follows, entry_media, diary_entries, saved_films, users RESTART IDENTITY CASCADE',
   );
 };
 

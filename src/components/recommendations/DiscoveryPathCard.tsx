@@ -1,4 +1,4 @@
-import { ArrowUpRight, Bookmark, Check } from 'lucide-react';
+import { ArrowUpRight, Bookmark } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useDiary } from '../../contexts/DiaryContext';
 import { EmotionScores } from '../../types/emotion';
@@ -41,7 +41,7 @@ export function DiscoveryPathCard({ movie, requestedFeelings = [] }: DiscoveryPa
         <div className="path-card__actions">
           <Link to={filmLink}>Open <ArrowUpRight aria-hidden="true" size={15} /></Link>
           <button aria-label={`${saved ? 'Remove' : 'Save'} ${movie.title}`} aria-pressed={saved} onClick={() => void toggleSaved()} type="button">
-            {saved ? <Check aria-hidden="true" size={15} /> : <Bookmark aria-hidden="true" size={15} />}
+            <Bookmark aria-hidden="true" fill={saved ? 'currentColor' : 'none'} size={15} />
             {saved ? 'Saved' : 'Save'}
           </button>
         </div>

@@ -33,4 +33,16 @@ describe('Current HTTP contract', () => {
     const response = await request(app).get('/api/discovery/feed?limit=0');
     expect(response.status).toBe(400);
   });
+
+  it('uses likes instead of the retired reaction route', async () => {
+    const oldRoute = await request(app).post('/api/discovery/entries/1/reaction');
+    const likeRoute = await request(app).post('/api/discovery/entries/1/like');
+    expect(oldRoute.status).toBe(404);
+    expect(likeRoute.status).toBe(401);
+  });
+
+  it('protects response comments', async () => {
+    const response = await request(app).post('/api/discovery/entries/1/comments').send({ body: 'This stayed with me too.' });
+    expect(response.status).toBe(401);
+  });
 });

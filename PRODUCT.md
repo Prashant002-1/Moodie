@@ -34,7 +34,7 @@ The logged-out landing page explains the product as a human sequence: the small 
 
 ### Feed
 
-The signed-in home has For you, Following, and Everyone views. For you leads with one recommendation from a real person, then keeps recommended films, followed responses, people, active community films, and saved films within reach. Each recommendation names the person and shared film, shows the feelings both people recorded there, and carries the public response behind the recommended film. Following and Everyone become chronological streams of complete responses. Every response keeps the person, film, note, feeling trace, and optional photo together. The home is dense enough to support several discovery paths without becoming a metrics dashboard or making photos and reactions the primary content.
+The signed-in home has For you, Following, and Everyone views. For you leads with one recommendation from a real person, then keeps recommended films, followed responses, people, active community films, and saved films within reach. Each recommendation names the person and shared film, shows the feelings both people recorded there, and carries the public response behind the recommended film. Following and Everyone become chronological streams of complete responses. Every response keeps the person, film, note, feeling trace, and optional photo together. The home is dense enough to support several discovery paths without becoming a metrics dashboard or making photos and likes the primary content.
 
 ### Add a film
 
@@ -66,7 +66,7 @@ Search covers films, feelings, and people. Film search supports saving and addin
 
 ### Activity
 
-Activity is the return trail for reactions, followers, and recent responses from people already followed. Every event links to the person, film, or exact response that caused it. The product does not claim unread state without storing it.
+Activity is the return trail for likes, comments, followers, and recent responses from people already followed. Every event links to the person, film, or exact response that caused it. The product does not claim unread state without storing it.
 
 ### Film and member pages
 
@@ -88,7 +88,7 @@ A film page leads with the film, then separates responses from related films. A 
 1. **People are the discovery engine.** Films become relevant through another person's lived response.
 2. **Response, not review.** The product invites meaning and feeling, not scores or criticism.
 3. **The person is the authority.** Direct input is complete.
-4. **Social has a purpose.** Follows, public responses, and reactions create paths to films rather than popularity theater.
+4. **Social has a purpose.** Follows, public responses, likes, and comments create paths to films rather than popularity theater.
 5. **Private stays private.** A private response may improve the owner's matching but never appears in another person's feed or recommendation explanation.
 6. **Media is not evidence.** An attached expression photo is optional social context, not a biometric signal.
 7. **No emotional stereotypes.** Sadness does not mean drama, and joy does not mean comedy. Relationships are learned between people and films.
@@ -103,7 +103,7 @@ The reviewed feeling mix is set directly by the person. Only those saved values 
 
 Optional post media is stored separately from the reviewed feeling mix. Removing the media must not change the meaning or recommendation value of the response.
 
-Saved films, follows, and reactions are separate relationships. Reactions express resonance with a post, not a universal judgment of a film.
+Saved films, follows, likes, and comments are separate relationships. A like expresses resonance with a response, not a universal judgment of a film.
 
 The current seven-key vector is a prototype constraint. It must not become the permanent feeling vocabulary. The target is defined in `docs/EMOTIONAL_SIGNAL_MODEL.md`.
 
@@ -113,8 +113,8 @@ The current seven-key vector is a prototype constraint. It must not become the p
 - `/api/diary`: complete response reads and writes plus diary summary.
 - `/api/library`: saved films only.
 - `/api/recommendations`: people-led recommendations and separate catalog fallbacks.
-- `/api/discovery`: feed, public responses, people, follows, and reactions.
-- `/api/discovery/activity`: reactions and follows that lead back to the exact social event.
+- `/api/discovery`: feed, public responses, people, follows, likes, and comments.
+- `/api/discovery/activity`: likes, comments, and follows that lead back to the exact social event.
 - `/api/discovery/pulse`: films with recent public responses from the community.
 - `/api/auth`: account access and profile changes.
 

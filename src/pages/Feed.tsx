@@ -2,6 +2,8 @@ import { ArrowUpRight, Heart } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CommunityFilmCard } from '../components/discovery/CommunityFilmCard';
+import { ResponseComments } from '../components/discovery/ResponseComments';
+import { ResponseFeelingTrace } from '../components/discovery/ResponseFeelingTrace';
 import FilmRail from '../components/features/movie/FilmRail';
 import { DiscoveryPathCard } from '../components/recommendations/DiscoveryPathCard';
 import { RecommendationSpotlight } from '../components/recommendations/RecommendationSpotlight';
@@ -10,41 +12,20 @@ import { useUser } from '../contexts/UserContext';
 import { CommunityEntry, CommunityFilm, CommunityPerson, discoveryService } from '../services/discoveryService';
 import { recommendationService } from '../services/recommendationService';
 import { savedFilmMovie } from '../types/diary';
-import { EmotionScores } from '../types/emotion';
 import { Movie } from '../types/movie';
-import { emotionColors, emotionLabels, formatCalendarDate, imageUrl, releaseYear } from '../utils/display';
+import { formatCalendarDate, imageUrl, releaseYear } from '../utils/display';
 
 type FeedView = 'for-you' | 'following' | 'everyone';
-
-const feelingKeys = Object.keys(emotionLabels) as (keyof EmotionScores)[];
-
-const FeelingTrace = ({ entry }: { entry: CommunityEntry }) => {
-  const feelings = feelingKeys
-    .map(key => ({ key, value: Number(entry[key]) || 0 }))
-    .filter(feeling => feeling.value > 0.02)
-    .sort((first, second) => second.value - first.value);
-
-  if (!feelings.length) return null;
-
-  return (
-    <div className="feed-response__feelings" aria-label={`Feelings: ${feelings.map(feeling => emotionLabels[feeling.key]).join(', ')}`} role="img">
-      <span aria-hidden="true" className="feed-response__trace">
-        {feelings.map(feeling => <i key={feeling.key} style={{ backgroundColor: emotionColors[feeling.key], flexGrow: Math.max(feeling.value, 0.03) }} />)}
-      </span>
-      <span>{feelings.slice(0, 4).map(feeling => emotionLabels[feeling.key]).join(' · ')}</span>
-    </div>
-  );
-};
 
 interface ResponseCardProps {
   compact?: boolean;
   entry: CommunityEntry;
   ownUserId?: number;
   onFollow: (entry: CommunityEntry) => void;
-  onReact: (entry: CommunityEntry) => void;
+  onLike: (entry: CommunityEntry) => void;
 }
 
-const ResponseCard = ({ compact = false, entry, ownUserId, onFollow, onReact }: ResponseCardProps) => {
+const ResponseCard = ({ compact = false, entry, ownUserId, onFollow, onLike }: ResponseCardProps) => {
   const poster = imageUrl(entry.poster_path, 'w342');
   const published = new Date(entry.created_at);
 
@@ -62,13 +43,14 @@ const ResponseCard = ({ compact = false, entry, ownUserId, onFollow, onReact }: 
           <Link to={`/movie/${entry.movie_id}`}><h2>{entry.title} <span>{releaseYear(entry.release_date)}</span></h2></Link>
           <p className="feed-response__watched">Watched {formatCalendarDate(entry.watched_on, { month: 'long', day: 'numeric', year: 'numeric' })}</p>
           <blockquote>{entry.note || 'No note added.'}</blockquote>
-          <FeelingTrace entry={entry} />
+          <ResponseFeelingTrace entry={entry} />
         </div>
         {entry.expression_image_path && <img alt={entry.expression_image_alt || `Photo shared by ${entry.username}`} className="feed-response__photo" loading="lazy" src={entry.expression_image_path} />}
       </div>
 
       <footer className="feed-response__footer">
-        <button aria-label={`${entry.reacted ? 'Remove reaction from' : 'React to'} ${entry.username}'s response`} aria-pressed={entry.reacted} className={`feed-response__react${entry.reacted ? ' feed-response__react--active' : ''}`} onClick={() => onReact(entry)} type="button"><Heart fill={entry.reacted ? 'currentColor' : 'none'} size={16} /><span>{entry.reaction_count || 0} {(entry.reaction_count || 0) === 1 ? 'reaction' : 'reactions'}</span></button>
+        <button aria-label={`${entry.liked ? 'Unlike' : 'Like'} ${entry.username}'s response`} aria-pressed={entry.liked} className={`feed-response__like${entry.liked ? ' feed-response__like--active' : ''}`} onClick={() => onLike(entry)} type="button"><Heart fill={entry.liked ? 'currentColor' : 'none'} size={16} /><span>{entry.like_count || 0} {(entry.like_count || 0) === 1 ? 'like' : 'likes'}</span></button>
+        <ResponseComments entryId={entry.id} initialCount={entry.comment_count} />
         <Link className="feed-response__film-link" to={`/movie/${entry.movie_id}`}>Open film <ArrowUpRight aria-hidden="true" size={15} /></Link>
       </footer>
     </article>
@@ -112,15 +94,15 @@ const Feed = () => {
   const visibleEntries = view === 'following' ? followingEntries : entries;
   const leadRecommendation = recommendations[0];
 
-  const toggleReaction = async (entry: CommunityEntry) => {
+  const toggleLike = async (entry: CommunityEntry) => {
     if (!user) return;
-    const next = !entry.reacted;
-    setEntries(current => current.map(item => item.id === entry.id ? { ...item, reacted: next, reaction_count: Math.max(0, item.reaction_count + (next ? 1 : -1)) } : item));
+    const next = !entry.liked;
+    setEntries(current => current.map(item => item.id === entry.id ? { ...item, liked: next, like_count: Math.max(0, item.like_count + (next ? 1 : -1)) } : item));
     try {
-      if (next) await discoveryService.react(entry.id);
-      else await discoveryService.unreact(entry.id);
+      if (next) await discoveryService.like(entry.id);
+      else await discoveryService.unlike(entry.id);
     } catch {
-      setEntries(current => current.map(item => item.id === entry.id ? { ...item, reacted: !next, reaction_count: Math.max(0, item.reaction_count + (next ? -1 : 1)) } : item));
+      setEntries(current => current.map(item => item.id === entry.id ? { ...item, liked: !next, like_count: Math.max(0, item.like_count + (next ? -1 : 1)) } : item));
     }
   };
 
@@ -168,7 +150,7 @@ const Feed = () => {
           {recommendations.length > 1 && <section className="home-section" aria-labelledby="recommendations-title"><header><h2 id="recommendations-title">Recommended films</h2><Link to="/recommendations">See all</Link></header><div className="path-grid">{recommendations.slice(1, 5).map(movie => <DiscoveryPathCard key={movie.id} movie={movie} />)}</div></section>}
 
           <div className="home-social-grid">
-            <section className="home-section home-section--responses" aria-labelledby="circle-title"><header><h2 id="circle-title">From your circle</h2><button onClick={() => setView(followingEntries.length ? 'following' : 'everyone')} type="button">See all</button></header><div className="home-response-stack">{(followingEntries.length ? followingEntries : entries).slice(0, 4).map(entry => <ResponseCard compact entry={entry} key={entry.id} onFollow={toggleFollow} onReact={toggleReaction} ownUserId={user?.id} />)}</div></section>
+            <section className="home-section home-section--responses" aria-labelledby="circle-title"><header><h2 id="circle-title">From your circle</h2><button onClick={() => setView(followingEntries.length ? 'following' : 'everyone')} type="button">See all</button></header><div className="home-response-stack">{(followingEntries.length ? followingEntries : entries).slice(0, 4).map(entry => <ResponseCard compact entry={entry} key={entry.id} onFollow={toggleFollow} onLike={toggleLike} ownUserId={user?.id} />)}</div></section>
 
             <section className="home-section home-section--people" aria-labelledby="people-title"><header><h2 id="people-title">People</h2><Link to="/people">See all</Link></header><div className="home-people-list">{people.slice(0, 6).map(person => <article className="home-person" key={person.id}><Link className="home-person__avatar" to={`/member/${person.username}`}>{person.username.charAt(0).toUpperCase()}</Link><div><Link to={`/member/${person.username}`}><strong>@{person.username}</strong></Link>{person.shared_film_title ? <p>Shared film: {person.shared_film_title}</p> : <p>{person.latest_title}</p>}</div><button aria-pressed={person.following} onClick={() => void togglePerson(person)} type="button">{person.following ? 'Following' : 'Follow'}</button></article>)}</div></section>
           </div>
@@ -178,7 +160,7 @@ const Feed = () => {
           {savedFilms.length > 0 && <FilmRail description="Films you kept for later." movies={savedFilms.map(savedFilmMovie).slice(0, 12)} title="Saved films" linkLabel="Open diary" linkTo="/diary" />}
         </div>
       ) : visibleEntries.length ? (
-        <section aria-label={view === 'following' ? 'Responses from people you follow' : 'Public responses'} className="response-feed">{visibleEntries.map(entry => <ResponseCard entry={entry} key={entry.id} onFollow={toggleFollow} onReact={toggleReaction} ownUserId={user?.id} />)}</section>
+        <section aria-label={view === 'following' ? 'Responses from people you follow' : 'Public responses'} className="response-feed">{visibleEntries.map(entry => <ResponseCard entry={entry} key={entry.id} onFollow={toggleFollow} onLike={toggleLike} ownUserId={user?.id} />)}</section>
       ) : <div className="product-empty"><p>No responses here yet.</p><div className="product-empty__actions"><Link className="text-link" to="/people">Find people</Link><Link className="text-link" to="/log">Add a response</Link></div></div>}
     </div>
   );

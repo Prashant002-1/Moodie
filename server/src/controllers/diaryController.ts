@@ -60,7 +60,8 @@ const selectEntry = `
          de.created_at, de.updated_at,
          u.username, m.title, m.overview, m.release_date, m.poster_path, m.backdrop_path,
          COALESCE((SELECT ARRAY_AGG(mg.genre_id ORDER BY mg.genre_id) FROM movie_genres mg WHERE mg.movie_id = m.id), ARRAY[]::integer[]) AS genre_ids,
-         (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS reaction_count,
+         (SELECT COUNT(*)::int FROM entry_reactions er WHERE er.entry_id = de.id) AS like_count,
+         (SELECT COUNT(*)::int FROM entry_comments ec WHERE ec.entry_id = de.id) AS comment_count,
          em.asset_path AS expression_image_path,
          em.alt_text AS expression_image_alt
   FROM diary_entries de

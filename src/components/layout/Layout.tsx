@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, BookOpen, House, LoaderCircle, Menu, Plus, Search, UserRound, UsersRound, X } from 'lucide-react';
+import { Bell, History, House, LoaderCircle, Menu, Plus, Search, UserRound, UsersRound, X } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
 import AuthModal from '../auth/AuthModal';
@@ -30,7 +30,7 @@ const Layout: React.FC = () => {
     { path: '/search', label: 'Search', icon: Search },
     { path: '/people', label: 'People', icon: UsersRound },
     { path: '/activity', label: 'Activity', icon: Bell },
-    { path: '/diary', label: 'Diary', icon: BookOpen },
+    { path: '/diary', label: 'Diary', icon: History },
     { path: '/log', label: 'Add a response', icon: Plus },
     { path: '/profile', label: 'Account', icon: UserRound },
   ];
@@ -89,7 +89,10 @@ const Layout: React.FC = () => {
       ) : (
         <header className="nav-shell nav-shell--public nav-shell--steady">
           <div className="nav-inner">
-            <Link aria-label="Moodie home" className="brand-lockup" to="/"><span className="wordmark">Moodie</span></Link>
+            <Link aria-label="Moodie home" className="brand-lockup" to="/">
+              <BrandMark className="brand-lockup__mark" />
+              <span className="wordmark">Moodie</span>
+            </Link>
             <div className="nav-actions">
               {!authLoading ? (
                 <>

@@ -14,7 +14,8 @@ export interface DiaryEntry extends EmotionScores {
   expression_image_alt: string | null;
   visibility: DiaryVisibility;
   created_at: string;
-  reaction_count: number;
+  like_count: number;
+  comment_count: number;
   title: string;
   overview: string;
   release_date: string;

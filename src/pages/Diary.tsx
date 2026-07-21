@@ -61,19 +61,23 @@ const Diary: React.FC = () => {
   return (
     <div className="page-shell diary-page">
       <header className="page-header diary-header">
-        <div className="diary-header__actions">
-          <div aria-label="Choose diary view" className="product-section-tabs" role="group">
-            <button aria-pressed={view === 'entries'} onClick={() => setView('entries')} type="button">Entries</button>
-            <button aria-pressed={view === 'saved'} onClick={() => setView('saved')} type="button">Saved</button>
-          </div>
-          <Link aria-label="Add a response" className="diary-add" to="/log"><Plus size={19} /></Link>
+        <h1 className="sr-only">Diary</h1>
+        <div aria-label="Choose diary view" className="product-section-tabs" role="group">
+          <button aria-pressed={view === 'entries'} onClick={() => setView('entries')} type="button">Entries</button>
+          <button aria-pressed={view === 'saved'} onClick={() => setView('saved')} type="button">Saved</button>
         </div>
+        <Link aria-label="Add a response" className="diary-add" to="/log"><Plus size={19} /></Link>
       </header>
 
       {view === 'entries' && (entries.length ? (
         <>
           <section className="diary-overview" aria-label="Recent diary summary">
-            <div className="diary-overview__feelings"><span>Last {Math.min(entries.length, 10)} viewings</span><strong>{recentFeelings.map(item => emotionLabels[item.key]).join(' · ')}</strong><div aria-hidden="true">{recentFeelings.map(item => <i key={item.key} style={{ background: emotionColors[item.key], flexGrow: Math.max(item.value, 0.1) }} />)}</div></div>
+            <div className="diary-overview__feelings">
+              <span>Last {Math.min(entries.length, 10)} viewings</span>
+              <strong>{recentFeelings.map(item => emotionLabels[item.key]).join(' · ')}</strong>
+              <div aria-label={`Recent feelings: ${recentFeelings.map(item => emotionLabels[item.key]).join(', ')}`} className="diary-overview__trace" role="img">{recentFeelings.map(item => <i key={item.key} style={{ background: emotionColors[item.key], flexGrow: Math.max(item.value, 0.1) }} />)}</div>
+              <ul aria-label="Feeling color key" className="diary-overview__legend">{recentFeelings.map(item => <li key={item.key}><i aria-hidden="true" style={{ background: emotionColors[item.key] }} />{emotionLabels[item.key]}</li>)}</ul>
+            </div>
             <dl><div><dt>Responses</dt><dd>{entries.length}</dd></div><div><dt>Public</dt><dd>{entries.filter(entry => entry.visibility === 'public').length}</dd></div><div><dt>Rewatches</dt><dd>{rewatchCount}</dd></div><div><dt>Saved</dt><dd>{savedFilms.length}</dd></div></dl>
           </section>
 
@@ -95,12 +99,13 @@ const Diary: React.FC = () => {
                     <DiaryEntryEditor entry={entry} onCancel={() => setEditingId(null)} onSave={async changes => { await updateEntry(entry.id, changes); setEditingId(null); }} />
                   ) : (
                     <>
-                      <div className="diary-entry__topline"><p>{formatCalendarDate(entry.watched_on, { month: 'long', day: 'numeric', year: 'numeric' })}</p><span>{entry.visibility === 'public' ? <Eye size={15} /> : <EyeOff size={15} />}{entry.visibility}</span></div>
+                      <div className="diary-entry__topline"><p>{formatCalendarDate(entry.watched_on, { month: 'long', day: 'numeric', year: 'numeric' })}</p></div>
                       <Link to={`/movie/${entry.movie_id}`}><h3>{entry.title}</h3></Link>
                       <div className="diary-entry__facts">
                         <span>{releaseYear(entry.release_date)}</span>
                         {emotion && <span><i style={{ background: emotionColors[emotion.emotion] }} />{feelingName(emotion.emotion)}</span>}
                         {viewings > 1 && <span>{viewings} viewings</span>}
+                        <span className="diary-entry__visibility">{entry.visibility === 'public' ? <Eye size={14} /> : <EyeOff size={14} />}{entry.visibility === 'public' ? 'Public response' : 'Private response'}</span>
                       </div>
                       {entry.expression_image_path && <img alt={entry.expression_image_alt || 'Expression photo attached to this response'} className="diary-entry__expression" loading="lazy" src={entry.expression_image_path} />}
                       {entry.note ? <blockquote>{entry.note}</blockquote> : <p className="diary-entry__empty-note">No note on this viewing.</p>}

@@ -10,6 +10,29 @@ interface DiarySignalRow extends EmotionScores {
   title: string;
 }
 
+interface SharedFilmRow {
+  id: number;
+  username: string;
+  bio: string;
+  shared_film_title: string;
+  viewer_shared_note: string;
+  person_shared_note: string;
+  viewer_neutral: number;
+  viewer_happy: number;
+  viewer_sad: number;
+  viewer_angry: number;
+  viewer_fearful: number;
+  viewer_disgusted: number;
+  viewer_surprised: number;
+  person_neutral: number;
+  person_happy: number;
+  person_sad: number;
+  person_angry: number;
+  person_fearful: number;
+  person_disgusted: number;
+  person_surprised: number;
+}
+
 export interface MatchedPerson {
   id: number;
   username: string;
@@ -65,32 +88,45 @@ interface CandidateRow extends EmotionScores {
 
 interface CandidateAccumulator {
   movie: SocialMovie;
-  people: RecommendationConnection[];
-  score: number;
+  people: Array<RecommendationConnection & { evidenceScore: number; connectionScore: number }>;
   latest: number;
 }
 
+const MIN_SHARED_FILM_SIMILARITY = 0.5;
+const MIN_AVERAGE_SIMILARITY = 0.4;
+const MIN_SHARED_FEELING_OVERLAP = 0.06;
+const MIN_INTENT_SIMILARITY = 0.28;
+const MAX_RECOMMENDATION_SOURCES = 3;
+
+const clamp = (value: number) => Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
+const round = (value: number) => Number(value.toFixed(4));
+
+const emotionTotal = (scores: Partial<EmotionScores>) => (
+  EMOTION_KEYS.reduce((sum, key) => sum + clamp(Number(scores[key]) || 0), 0)
+);
+
 const normalizeScores = (scores: Partial<EmotionScores>): EmotionScores => {
-  const total = EMOTION_KEYS.reduce((sum, key) => sum + Math.max(0, Number(scores[key]) || 0), 0);
+  const total = emotionTotal(scores);
   if (!total) return { neutral: 0, happy: 0, sad: 0, angry: 0, fearful: 0, disgusted: 0, surprised: 0 };
   return Object.fromEntries(
-    EMOTION_KEYS.map(key => [key, Math.max(0, Number(scores[key]) || 0) / total]),
+    EMOTION_KEYS.map(key => [key, clamp(Number(scores[key]) || 0) / total]),
   ) as EmotionScores;
 };
 
 const emotionalSimilarity = (left: Partial<EmotionScores>, right: Partial<EmotionScores>): number => {
+  if (!emotionTotal(left) || !emotionTotal(right)) return 0;
   const a = normalizeScores(left);
   const b = normalizeScores(right);
   const distance = EMOTION_KEYS.reduce((sum, key) => sum + Math.abs(a[key] - b[key]), 0);
-  return Math.max(0, 1 - distance / 2);
+  return round(Math.max(0, 1 - distance / 2));
 };
 
 const topFeelings = (scores: Partial<EmotionScores>, limit = 3): EmotionKey[] => {
   const normalized = normalizeScores(scores);
   return EMOTION_KEYS
     .map(key => ({ key, value: normalized[key] }))
-    .filter(item => item.value > 0.04)
-    .sort((left, right) => right.value - left.value)
+    .filter(item => item.value >= 0.06)
+    .sort((left, right) => right.value - left.value || left.key.localeCompare(right.key))
     .slice(0, limit)
     .map(item => item.key);
 };
@@ -100,11 +136,15 @@ const sharedFeelings = (viewer: Partial<EmotionScores>, person: Partial<EmotionS
   const personScores = normalizeScores(person);
   return EMOTION_KEYS
     .map(key => ({ key, overlap: Math.min(viewerScores[key], personScores[key]) }))
-    .filter(item => item.overlap > 0.035)
-    .sort((left, right) => right.overlap - left.overlap)
+    .filter(item => item.overlap >= MIN_SHARED_FEELING_OVERLAP)
+    .sort((left, right) => right.overlap - left.overlap || left.key.localeCompare(right.key))
     .slice(0, 3)
     .map(item => item.key);
 };
+
+const responseStrength = (scores: Partial<EmotionScores>) => (
+  Math.max(...EMOTION_KEYS.map(key => clamp(Number(scores[key]) || 0)))
+);
 
 const asSocialMovie = (row: CandidateRow): SocialMovie => {
   const movie = row.tmdb_data || ({} as TMDBMovie);
@@ -135,7 +175,7 @@ const loadDiarySignals = async (userId?: number): Promise<DiarySignalRow[]> => {
      FROM diary_entries de
      JOIN movies m ON m.id = de.movie_id
      WHERE de.user_id = $1
-     ORDER BY de.movie_id, de.watched_on DESC, de.created_at DESC`,
+     ORDER BY de.movie_id, de.watched_on DESC, de.created_at DESC, de.id DESC`,
     [userId],
   );
   return result.rows;
@@ -149,15 +189,15 @@ const loadMatchedPeople = async (userId?: number): Promise<MatchedPerson[]> => {
               movie_id, note, neutral, happy, sad, angry, fearful, disgusted, surprised
        FROM diary_entries
        WHERE user_id = $1
-       ORDER BY movie_id, watched_on DESC, created_at DESC
+       ORDER BY movie_id, watched_on DESC, created_at DESC, id DESC
      ), public_latest AS (
        SELECT DISTINCT ON (de.user_id, de.movie_id)
               de.user_id, de.movie_id, m.title, de.note,
               de.neutral, de.happy, de.sad, de.angry, de.fearful, de.disgusted, de.surprised
        FROM diary_entries de
        JOIN movies m ON m.id = de.movie_id
-       WHERE de.visibility = 'public' AND de.user_id <> $1
-       ORDER BY de.user_id, de.movie_id, de.watched_on DESC, de.created_at DESC
+       WHERE de.visibility = 'public' AND de.user_id <> $1 AND char_length(trim(de.note)) > 0
+       ORDER BY de.user_id, de.movie_id, de.watched_on DESC, de.created_at DESC, de.id DESC
      ), comparisons AS (
        SELECT candidate.user_id, candidate.title,
               candidate.note AS person_shared_note, viewer.note AS viewer_shared_note,
@@ -168,42 +208,26 @@ const loadMatchedPeople = async (userId?: number): Promise<MatchedPerson[]> => {
               viewer.neutral AS viewer_neutral, viewer.happy AS viewer_happy,
               viewer.sad AS viewer_sad, viewer.angry AS viewer_angry,
               viewer.fearful AS viewer_fearful, viewer.disgusted AS viewer_disgusted,
-              viewer.surprised AS viewer_surprised,
-              GREATEST(0, 1 - (
-                ABS(candidate.neutral - viewer.neutral) + ABS(candidate.happy - viewer.happy) +
-                ABS(candidate.sad - viewer.sad) + ABS(candidate.angry - viewer.angry) +
-                ABS(candidate.fearful - viewer.fearful) + ABS(candidate.disgusted - viewer.disgusted) +
-                ABS(candidate.surprised - viewer.surprised)
-              ) / 7)::float AS similarity
+              viewer.surprised AS viewer_surprised
        FROM public_latest candidate
        JOIN viewer_entries viewer ON viewer.movie_id = candidate.movie_id
-     ), strongest_shared AS (
-       SELECT DISTINCT ON (user_id) *
-       FROM comparisons
-       ORDER BY user_id, similarity DESC, title ASC
-     ), ranked AS (
-       SELECT user_id, COUNT(*)::int AS shared_films, AVG(similarity)::float AS similarity,
-              (ARRAY_AGG(title ORDER BY similarity DESC, title ASC))[1] AS shared_film_title
-       FROM comparisons
-       GROUP BY user_id
-       HAVING COUNT(*) >= 1
      )
-     SELECT u.id, u.username, u.bio, ranked.shared_films,
-            ranked.similarity, ranked.shared_film_title,
-            strongest.viewer_shared_note, strongest.person_shared_note,
-            strongest.viewer_neutral, strongest.viewer_happy, strongest.viewer_sad,
-            strongest.viewer_angry, strongest.viewer_fearful, strongest.viewer_disgusted,
-            strongest.viewer_surprised, strongest.person_neutral, strongest.person_happy,
-            strongest.person_sad, strongest.person_angry, strongest.person_fearful,
-            strongest.person_disgusted, strongest.person_surprised
-     FROM ranked
-     JOIN users u ON u.id = ranked.user_id
-     JOIN strongest_shared strongest ON strongest.user_id = ranked.user_id
-     ORDER BY ranked.similarity DESC, ranked.shared_films DESC, u.username ASC
-     LIMIT 12`,
+     SELECT u.id, u.username, u.bio,
+            comparisons.title AS shared_film_title,
+            comparisons.viewer_shared_note, comparisons.person_shared_note,
+            comparisons.viewer_neutral, comparisons.viewer_happy, comparisons.viewer_sad,
+            comparisons.viewer_angry, comparisons.viewer_fearful, comparisons.viewer_disgusted,
+            comparisons.viewer_surprised, comparisons.person_neutral, comparisons.person_happy,
+            comparisons.person_sad, comparisons.person_angry, comparisons.person_fearful,
+            comparisons.person_disgusted, comparisons.person_surprised
+     FROM comparisons
+     JOIN users u ON u.id = comparisons.user_id
+     ORDER BY u.username ASC, comparisons.title ASC`,
     [userId],
   );
-  return result.rows.map(row => {
+  const matches = new Map<number, Array<MatchedPerson & { sharedSimilarity: number }>>();
+
+  (result.rows as SharedFilmRow[]).forEach(row => {
     const viewerSignals: EmotionScores = {
       neutral: Number(row.viewer_neutral) || 0,
       happy: Number(row.viewer_happy) || 0,
@@ -222,23 +246,65 @@ const loadMatchedPeople = async (userId?: number): Promise<MatchedPerson[]> => {
       disgusted: Number(row.person_disgusted) || 0,
       surprised: Number(row.person_surprised) || 0,
     };
-    return {
+    const feelings = sharedFeelings(viewerSignals, personSignals);
+    const similarity = emotionalSimilarity(viewerSignals, personSignals);
+    const person: MatchedPerson & { sharedSimilarity: number } = {
       id: Number(row.id),
       username: row.username,
       bio: row.bio || '',
-      similarity: Number(Number(row.similarity).toFixed(3)),
-      sharedFilms: Number(row.shared_films),
+      similarity: Number(similarity.toFixed(3)),
+      sharedSimilarity: similarity,
+      sharedFilms: 1,
       sharedFilmTitle: row.shared_film_title,
-      sharedFeelings: sharedFeelings(viewerSignals, personSignals),
+      sharedFeelings: feelings,
       viewerSharedNote: row.viewer_shared_note || '',
       personSharedNote: row.person_shared_note || '',
     };
+    const existing = matches.get(person.id) || [];
+    existing.push(person);
+    matches.set(person.id, existing);
   });
+
+  return [...matches.values()]
+    .map((shared): MatchedPerson | null => {
+      const ordered = [...shared].sort((left, right) =>
+        right.sharedSimilarity - left.sharedSimilarity
+        || right.sharedFeelings.length - left.sharedFeelings.length
+        || left.sharedFilmTitle.localeCompare(right.sharedFilmTitle),
+      );
+      const meaningful = ordered.filter(item => (
+        item.sharedSimilarity >= MIN_SHARED_FILM_SIMILARITY
+        && item.sharedFeelings.length > 0
+      ));
+      if (!meaningful.length) return null;
+      const average = ordered.reduce((total, item) => total + item.sharedSimilarity, 0) / ordered.length;
+      if (average < MIN_AVERAGE_SIMILARITY) return null;
+      const strongest = meaningful[0];
+      const repeatBonus = Math.min(0.09, Math.log2(meaningful.length) * 0.045);
+      const connectionScore = Math.min(
+        1,
+        strongest.sharedSimilarity * 0.55 + average * 0.35 + repeatBonus,
+      );
+      return {
+        id: strongest.id,
+        username: strongest.username,
+        bio: strongest.bio,
+        sharedFilms: ordered.length,
+        similarity: round(connectionScore),
+        sharedFilmTitle: strongest.sharedFilmTitle,
+        sharedFeelings: strongest.sharedFeelings,
+        viewerSharedNote: strongest.viewerSharedNote,
+        personSharedNote: strongest.personSharedNote,
+      } satisfies MatchedPerson;
+    })
+    .filter((person): person is MatchedPerson => person !== null)
+    .sort((left, right) => right.similarity - left.similarity || right.sharedFilms - left.sharedFilms || left.username.localeCompare(right.username))
+    .slice(0, 24);
 };
 
 const loadCandidateRows = async (userId: number | undefined, personIds?: number[]): Promise<CandidateRow[]> => {
   const values: unknown[] = [];
-  const clauses = ["de.visibility = 'public'", 'm.poster_path IS NOT NULL'];
+  const clauses = ['m.poster_path IS NOT NULL', "char_length(trim(de.note)) > 0"];
   if (userId) {
     values.push(userId);
     clauses.push(`de.movie_id NOT IN (SELECT movie_id FROM diary_entries WHERE user_id = $${values.length})`);
@@ -249,16 +315,22 @@ const loadCandidateRows = async (userId: number | undefined, personIds?: number[
     clauses.push(`de.user_id = ANY($${values.length}::int[])`);
   }
   const result = await pool.query(
-    `SELECT de.id AS entry_id, de.user_id, u.username, de.movie_id, de.note, de.created_at,
+    `WITH public_latest AS (
+       SELECT DISTINCT ON (source.user_id, source.movie_id) source.*
+       FROM diary_entries source
+       WHERE source.visibility = 'public'
+       ORDER BY source.user_id, source.movie_id, source.watched_on DESC, source.created_at DESC, source.id DESC
+     )
+     SELECT de.id AS entry_id, de.user_id, u.username, de.movie_id, de.note, de.created_at,
             de.neutral::float, de.happy::float, de.sad::float, de.angry::float,
             de.fearful::float, de.disgusted::float, de.surprised::float,
             m.title, m.overview, m.release_date::text, m.poster_path, m.backdrop_path, m.tmdb_data
-     FROM diary_entries de
+     FROM public_latest de
      JOIN users u ON u.id = de.user_id
      JOIN movies m ON m.id = de.movie_id
      WHERE ${clauses.join(' AND ')}
-     ORDER BY de.created_at DESC
-     LIMIT 240`,
+     ORDER BY de.watched_on DESC, de.created_at DESC, de.id DESC
+     LIMIT 800`,
     values,
   );
   return result.rows;
@@ -271,13 +343,14 @@ const rankCandidateRows = (
 ): RankedMovie[] => {
   const matchById = new Map(matchedPeople.map(person => [person.id, person]));
   const byMovie = new Map<number, CandidateAccumulator>();
+  const hasSignal = Boolean(signal && emotionTotal(signal));
 
   rows.forEach(row => {
+    if (!emotionTotal(row)) return;
     const person = matchById.get(Number(row.user_id));
-    const signalFit = signal ? emotionalSimilarity(row, signal) : 0;
-    if (signal && signalFit < 0.18) return;
-    const personScore = person?.similarity ?? 0.2;
-    const connection: RecommendationConnection | null = person ? {
+    const signalFit = hasSignal ? emotionalSimilarity(row, signal || {}) : 0;
+    if (hasSignal && signalFit < MIN_INTENT_SIMILARITY) return;
+    const connection = person ? {
       id: person.id,
       username: person.username,
       shared_film_title: person.sharedFilmTitle,
@@ -287,21 +360,52 @@ const rankCandidateRows = (
       person_shared_note: person.personSharedNote,
       response_id: Number(row.entry_id),
       response_note: row.note || '',
+      connectionScore: person.similarity,
+      evidenceScore: round(hasSignal
+        ? person.similarity * 0.52 + signalFit * 0.43 + responseStrength(row) * 0.05
+        : person.similarity * 0.9 + responseStrength(row) * 0.1),
     } : null;
+    if (matchedPeople.length && !connection) return;
     const existing = byMovie.get(Number(row.movie_id)) || {
       movie: asSocialMovie(row),
       people: [],
-      score: 0,
       latest: 0,
     };
     if (connection && !existing.people.some(item => item.id === connection.id)) existing.people.push(connection);
-    existing.score += signal ? personScore * 0.55 + signalFit * 1.45 : personScore;
     existing.latest = Math.max(existing.latest, new Date(row.created_at).getTime() || 0);
     byMovie.set(Number(row.movie_id), existing);
   });
 
   return [...byMovie.values()]
-    .sort((a, b) => b.score - a.score || b.people.length - a.people.length || b.latest - a.latest)
+    .map(({ movie, people, latest }) => {
+      const ordered = [...people].sort((left, right) => (
+        right.evidenceScore - left.evidenceScore
+        || right.connectionScore - left.connectionScore
+        || left.username.localeCompare(right.username)
+      ));
+      const corroborationBonus = Math.min(0.075, Math.max(0, ordered.length - 1) * 0.025);
+      const score = ordered.length ? ordered[0].evidenceScore + corroborationBonus : latest;
+      const publicConnections: RecommendationConnection[] = ordered
+        .slice(0, MAX_RECOMMENDATION_SOURCES)
+        .map(source => ({
+          id: source.id,
+          username: source.username,
+          shared_film_title: source.shared_film_title,
+          shared_feelings: source.shared_feelings,
+          response_feelings: source.response_feelings,
+          viewer_shared_note: source.viewer_shared_note,
+          person_shared_note: source.person_shared_note,
+          response_id: source.response_id,
+          response_note: source.response_note,
+        }));
+      return { movie, people: publicConnections, score, latest };
+    })
+    .sort((a, b) =>
+      b.score - a.score
+      || b.people.length - a.people.length
+      || b.latest - a.latest
+      || a.movie.title.localeCompare(b.movie.title),
+    )
     .map(({ movie, people }) => {
       const lead = people[0];
       const recommendationReason = lead
@@ -310,7 +414,7 @@ const rankCandidateRows = (
       return {
         ...movie,
         recommendation_reason: recommendationReason,
-        ...(people.length ? { recommended_by: people.slice(0, 4) } : {}),
+        ...(people.length ? { recommended_by: people } : {}),
       };
     });
 };
@@ -338,9 +442,10 @@ export const buildRecommendationProfile = async (userId?: number, signal?: Parti
     loadDiarySignals(userId),
     loadMatchedPeople(userId),
   ]);
+  const hasSignal = Boolean(signal && emotionTotal(signal));
   const source: RecommendationProfile['source'] = matchedPeople.length
     ? 'people'
-    : signal
+    : hasSignal
       ? 'signal'
       : 'community';
   return {
@@ -358,22 +463,24 @@ export const buildRecommendationProfile = async (userId?: number, signal?: Parti
 export const recommend = async (userId?: number, signal?: Partial<EmotionScores>) => {
   const { entries, matchedPeople, profile } = await buildRecommendationProfile(userId, signal);
   const matchedIds = matchedPeople.map(person => person.id);
-  const [matchedRows, communityRows] = await Promise.all([
-    matchedIds.length ? loadCandidateRows(userId, matchedIds) : Promise.resolve([]),
-    loadCandidateRows(userId),
-  ]);
+  const matchedRows = matchedIds.length ? await loadCandidateRows(userId, matchedIds) : [];
   const matched = rankCandidateRows(matchedRows, matchedPeople, signal);
-  const community = rankCandidateRows(communityRows, matchedPeople, signal);
   const forYou = matched.slice(0, 18);
   const forYouIds = new Set(forYou.map(movie => movie.id));
   const adjacent = matched.slice(18, 32);
-  const publicResponses = community.filter(movie => !forYouIds.has(movie.id)).slice(0, 18);
+  const adjacentIds = new Set(adjacent.map(movie => movie.id));
+  // Never mix an anonymous public response into a personalized path. When
+  // there is a match, this final rail is still made from connected people. A
+  // generic community list exists only for a true cold start.
+  const community = matchedPeople.length
+    ? matched.filter(movie => !forYouIds.has(movie.id) && !adjacentIds.has(movie.id)).slice(0, 18)
+    : rankCandidateRows(await loadCandidateRows(userId), []).slice(0, 18);
 
   return {
     profile,
     forYou,
     adjacent,
-    community: publicResponses,
+    community,
     watchedCount: entries.length,
   };
 };

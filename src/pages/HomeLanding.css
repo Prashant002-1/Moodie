@@ -93,6 +93,17 @@
   z-index: 1;
 }
 
+.nav-shell--steady .brand-lockup {
+  gap: 8px;
+}
+
+.nav-shell--steady .brand-lockup__mark {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  color: #1d2b33;
+}
+
 .nav-shell--steady .wordmark {
   color: #1d2b33;
   font-family: 'Newsreader', serif;
@@ -381,7 +392,7 @@
 .mf-cycle-frame {
   opacity: 0;
   animation: mf-beat-cycle 20s ease-in-out infinite;
-  animation-delay: calc(var(--beat-delay) - 2.6s);
+  animation-delay: calc(var(--beat-delay) - 3.4s);
 }
 
 .mf-hero-media {
@@ -1700,17 +1711,25 @@
   display: grid;
   width: min(calc(100% - 48px), 1224px);
   min-height: 0;
-  margin: clamp(80px, 9vw, 132px) auto 0;
+  margin: clamp(80px, 9vw, 132px) auto clamp(32px, 3vw, 44px);
   padding: clamp(34px, 4.4vw, 56px);
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: clamp(34px, 5vw, 72px);
-  border: 1px solid var(--mf-line-strong);
+  border: 1px solid var(--mf-page-line-strong);
   border-radius: 18px;
   overflow: hidden;
-  background: var(--mf-panel);
-  color: var(--mf-text);
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.28);
+  background-color: #e2d9c8;
+  background-image:
+    radial-gradient(ellipse at 8% 8%, rgba(215, 99, 88, 0.2), transparent 36%),
+    radial-gradient(ellipse at 94% 18%, rgba(85, 120, 144, 0.2), transparent 40%),
+    linear-gradient(112deg, rgba(113, 59, 66, 0.06), rgba(244, 239, 233, 0.4) 46%, rgba(215, 99, 88, 0.06)),
+    var(--grain-image);
+  background-position: center, center, center, 17px 23px;
+  background-size: auto, auto, auto, 144px 144px;
+  background-blend-mode: normal, normal, normal, soft-light;
+  color: var(--mf-page-text);
+  box-shadow: 0 36px 86px rgba(29, 43, 51, 0.2);
 }
 
 .mf-final__glow {
@@ -1720,9 +1739,9 @@
   width: 74%;
   aspect-ratio: 1.4;
   pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(215, 99, 88, 0.18), rgba(85, 120, 144, 0.06) 42%, transparent 70%);
-  filter: blur(16px);
-  opacity: 0.9;
+  background: radial-gradient(ellipse at center, rgba(215, 99, 88, 0.2), rgba(85, 120, 144, 0.08) 44%, transparent 72%);
+  filter: blur(24px);
+  opacity: 0.72;
 }
 
 .mf-final > div:not(.mf-final__glow) {
@@ -1731,6 +1750,7 @@
 
 .mf-final h2 {
   max-width: 16ch;
+  color: var(--mf-page-text);
   font-size: clamp(2.65rem, 3.7vw, 3.9rem);
   line-height: 1;
 }
@@ -1738,7 +1758,7 @@
 .mf-final > div > p:last-child {
   max-width: 62ch;
   margin-top: 14px;
-  color: var(--mf-muted);
+  color: var(--mf-page-muted);
   font-size: 0.82rem;
   line-height: 1.65;
 }
@@ -2413,7 +2433,7 @@
   .mf-final {
     width: calc(100% - 34px);
     min-height: 0;
-    margin: 68px auto 0;
+    margin: 68px auto 28px;
     padding: 30px 24px;
     border-radius: 14px;
   }
