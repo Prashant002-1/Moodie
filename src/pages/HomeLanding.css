@@ -541,7 +541,7 @@
 .mf-hero__reaction {
   position: absolute;
   z-index: 6;
-  top: 0;
+  top: 3%;
   right: 3%;
   width: min(24%, 166px);
   margin: 0;
