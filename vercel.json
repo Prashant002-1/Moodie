@@ -5,7 +5,7 @@
   "functions": {
     "api/index.ts": {
       "maxDuration": 60,
-      "includeFiles": "database/schema.sql"
+      "includeFiles": "{database/schema.sql,node_modules/@electric-sql/pglite/dist/**}"
     }
   },
   "rewrites": [
