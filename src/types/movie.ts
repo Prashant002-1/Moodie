@@ -1,3 +1,5 @@
+import type { EmotionScores } from './emotion';
+
 /**
  * Movie Type Definitions
  * 
@@ -45,15 +47,29 @@ export interface Movie {
   /** Number of votes/ratings */
   vote_count: number;
   /** Whether the movie is rated for adults only */
-  adult: boolean;
+  adult?: boolean;
   /** Original language code (e.g., 'en', 'es') */
-  original_language: string;
+  original_language?: string;
   /** Original title in native language */
-  original_title: string;
+  original_title?: string;
   /** Whether this is a video/documentary vs theatrical release */
-  video: boolean;
+  video?: boolean;
   /** Movie tagline/slogan */
   tagline?: string;
+  /** Plain-language explanation returned by the recommendation API. */
+  recommendation_reason?: string;
+  /** People whose same-film responses led to this recommendation. */
+  recommended_by?: {
+    id: number;
+    username: string;
+    shared_film_title: string;
+    shared_feelings: (keyof EmotionScores)[];
+    response_feelings: (keyof EmotionScores)[];
+    viewer_shared_note: string;
+    person_shared_note: string;
+    response_id: number;
+    response_note: string;
+  }[];
 }
 
 /**

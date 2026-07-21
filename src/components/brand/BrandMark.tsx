@@ -1,0 +1,33 @@
+import React from 'react';
+
+interface BrandMarkProps {
+  className?: string;
+  title?: string;
+}
+
+const BrandMark: React.FC<BrandMarkProps> = ({ className = 'brand-mark', title }) => (
+  <svg
+    aria-hidden={title ? undefined : true}
+    aria-label={title}
+    className={className}
+    fill="currentColor"
+    focusable="false"
+    role={title ? 'img' : undefined}
+    viewBox="0 0 512 512"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {title && <title>{title}</title>}
+    <path
+      fillRule="evenodd"
+      d="M136 80 H376 Q400 80 400 104 V408 Q400 432 376 432 H136 Q112 432 112 408 V104 Q112 80 136 80 Z
+        M142 132 H174 Q184 132 184 142 V178 Q184 188 174 188 H142 Q132 188 132 178 V142 Q132 132 142 132 Z
+        M338 132 H370 Q380 132 380 142 V178 Q380 188 370 188 H338 Q328 188 328 178 V142 Q328 132 338 132 Z
+        M158 236 C151 227 138 227 131 234 C124 241 124 253 131 260 L158 287 L185 260 C192 253 192 241 185 234 C178 227 165 227 158 236 Z
+        M354 236 C347 227 334 227 327 234 C320 241 320 253 327 260 L354 287 L381 260 C388 253 388 241 381 234 C374 227 361 227 354 236 Z
+        M142 324 H174 Q184 324 184 334 V370 Q184 380 174 380 H142 Q132 380 132 370 V334 Q132 324 142 324 Z
+        M338 324 H370 Q380 324 380 334 V370 Q380 380 370 380 H338 Q328 380 328 370 V334 Q328 324 338 324 Z"
+    />
+  </svg>
+);
+
+export default BrandMark;

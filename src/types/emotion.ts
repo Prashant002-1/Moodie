@@ -1,12 +1,12 @@
 /**
  * Emotion Type Definitions
  * 
- * Type definitions for emotion detection, scoring, and mapping functionality.
- * These types support face-api.js integration and emotion-based movie recommendations.
+ * Type definitions for reviewed emotional records.
+ * The current seven-key shape is a prototype constraint, not the final product vocabulary.
  */
 
 /**
- * Emotion scores detected by face-api.js or entered manually.
+ * Reviewed emotional values entered directly by the person.
  * All values are normalized between 0 and 1, representing the intensity of each emotion.
  */
 export interface EmotionScores {
@@ -24,36 +24,6 @@ export interface EmotionScores {
   disgusted: number;
   /** Surprised emotional state (0-1) */
   surprised: number;
-}
-
-/**
- * Records a single emotion detection session with metadata.
- * Tracks how emotions were captured and when they were detected.
- */
-export interface EmotionSession {
-  /** Unique identifier for the session */
-  id: string;
-  /** Method used to detect emotions */
-  type: 'webcam' | 'manual' | 'upload';
-  /** The detected or entered emotion scores */
-  emotionScores: EmotionScores;
-  /** Confidence level of the detection (0-1), 1.0 for manual input */
-  confidence: number;
-  /** When the emotion session was recorded */
-  timestamp: Date;
-}
-
-/**
- * Maps emotions to movie genres for recommendation algorithms.
- * Defines how specific emotions correlate with movie genre preferences.
- */
-export interface EmotionToGenreMapping {
-  /** The emotion being mapped */
-  emotion: keyof EmotionScores;
-  /** Array of TMDB genre IDs associated with this emotion */
-  genreIds: number[];
-  /** Weight/strength of the emotion-to-genre relationship (0-1) */
-  weight: number;
 }
 
 /**

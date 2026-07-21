@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "contractVersion": "2.4.0",
+  "purpose": "Populate Moodie as an emotion-based social film discovery product: people share what a film meant to them, find others who felt similarly about the same films, and discover what those people watched next.",
+  "executionOwner": "The seed-data implementation owns only deterministic synthetic accounts and records identified by this contract. Seeding remains an explicit operator action.",
+  "productFraming": {
+    "primaryObject": "A response to a film, expressed in the viewer's own words and emotional sliders.",
+    "socialObject": "A public response becomes a timeline post. A restrained comment responds to that person's words, not the film in the abstract. A private response informs only its owner's experience.",
+    "recommendationPrinciple": "Match people by how similarly they responded to the same films, then surface other public films from those people.",
+    "ratingRule": "Moodie does not ask seeded people to rate films. Every active seeded diary rating is null.",
+    "photoRule": "An expression photo is an optional social attachment. It is never evidence that the response was inferred from a face and never changes capture_method from manual. Active uploads accept bounded JPEG, PNG, or WebP data URLs; seed posts use approved app asset paths."
+  },
+  "sourceOfTruth": {
+    "schema": "database/schema.sql",
+    "movieProvider": "TMDB",
+    "requiredApiKey": "TMDB_API_KEY",
+    "movieValidation": "Resolve every film through TMDB and cache the returned film and genre metadata. Never guess IDs or artwork paths.",
+    "expressionAssets": [
+      "/social/ananya-after-scream-natural.webp",
+      "/social/ananya-after-whiplash-natural.webp",
+      "/social/chloe-after-kikis-delivery-service-natural.webp",
+      "/social/clara-after-worst-person-world-natural.webp",
+      "/social/devon-after-babadook-natural.webp",
+      "/social/devon-after-past-lives-natural.webp",
+      "/social/elena-after-perfect-days-natural.webp",
+      "/social/hiro-after-cure-natural.webp",
+      "/social/hiro-after-others-natural.webp",
+      "/social/lucas-after-truman-show-natural.webp",
+      "/social/marcus-after-after-yang-natural.webp",
+      "/social/rachel-after-farewell-natural.webp",
+      "/social/sarah-after-columbus-natural.webp",
+      "/social/tariq-after-lives-of-others-natural.webp"
+    ]
+  },
+  "demoAccess": {
+    "email": "demo@demo.com",
+    "password": "demo123!",
+    "accountRule": "Upsert the demo account in place. Its ID and relationships must survive every seed run."
+  },
+  "executionRequirements": {
+    "entryPoint": "server/src/scripts/seedData.ts via npm run seed",
+    "verificationEntryPoint": "server/src/scripts/verifySeedData.ts via npm run seed:verify",
+    "transactionSafety": "Apply all schema compatibility and seed writes in one transaction and roll back when a required lookup or write fails.",
+    "stableOwnership": "Identify users by the exact email manifest and entries by nullable unique seed_key values. Never use domain wildcards as an ownership boundary.",
+    "idempotency": "A second run must preserve seed user IDs, seed entry IDs, timestamps, relationships, media, and logical content while creating no duplicates. Seed comments use their own deterministic seed keys so comments can be reconciled without touching a non-seed person's words.",
+    "nonSeedSafety": "Never delete or rewrite an ordinary user's account, diary, follow, like, comment, saved film, or relationship to a seed-owned person or post.",
+    "startupBoundary": "Do not seed from API, schema, container, or frontend startup.",
+    "environment": "Use the automatically initialized embedded database and require TMDB_API_KEY with a direct failure message.",
+    "completionOutput": "Print seed-scoped counts for accounts, films, responses, public posts, optional photos, saved films, follows, likes, and comments, then instruct the operator to run seed:verify."
+  },
+  "requiredCohorts": [
+    {
+      "name": "portfolio_demo",
+      "accounts": 1,
+      "minimumResponses": 20,
+      "minimumSavedFilms": 10,
+      "publicPostRange": [6, 8],
+      "notes": "Give the demo enough private and public history to match with several different people."
+    },
+    {
+      "name": "community",
+      "accounts": 11,
+      "minimumResponsesPerAccount": 12,
+      "minimumSavedFilmsPerAccount": 5,
+      "publicPostRange": [8, 10],
+      "notes": "Each person needs a distinct emotional perspective, not a genre persona or review style. Diary depth, note length, private/public balance, and saved-film history vary within the cohort. Every person also contributes one current public response that can carry a living discovery path."
+    }
+  ],
+  "responseRequirements": {
+    "rating": "Null for every active seeded response.",
+    "watchedOn": "Use deterministic dates across the previous 18 months and include repeat viewings for at least two community people.",
+    "noteLength": "20 to 420 characters for every public seed post, with a real mix of concise observations and fuller reflections.",
+    "noteVoice": "First-person, specific, emotionally candid, and concerned with what the film meant or stirred in the viewer. Give notes context, contradiction, changing feelings, and occasional uncertainty without turning them into reviews.",
+    "noteProhibitions": [
+      "plot summary",
+      "star or numeric rating language",
+      "review-template conclusions",
+      "marketing copy",
+      "craft-scorecard language about acting, editing, cinematography, pacing, plotting, or technical execution",
+      "em dashes",
+      "claims that the system diagnosed the viewer"
+    ],
+    "visibility": "The demo is private by default. Every community person has both public and private responses.",
+    "emotionInput": "All seeded vectors are reviewed direct input and use capture_method manual with confidence 1.",
+    "expressionImageInput": "Active diary writes accept only JPEG, PNG, or WebP base64 data URLs whose decoded bytes match the declared MIME signature and are no larger than 2 MiB. SVG, GIF, external URLs, empty payloads, and mismatched signatures are rejected.",
+    "emotionVector": "All seven values are between 0 and 1 and need not sum to 1. Avoid uniform or one-hot vectors.",
+    "emotionalCoverage": "Every feeling signal is materially present in multiple responses. Each person has recurring feelings plus credible outliers, without forcing one-hot emotional labels."
+  },
+  "socialRequirements": {
+    "bios": "Write 40 to 160 characters in plain first-person language about what tends to stay with that person after a film.",
+    "sharedFilmOverlap": "The demo shares at least three films with at least six community people.",
+    "matchedPeople": "At least three people closely resemble the demo across shared films and at least two respond differently, demonstrating that feelings are personal.",
+    "candidateDepth": "Every closely matched person has at least three public films the demo has not watched.",
+    "follows": "Use a sparse directed graph. The demo follows three people with eight to nine public responses each, so Following is substantial without becoming a generic firehose. Community people follow two or three others; no self-follows.",
+    "likes": "Like only public seed posts, with zero to five likes per post and at least 25 percent with none.",
+    "comments": "Add twenty-four seed comments across sixteen public posts. Eight flat comment threads contain a follow-up from the response owner, and eight remain one thoughtful reply. At least 75 percent of public posts remain uncommented. Every comment must answer a specific thought in the response with no generic praise, review language, or rating language.",
+    "feedDiversity": "The authenticated demo feed is chronological. Its first twelve responses include all eleven community people and eleven optional photos, while the first twenty-four span at least twelve films. The full fifty include all eleven community people, at least twenty-four films, and recent responses from all three followed people.",
+    "currentStream": "Every community person has one public response dated within eleven days of the seed reference date. That response is on a film the demo has not logged, so people cards and recommendation paths have a current, distinct destination. Ananya also has a joyful public Scream viewing, proving a discovery path can reach a film through a person's lived response rather than genre or ratings.",
+    "photoPosts": "Attach fourteen approved generated candid assets to their named public posts. Eleven photos belong to responses in the first twelve chronological feed positions so the stream feels inhabited immediately. Store them as entry_media kind expression_photo and keep capture_method manual."
+  },
+  "recommendationCoverage": {
+    "matchingBasis": "Emotional similarity on films both people watched.",
+    "candidateBasis": "Other public responses from emotionally matched people.",
+    "privacy": "The viewer's public and private responses may inform their own match. Another person's private responses never become timeline content or recommendation candidates.",
+    "excludedMovieRule": "Never recommend a film already present in the viewer's responses.",
+    "payloadRule": "Recommendation candidates identify the people behind them. Feed and recommendation framing must not expose diary ratings, TMDB votes, top genres, or genre/rating reasons."
+  },
+  "prohibited": [
+    "Do not call legacy user-movie, emotion-mapping, profile, or recommendations tables.",
+    "Do not make every response public.",
+    "Do not treat an expression photo as emotion evidence.",
+    "Do not attach a photo to a private post.",
+    "Do not use real camera frames or real-person uploads as seed media.",
+    "Do not rank recommendations by ratings, TMDB vote, popularity, or genre affinity.",
+    "Do not delete and recreate seed users or seed posts during reconciliation.",
+    "Do not scan or mutate unrelated user content during verification."
+  ],
+  "acceptanceChecks": [
+    "Demo login returns a valid token.",
+    "Every active seeded rating is null and every capture_method is manual.",
+    "Every public seeded note is first-person and passes the emotional-response language gate.",
+    "The demo shares at least three films with at least six people.",
+    "The authenticated feed is chronological, its first twelve responses include all eleven community people, and its first twenty-four contain at least twelve films while omitting rating and vote_average fields.",
+    "The seed graph contains twenty-six public responses from the three people the demo follows, and the recent 50-item stream contains all eleven community people plus responses from all three followed people.",
+    "Twenty-four restrained seed comments appear only on public responses, including eight conversational exchanges, are available through the response comment endpoint, and a non-seed comment on a seed response survives a seed rerun unchanged.",
+    "Seed histories vary in response depth, public/private balance, note length, saved films, follows, and direct feeling mixtures while staying inside the same product rules.",
+    "The fourteen approved expression assets appear on the intended public posts, eleven appear within the first twelve timeline responses, and none change capture_method.",
+    "People results use same-film emotional overlap.",
+    "Recommendations are non-empty, exclude watched films, identify matched people, and contain no genre/rating reasons.",
+    "Private responses do not appear in discovery payloads.",
+    "A second seed run preserves seed user IDs, entry IDs, timestamps, and fingerprints.",
+    "A randomized non-seed account, diary entry, follow to a seed person, and like to a seed post survive a seed rerun unchanged."
+  ]
+}

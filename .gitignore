@@ -39,6 +39,7 @@ GEMINI.md
 .env.development.local
 .env.test.local
 .env.production.local
+!.env.example
 
 # Coverage and testing
 coverage/
@@ -57,6 +58,8 @@ logs/
 # AI agent local files
 CLAUDE.local.md
 GEMINI.local.md
+.codex/
+.agents/
 
 # Testing documentation
 TESTING.md
@@ -65,8 +68,8 @@ TESTING.md
 .vite/
 *.cache
 
-# Docker volumes
-postgres_data/
+# Embedded local database
+.data/
 
 *.mdc
 

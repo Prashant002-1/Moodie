@@ -6,12 +6,9 @@
  * shared test utilities and configuration across all test files.
  */
 
-import dotenv from 'dotenv';
 import { expect, jest, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
 import { setupTestDatabase, cleanupTestDatabase } from './setup-test-db';
-
-// Load test environment variables
-dotenv.config({ path: '.env.test' });
+import pool from '../src/config/database';
 
 // Global test setup
 beforeAll(async () => {
@@ -35,6 +32,7 @@ afterAll(async () => {
   
   try {
     await cleanupTestDatabase();
+    await pool.end();
   } catch (error) {
     console.error('Error cleaning up test database:', error);
   }

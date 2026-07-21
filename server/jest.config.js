@@ -25,6 +25,8 @@ module.exports = {
       statements: 85,
     },
   },
+  setupFiles: ['<rootDir>/tests/load-env.ts'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  testTimeout: 10000,
+  maxWorkers: 1,
+  testTimeout: 20000,
 };
