@@ -9,7 +9,7 @@ Status: Draft for Prashant's review. Do not submit yet.
 - Category: `Apps for Your Life`
 - Submitter type: `Individual`
 - Country of residence: `United States`
-- Repository: `https://github.com/Prashant002-1/Emotionflix`
+- Repository: `https://github.com/Prashant002-1/Moodie`
 - License: `MIT`
 - Demo video URL: pending
 - `/feedback` session ID: pending Prashant's selection
@@ -83,7 +83,7 @@ The repository includes setup instructions, demo credentials, the seed contract,
 
 ### Repository URL
 
-`https://github.com/Prashant002-1/Emotionflix`
+`https://github.com/Prashant002-1/Moodie`
 
 ### Testing instructions
 

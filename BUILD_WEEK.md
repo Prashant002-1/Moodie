@@ -6,7 +6,7 @@ No two people feel the same. I have believed that for a long time, and it is the
 
 Before Build Week, this repository held an abandoned student-project skeleton around the idea. It combined a camera demo, emotion-to-genre mappings, ratings, popularity, generic interface patterns, and immature architecture into something shaped like an app. It was not a functioning product, and it was not an earlier version of Moodie. The execution never reached the idea.
 
-Commit [`1f4a3fd`](https://github.com/Prashant002-1/Emotionflix/commit/1f4a3fd8965f9b9d3af963dafad0d11e5caa5520), dated January 21, 2026, preserves that skeleton. After it, the repository sat untouched for nearly six months. The belief stayed with me. The implementation was not a foundation worth preserving.
+Commit [`1f4a3fd`](https://github.com/Prashant002-1/Moodie/commit/1f4a3fd8965f9b9d3af963dafad0d11e5caa5520), dated January 21, 2026, preserves that skeleton. After it, the repository sat untouched for nearly six months. The belief stayed with me. The implementation was not a foundation worth preserving.
 
 ## What I built during Build Week
 
@@ -20,7 +20,7 @@ The product became social because the social layer has a purpose. A response, fo
 
 I also replaced the old runtime with one runnable system. Docker, the separate system database requirement, duplicate lockfiles, Tailwind scaffolding, the browser facial-analysis bundle, and old emotion-mapping paths were removed. The current application uses one dependency install, one embedded PGlite database, one development command, and one production process.
 
-The repository preserves 15 dated implementation commits after [`af9cd5d`](https://github.com/Prashant002-1/Emotionflix/commit/af9cd5d), from [`7ffe1f4`](https://github.com/Prashant002-1/Emotionflix/commit/7ffe1f4) through [`ce4630c`](https://github.com/Prashant002-1/Emotionflix/commit/ce4630c). The first three relaunch commits remain in the history as restart and checkpoint work around the opening of the event. They are not included in that 15-commit comparison.
+The repository preserves 15 dated implementation commits after [`af9cd5d`](https://github.com/Prashant002-1/Moodie/commit/af9cd5d), from [`7ffe1f4`](https://github.com/Prashant002-1/Moodie/commit/7ffe1f4) through [`ce4630c`](https://github.com/Prashant002-1/Moodie/commit/ce4630c). The first three relaunch commits remain in the history as restart and checkpoint work around the opening of the event. They are not included in that 15-commit comparison.
 
 ## Codex contribution
 
@@ -73,7 +73,7 @@ The `/feedback` session used for the submission will be selected by Prashant bef
 
 The complete 15-commit comparison is:
 
-[`af9cd5d...ce4630c`](https://github.com/Prashant002-1/Emotionflix/compare/af9cd5ddf0299570def10aa6fd600b5b8568fa6b...ce4630c)
+[`af9cd5d...ce4630c`](https://github.com/Prashant002-1/Moodie/compare/af9cd5ddf0299570def10aa6fd600b5b8568fa6b...ce4630c)
 
 | Date | Commits | Work completed |
 | --- | --- | --- |
@@ -83,7 +83,7 @@ The complete 15-commit comparison is:
 | July 18 | `a89959f` | Refined the signed-in home and its discovery paths. |
 | July 21 | `c157ecc`, `5f453ad`, `1641f2f`, `ce4630c` | Expanded the recommendation engine, social data, generated imagery, product surfaces, rendering, framing, and scrolling work. |
 
-Pull request [#6](https://github.com/Prashant002-1/Emotionflix/pull/6) preserves every relaunch commit individually.
+Pull request [#6](https://github.com/Prashant002-1/Moodie/pull/6) preserves every relaunch commit individually.
 
 ## Verification
 
