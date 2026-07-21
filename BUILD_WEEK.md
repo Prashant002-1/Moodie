@@ -1,26 +1,26 @@
-# OpenAI Build Week: From a dormant idea to Moodie
+# OpenAI Build Week: Building Moodie from the idea up
 
 No two people feel the same. I have believed that for a long time, and it is the primitive behind Moodie. A recommendation should not begin by reducing someone to a rating history or a point in a system. It should begin with what a film meant to them, find another person who felt something familiar, and let that person create the path to what comes next.
 
-## The idea before Build Week
+## What existed before Build Week
 
-The idea first existed as a student project called EmotionFlix. I built facial-expression capture, mapped emotions to genres, mixed ratings and popularity into recommendations, and organized the result like an application. It was still a school prototype. The architecture was immature, the interface followed generic product patterns, and the execution never reached the idea.
+Before Build Week, this repository held an abandoned student-project skeleton around the idea. It combined a camera demo, emotion-to-genre mappings, ratings, popularity, generic interface patterns, and immature architecture into something shaped like an app. It was not a functioning product, and it was not an earlier version of Moodie. The execution never reached the idea.
 
-Commit [`1f4a3fd`](https://github.com/Prashant002-1/Emotionflix/commit/1f4a3fd8965f9b9d3af963dafad0d11e5caa5520), dated January 21, 2026, preserves that baseline. After it, the repository sat untouched for nearly six months. The idea stayed with me, but the product did not move.
+Commit [`1f4a3fd`](https://github.com/Prashant002-1/Emotionflix/commit/1f4a3fd8965f9b9d3af963dafad0d11e5caa5520), dated January 21, 2026, preserves that skeleton. After it, the repository sat untouched for nearly six months. The belief stayed with me. The implementation was not a foundation worth preserving.
 
-OpenAI Build Week changed that. Seeing what Codex and GPT-5.6 Sol could do with frontend work, a real repository, and sustained product context pushed me to reopen it. I did not want to reskin the school project. I wanted to see whether the original belief could finally become a product.
+## What I built during Build Week
 
-## What changed during Build Week
+Moodie was built during OpenAI Build Week as a ground-up refresh of that belief. Seeing what Codex and GPT-5.6 Sol could do with frontend work, a real repository, and sustained product context pushed me to return to it and start again. This was not a reskin or an incremental extension of a functioning application. I discarded most of the old work and rebuilt what the product was, how it worked, how it looked, and how it ran.
 
-The core idea survived. Almost everything around it changed.
+The dated 15-commit Build Week implementation changes 88 files, with 12,701 additions and 3,409 deletions. Those deletions removed most of the old skeleton instead of carrying it forward. Across the full refresh from the January baseline, 159 files changed, with 30,628 additions and 22,080 deletions. The old repository supplied an idea. The current product is the work of this relaunch.
 
 Moodie stopped asking a camera to decide what someone felt. Writing and direct feeling controls became complete on their own. An optional photo became a human artifact attached to a response, never biometric evidence. The recommendation engine stopped mapping emotions to genres and stopped treating ratings, popularity, or TMDB vote values as personal truth. It now connects people through reviewed feelings on films they both watched, then recommends an unseen film backed by a real public response from that person.
 
 The product became social because the social layer has a purpose. A response, follow, like, comment, diary entry, member page, and film page all preserve the path between a person, a shared film, and what stayed with them. The interface became Moodie: cinematic without becoming dark by default, expressive without becoming busy, and personal without turning into a generic social feed.
 
-The dormant student application also became one runnable system. Docker, the separate system database requirement, duplicate lockfiles, Tailwind scaffolding, the browser facial-analysis bundle, and old emotion-mapping paths were removed. The current application uses one dependency install, one embedded PGlite database, one development command, and one production process.
+I also replaced the old runtime with one runnable system. Docker, the separate system database requirement, duplicate lockfiles, Tailwind scaffolding, the browser facial-analysis bundle, and old emotion-mapping paths were removed. The current application uses one dependency install, one embedded PGlite database, one development command, and one production process.
 
-The full relaunch from the January baseline changes 159 files, with 30,628 additions and 22,080 deletions. For the dated Build Week implementation record, the repository preserves 15 commits after [`af9cd5d`](https://github.com/Prashant002-1/Emotionflix/commit/af9cd5d), from [`7ffe1f4`](https://github.com/Prashant002-1/Emotionflix/commit/7ffe1f4) through [`ce4630c`](https://github.com/Prashant002-1/Emotionflix/commit/ce4630c). That range alone changes 88 files, with 12,701 additions and 3,409 deletions. The first three relaunch commits remain in the history as restart and checkpoint work around the opening of the event. They are not included in the 15-commit comparison.
+The repository preserves 15 dated implementation commits after [`af9cd5d`](https://github.com/Prashant002-1/Emotionflix/commit/af9cd5d), from [`7ffe1f4`](https://github.com/Prashant002-1/Emotionflix/commit/7ffe1f4) through [`ce4630c`](https://github.com/Prashant002-1/Emotionflix/commit/ce4630c). The first three relaunch commits remain in the history as restart and checkpoint work around the opening of the event. They are not included in that 15-commit comparison.
 
 ## Codex contribution
 

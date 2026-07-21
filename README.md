@@ -8,13 +8,13 @@ No two people feel the same. Moodie starts there. A person records what a film m
 
 It does not treat a person as a rating, genre profile, or point in a recommendation system. The person, the shared film, and the response behind each recommendation remain visible.
 
-## OpenAI Build Week
+## Built during OpenAI Build Week
 
-The idea existed before Build Week. I first organized it as a student project called EmotionFlix, built around facial-expression analysis and rating-led recommendations. It never became the product I had in mind. After the January 21 baseline commit [`1f4a3fd`](https://github.com/Prashant002-1/Emotionflix/commit/1f4a3fd8965f9b9d3af963dafad0d11e5caa5520), the repository sat untouched for nearly six months.
+Moodie was built during OpenAI Build Week. Before it, this repository held an abandoned student-project skeleton and the seed of one idea: no two people feel the same, so film discovery should not reduce someone to ratings or a point of data. That old experiment was shaped like an app, but it was not a real product and it was not an earlier version of Moodie. It had no coherent execution and sat untouched for nearly six months after the January 21 baseline commit [`1f4a3fd`](https://github.com/Prashant002-1/Emotionflix/commit/1f4a3fd8965f9b9d3af963dafad0d11e5caa5520).
 
-OpenAI Build Week gave me a reason to reopen it. The frontend and product capabilities I saw in Codex with GPT-5.6 Sol made a complete relaunch feel possible. The core belief stayed the same, but the product philosophy, recommendation model, data, design system, social experience, runtime, and execution became Moodie during this work.
+Build Week pushed me to return to the idea and start again. This was not a reskin or an incremental improvement to a functioning application. Most of the old implementation was discarded. The camera-led premise, recommendation logic, interface, architecture, data, and runtime were removed, rewritten, or replaced. What survived was the belief. The product philosophy, social response model, people-led recommendation engine, seed world, visual identity, frontend, backend, and working system became Moodie during this refresh.
 
-The dated Build Week implementation is preserved as 15 commits after [`af9cd5d`](https://github.com/Prashant002-1/Emotionflix/commit/af9cd5d), from [`7ffe1f4`](https://github.com/Prashant002-1/Emotionflix/commit/7ffe1f4) through [`ce4630c`](https://github.com/Prashant002-1/Emotionflix/commit/ce4630c). That range changes 88 files, with 12,701 additions and 3,409 deletions. The complete relaunch from the dormant student baseline changes 159 files, with 30,628 additions and 22,080 deletions.
+The dated Build Week implementation is preserved as 15 commits after [`af9cd5d`](https://github.com/Prashant002-1/Emotionflix/commit/af9cd5d), from [`7ffe1f4`](https://github.com/Prashant002-1/Emotionflix/commit/7ffe1f4) through [`ce4630c`](https://github.com/Prashant002-1/Emotionflix/commit/ce4630c). That range changes 88 files, with 12,701 additions and 3,409 deletions. Those deletions are old work being removed, not a foundation being preserved. Across the full refresh from the dormant skeleton, 159 files changed, with 30,628 additions and 22,080 deletions.
 
 [`BUILD_WEEK.md`](./BUILD_WEEK.md) carries the story, commit evidence, Codex and GPT-5.6 Sol contributions, and the decisions I kept ownership of.
 
