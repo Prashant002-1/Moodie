@@ -750,18 +750,36 @@ export const seed = async () => {
     console.log(`Comments: ${result.comments}`);
     console.log('Run npm run seed:verify to verify the social seed contract.');
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Seeding failed:', error);
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Seed rollback failed:', rollbackError);
+    }
     throw error;
   } finally {
     client.release();
   }
 };
 
-if (typeof require !== 'undefined' && require.main === module) {
-  void seed()
-    .catch(() => {
-      process.exitCode = 1;
-    })
-    .finally(() => pool.end());
-}
+export const runSeedCommand = async (
+  run: () => Promise<void> = seed,
+  close: () => Promise<void> = () => pool.end(),
+) => {
+  let exitCode = 0;
+
+  try {
+    await run();
+  } catch (error) {
+    console.error('Seeding failed:', error);
+    exitCode = 1;
+  }
+
+  try {
+    await close();
+  } catch (error) {
+    console.error('Failed to close the seed database:', error);
+    exitCode = 1;
+  }
+
+  return exitCode;
+};

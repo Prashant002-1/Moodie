@@ -13,7 +13,7 @@
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test:security": "NODE_OPTIONS=--experimental-vm-modules jest --testNamePattern=\"Security\"",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testNamePattern=\"Integration\"",
-    "seed": "tsx src/scripts/seedData.ts",
+    "seed": "tsx src/scripts/runSeed.ts",
     "seed:verify": "tsx src/scripts/verifySeedData.ts",
     "demo:snapshot": "tsx src/scripts/buildDemoSnapshot.ts"
   },
