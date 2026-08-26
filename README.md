@@ -10,27 +10,31 @@ No two people feel the same. Moodie starts there. A person records what a film m
 
 It does not treat a person as a rating, genre profile, or point in a recommendation system. The person, the shared film, and the response behind each recommendation remain visible.
 
-## Built during OpenAI Build Week
+## Why I built it
 
-Moodie was built during OpenAI Build Week. Before it, this repository held an abandoned student-project skeleton and the seed of one idea: no two people feel the same, so film discovery should not reduce someone to ratings or a point of data. That old experiment was shaped like an app, but it was not a real product and it was not an earlier version of Moodie. It had no coherent execution and sat untouched for nearly six months after the January 21 baseline commit [`1f4a3fd`](https://github.com/Prashant002-1/Moodie/commit/1f4a3fd8965f9b9d3af963dafad0d11e5caa5520).
+Most film recommendation systems flatten taste into ratings, genres, and popularity. I built Moodie around the part those systems miss: what a film meant to someone and what stayed with them afterward.
 
-Build Week pushed me to return to the idea and start again. This was not a reskin or an incremental improvement to a functioning application. Most of the old implementation was discarded. The camera-led premise, recommendation logic, interface, architecture, data, and runtime were removed, rewritten, or replaced. What survived was the belief. The product philosophy, social response model, people-led recommendation engine, seed world, visual identity, frontend, backend, and working system became Moodie during this refresh.
+That decision shaped the product. Responses replace ratings. People and shared films create recommendations instead of universal emotion-to-genre rules. Optional photos add context but never decide what a person felt.
 
-The dated Build Week implementation is preserved as 15 commits after [`af9cd5d`](https://github.com/Prashant002-1/Moodie/commit/af9cd5d), from [`7ffe1f4`](https://github.com/Prashant002-1/Moodie/commit/7ffe1f4) through [`ce4630c`](https://github.com/Prashant002-1/Moodie/commit/ce4630c). That range changes 88 files, with 12,701 additions and 3,409 deletions. Those deletions are old work being removed, not a foundation being preserved. Across the full refresh from the dormant skeleton, 159 files changed, with 30,628 additions and 22,080 deletions.
+## How the experience fits together
 
-[`BUILD_WEEK.md`](./BUILD_WEEK.md) carries the story, commit evidence, Codex and GPT-5.6 Sol contributions, and the decisions I kept ownership of.
+### Respond instead of rating
 
-## Codex and GPT-5.6 Sol
+A response pairs a first-person note with feeling sliders. The note preserves why the film mattered, while the sliders capture mixed feelings without forcing the viewing into one label or score. It can stay private or be shared publicly, with an optional photo that adds context but is never analyzed.
 
-I used Codex as a working partner across the repository, not as autocomplete. The workflow stayed simple: I described what felt wrong, Codex read the product and code, implemented a direction, ran it, and I steered the next correction. It untangled an immature architecture, rebuilt the frontend and backend, exercised the product in the browser when needed, generated visual assets inside coding sessions, created and verified the social seed world, and turned repeated feedback into a repository-specific agent skill.
+### Keep a personal film history
 
-GPT-5.6 Sol made the largest product correction. It recognized that facial recognition was not the real idea and pushed the product toward direct emotional responses and people-led discovery. It could recover the intention from old code without preserving its assumptions. It also helped keep the recommendation engine lean: shared films and reviewed feelings connect people, and real public responses create the path to another film.
+Each viewing becomes its own diary entry, so rewatches can hold different notes and feelings. Search and visibility filters keep that history usable, while saved films remain separate from films already watched.
 
-Direct feeling controls and writing are the inputs. A public response may include an optional expression photo as attached media. The photo is never analyzed and never changes the person's feelings.
+### Discover through other people
 
-There are no user ratings. Genres, TMDB vote values, and universal emotion-to-genre rules do not power personal recommendations.
+Public responses enter For you, Following, and Everyone feeds, with the person, film, note, and feelings kept together. Follows build a circle of people whose taste they understand. Likes and comments stay attached to the response instead of becoming a film score. The For you view also keeps recommendations, connected people, recent community films, and saved films within reach.
 
-[`PRODUCT.md`](./PRODUCT.md) defines the product philosophy and journeys. [`docs/EMOTIONAL_SIGNAL_MODEL.md`](./docs/EMOTIONAL_SIGNAL_MODEL.md) defines emotional evidence, people-led matching, media separation, and consent. [`DESIGN.md`](./DESIGN.md) defines the Matinee Archive interface system.
+### Follow the reason behind a recommendation
+
+Moodie connects people through a shared film and overlapping feelings, then introduces another film through that person's public response. The person, shared film, and source response remain visible, so the path can be understood and explored. Search extends the same experience across films, feelings, and people.
+
+[`PRODUCT.md`](./PRODUCT.md) defines the product philosophy and journeys. [`docs/EMOTIONAL_SIGNAL_MODEL.md`](./docs/EMOTIONAL_SIGNAL_MODEL.md) defines emotional evidence, people-led matching, media separation, and consent. [`DESIGN.md`](./DESIGN.md) defines the Living Afterimage interface system.
 
 ## Stack
 
@@ -38,6 +42,12 @@ There are no user ratings. Genres, TMDB vote values, and universal emotion-to-ge
 - Express, embedded PostgreSQL via PGlite, JWT authentication, and Zod validation
 - TMDB for server-side film metadata and artwork
 - Vitest, React Testing Library, Jest, and Supertest
+
+## Architecture
+
+`React client → Express API → PGlite`
+
+React and TypeScript handle the interface through one authenticated API client. Express groups catalog, diary, library, discovery, recommendation, and demo-session routes, and proxies TMDB so its key stays off the client. PGlite stores diary and social data. Vite proxies `/api` locally; Vercel serves the React build and rewrites `/api` to Express.
 
 ## Product routes
 
@@ -56,6 +66,7 @@ There are no user ratings. Genres, TMDB vote values, and universal emotion-to-ge
 
 - `GET /api/catalog/trending`
 - `GET /api/catalog/popular`
+- `GET /api/catalog/genres`
 - `GET /api/catalog/search?q=`
 - `GET /api/catalog/movies/:movieId`
 - `GET /api/catalog/movies/:movieId/related`
@@ -71,12 +82,10 @@ There are no user ratings. Genres, TMDB vote values, and universal emotion-to-ge
 - `GET /api/discovery/activity`
 - `GET /api/discovery/pulse`
 - `POST|DELETE /api/discovery/people/:personId/follow`
-- `POST|DELETE /api/discovery/entries/:entryId/reaction`
+- `POST|DELETE /api/discovery/entries/:entryId/like`
+- `GET|POST /api/discovery/entries/:entryId/comments`
+- `DELETE /api/discovery/comments/:commentId`
 - `POST /api/auth/demo`
-
-## Current implementation boundary
-
-The current application supports direct feeling controls and an optional attached photo. The seven-key feeling vocabulary is still a prototype constraint and will need a deliberate migration before it expands.
 
 ## Run locally
 
