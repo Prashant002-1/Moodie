@@ -5,10 +5,11 @@ export const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
 export const imageUrl = (path: string | null | undefined, size = 'w500') =>
   path ? `${TMDB_IMAGE_BASE}/${size}${path}` : null;
 
-export const releaseYear = (date?: string) => {
+export const releaseYear = (date?: string | null) => {
   if (!date) return 'Date unknown';
-  const year = new Date(date).getFullYear();
-  return Number.isNaN(year) ? 'Date unknown' : String(year);
+  // Release dates are calendar dates, not instants in the viewer's timezone.
+  const parsed = calendarDate(date);
+  return parsed ? String(parsed.getFullYear()) : 'Date unknown';
 };
 
 export const calendarDate = (value?: string | Date | null) => {
