@@ -100,9 +100,25 @@ The SwiftUI iPhone client in [ios](ios/README.md) uses the same API and data. Cr
 - `POST /api/auth/recover`
 - `DELETE /api/auth/account`
 
+## Where to start
+
+- [Philosophy](docs/PHILOSOPHY.md): what Moodie is for and the principles everything else follows.
+- [Roadmap](docs/ROADMAP.md): where the build stands and what comes next.
+- [Market landscape](docs/MARKET_LANDSCAPE.md): who else is here and what is still open.
+- [Design system](DESIGN.md): the visual direction and the shared tokens in `design/tokens.json`.
+
+## Preview it
+
+```bash
+npm install
+npm run preview:demo
+```
+
+This starts a disposable API with sample people and films, plus the web app at `http://localhost:5273`. It never opens your personal database, and everything is discarded when you stop it. Sign in as `ios_viewer` with password `native-test-password`, or sign up to see the first-run choice between Moodie with and without AI. To see it on a phone, open the Network address that Vite prints from a phone on the same Wi-Fi. To run the native iPhone app against the same preview, see [ios/README.md](ios/README.md).
+
 ## Run locally
 
-Requirement: Node.js 20 through 25. Node.js 22 is the recommended local runtime. Docker and a system database are not needed.
+Requirement: Node.js 20 through 25. Node.js 22 is the recommended local runtime (`.nvmrc`); npm fails to start under Node 26. Docker and a system database are not needed.
 
 ```bash
 npm install

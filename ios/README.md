@@ -16,6 +16,20 @@ The generated project is checked in. Regenerate it after adding a Swift source:
 python3 ios/scripts/generate_project.py
 ```
 
+## Preview in the simulator
+
+From the repository root, start the disposable preview API and web app with `npm run preview:demo`. Then build and run the app against it:
+
+```sh
+xcodebuild -project ios/Moodie.xcodeproj -scheme Moodie -configuration Debug \
+  -destination 'platform=iOS Simulator,name=iPhone 18 Pro' \
+  MOODIE_API_URL=http://127.0.0.1:3101/api build
+```
+
+Or open the project in Xcode, set `MOODIE_API_URL = http://127.0.0.1:3101/api` in `Config/DebugLocal.xcconfig`, and press Run. Sign in as `ios_viewer` / `native-test-password`, or sign up to see the first-run choice. A physical iPhone needs an HTTPS API it can reach; see [the roadmap](../docs/ROADMAP.md).
+
+Colors, spacing and radii come from `design/tokens.json`. Run `npm run tokens` after changing it; that regenerates `Moodie/Design/Tokens.swift` and the semantic colorsets.
+
 ## Implemented journeys
 
 - Sign in, individual sign-up, one-time recovery code presentation, recovery, secure persistent sessions, profile, password rotation, sign-out, and permanent account deletion.

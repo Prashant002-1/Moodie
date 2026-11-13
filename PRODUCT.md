@@ -2,7 +2,9 @@
 
 ## Product purpose
 
-Moodie is emotion-based social film discovery.
+Moodie is social film discovery driven by people: a log, a way of responding to what you watched, and recommendations that keep the person and the reason attached. The principles behind every decision here are in [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md); where this file and that one disagree, the philosophy wins and this file is out of date.
+
+Television, reminders that carry the reason, and a feeling vocabulary that records without measuring are part of the direction but not yet built. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 A person shares a film alongside what it meant to them and the feelings that stayed with them. A shared film and overlapping feelings can connect that person to someone else's response, then to another film. The signed-in feed keeps people and their responses at the center. The diary preserves a person's history, and the catalog remains available underneath discovery.
 
@@ -23,6 +25,15 @@ The note and feeling controls are the complete path. The person sets the feeling
 An expression photo is an optional, playful reaction attached to a response. It adds a little life when the person wants it; it is not emotional evidence, is never analyzed, and is optional even when the response is public.
 
 There are no user ratings. TMDB metadata may contain catalog values internally, but ratings and vote counts do not appear in the product experience and do not power personal recommendations.
+
+## With or without AI
+
+The first screen after joining asks how Moodie should work: **People only** or **People, with AI**. The choice is stored on the account (`users.ai_mode`), can be changed in Account, and is enforced by the server.
+
+- Everything in this document works identically in both modes. People-led matching compares feelings two people entered on the same film; it is not a language-model feature and is not what the choice controls.
+- With AI off, or not yet chosen, every assistant tool refuses the account. No language model reads its diary, notes or conversations and no external assistant can be connected.
+- With AI on, the account may use model-backed explanation and connect its own assistant through authorized, read-only tools. Neither is live yet; the choice is recorded now so it applies from the first release that includes them.
+- AI never posts, follows, recommends or replies for a person.
 
 ## Product surfaces
 
@@ -119,7 +130,7 @@ The current seven-key vector is a prototype constraint. It must not become the p
 - `/api/discovery`: feed, public responses, people, follows, likes, and comments.
 - `/api/discovery/activity`: likes, comments, and follows that lead back to the exact social event.
 - `/api/discovery/pulse`: films with recent public responses from the community.
-- `/api/auth`: sign up, sign in, persistent sessions, profile, password, recovery code, sign out, and account deletion.
+- `/api/auth`: sign up, sign in, persistent sessions, profile, the AI choice (`PATCH /api/auth/preferences`), password, recovery code, sign out, and account deletion.
 
 ## Accessibility and inclusion
 
