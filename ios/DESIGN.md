@@ -1,5 +1,7 @@
 # Native design working brief
 
+> 2026-11-13: The shared direction and tokens now live in the root [DESIGN.md](../DESIGN.md) and `design/tokens.json`. Colours, spacing and radii here are generated from those tokens. Where this brief disagrees with the root document, the root document wins. The platform rules below (native navigation, Dynamic Type, system materials) still hold.
+
 This is the implementation rationale for this app, not a new personal skill or permanent preference record.
 
 The September 21–22 native refinement is complete locally and ready for the user's detailed review. See [design evolution](DESIGN_EVOLUTION.md) for research, four implemented passes, screenshot critiques, and scoped acceptance evidence. Release validation remains separate.

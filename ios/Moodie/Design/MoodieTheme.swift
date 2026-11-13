@@ -11,8 +11,8 @@ enum MoodieTheme {
     static let rule = Color("SecondaryInk").opacity(0.18)
     static func color(_ feeling: Feeling) -> Color {
         switch feeling {
-        case .neutral: Color("SecondaryInk")
-        case .happy: Color("AccentColor")
+        case .neutral: Color("FeelingNeutral")
+        case .happy: Color("FeelingHappy")
         case .sad: Color("FeelingSad")
         case .angry: Color("FeelingAngry")
         case .fearful: Color("FeelingFearful")

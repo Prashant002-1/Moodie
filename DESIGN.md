@@ -1,210 +1,124 @@
 ---
 name: Moodie
-description: Social film discovery through personal responses.
-direction: "Living Afterimage"
-colors:
-  mineral: "#D8D6D1"
-  mist: "#B9C4C0"
-  ink: "#1D2B33"
-  chalk: "#F4EFE9"
-  oxide: "#D76358"
-  fig: "#713B42"
-  blue: "#557890"
-  teal: "#477B78"
-typography:
-  display: "Newsreader, serif"
-  interface: "Oxygen, sans-serif"
-layout:
-  landingWidth: "1440px"
-  productFrameWidth: "1360px"
-  navHeight: "62px"
-rounded:
-  control: "9px"
-  productFrame: "18px"
-  poster: "3px"
+description: Social film discovery through people and their responses.
+direction: "The Programme"
+tokens: design/tokens.json
 ---
 
 # Design system: Moodie
 
-## Creative direction
+Revised 2026-11-13. This replaces the earlier "Living Afterimage" direction. The reasons are in [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md), principle 6.
 
-**Living Afterimage**
+## Creative direction: The Programme
 
-Moodie should feel like the minutes after a film ends, when the room is ordinary again but the film is still moving through the people in it. The page is quiet, intimate, and cinematic. Its character comes from human writing, real film art, candid reaction photos, and a slowly changing field of light.
+Moodie should feel like walking into a cinémathèque: a festival programme, a museum wall, an archive of film. The references are MUBI, the catalogues of film institutions, Cannes, and the shops that used to be lined with discs.
 
-The landing page is a product demonstration, not an editorial campaign. It should show the interface and the data that moves through it with the same clarity a strong developer-tool landing page gives its product. Visitors should be able to see the inputs, the recommendation source, and the output without reading an abstract manifesto.
+Those places look premium for one reason: the work is the decoration. Nothing competes with the films.
 
-The visual identity has two connected modes:
+Three rules carry the direction.
 
-- The hero is an expressive welcome built from posters, reaction photos, and one anchored paper response card.
-- Everything below the hero is a continuous product environment that exposes capture, discovery, the people feed, and history through real interface states.
+1. **The canvas is still.** One flat, warm paper surface. No ambient colour, no gradient fields, no glows, no scanlines, no grain. Colour on screen comes from film artwork and, sparingly, from one accent.
+2. **Typography is the ornament.** Hierarchy comes from a serif display face against a quiet grotesque, generous space and thin rules. Not from boxes, shadows or tints.
+3. **Films are hung, not piled.** Artwork sits on the canvas like a work on a wall: square corners, a caption, room around it.
 
-Do not split the page into alternating presentation slides. Do not treat each section as a poster or a separate campaign idea.
+## Tokens
 
-## Hero
+`design/tokens.json` is the single source for colour, type, spacing, radius and motion. `npm run tokens` generates:
 
-The hero is the product story in motion.
+- `src/styles/tokens.css`: CSS custom properties prefixed `--m-`.
+- `ios/Moodie/Design/Tokens.swift` and the semantic colorsets in the iOS asset catalog.
 
-- Keep the left side quiet: one product descriptor, one headline, one conclusion, and two actions.
-- Do not underline or draw after the headline.
-- The right side cycles through five different films one at a time.
-- Poster, backdrop, reaction photo, response text, feeling trace, and context change together.
-- The paper response card stays physically anchored while its contents change.
-- Use the original paper-card behavior: warm paper, internal metadata divider, compact type, small feeling trace, modest radius, slight rotation, and a hard offset shadow.
-- A full loop lasts 20 seconds. Each film has room to register before the next crossfade.
-- The trail demonstrates a response being saved, reaching another person, creating common ground, satisfying a feeling request across genre, and continuing through another response.
-- Never label a card “public response.” Visibility is ordinary entry state, not a selling point.
-- Show film and human diversity through time, never as a pile of simultaneous posters.
+Android will read the same file. `npm run tokens:check` runs in the web build and fails if a generated file is stale. Never edit a generated file, and never introduce a raw colour, size or radius in a component: add or reuse a token.
 
-The hero must not contain flying quotes, stars, particles, wavy lines, decorative circles, or multiple competing effects.
+Older stylesheets still use legacy names such as `--color-chalk` and `--color-oxide`. They now resolve to tokens in `src/index.css`. New rules use `--m-*` directly, and legacy names are removed as each screen is revisited.
 
-## Ambient field
+## Colour
 
-The page uses one continuous Mineral and Mist field from hero to final call to action. Dark Ink product frames carry the application demonstrations without turning the public canvas into a night theme.
+| Role | Light | Dark (screening room) | Use |
+| --- | --- | --- | --- |
+| canvas | `#F4F1EA` | `#0F1214` | The page. |
+| surface | `#FBF9F5` | `#181C1F` | Fields, cards, sheets. |
+| sunken | `#EAE6DD` | `#0A0C0E` | Wells and quiet secondary areas. |
+| ink | `#161D21` | `#EFEBE2` | Text, primary buttons, selection. |
+| inkSecondary | `#465056` | `#B4B8B6` | Supporting copy. |
+| inkMuted | `#626B70` | `#8C9294` | Metadata and labels. Lowest contrast allowed for text. |
+| rule / ruleStrong | `#DAD6CD` / `#B4B0A7` | `#2A2F33` / `#454B50` | Hairlines and control borders. |
+| accent | `#A63B2C` | `#E0705F` | One deliberate mark per screen: an active state, a single call to action. |
+| laurel | `#8F7437` | `#C9A961` | Rare. Reserved for honours and programme marks. |
+| inverse / onInverse | `#161D21` / `#F4F1EA` | reversed | A dark frame on the light canvas, used for one featured item. |
 
-- Large Oxide, Fig, Teal, and Blue light pools move slowly behind the page.
-- Motion is pronounced enough to make the page feel alive, but slow enough to remain peripheral.
-- Animate transform and opacity only. Do not animate blur or `backdrop-filter`.
-- Keep deterministic grain static and visible across the header, landing page, and footer.
-- Color is atmospheric. It must not become neon fog, gradient text, or a set of disconnected matte backgrounds.
+Rules:
 
-The hero and product environment share the same uninterrupted color and grain field. Do not insert an ink divider or decorative handoff between them.
-
-## Product overview
-
-The landing page shows four product surfaces in order.
-
-### Capture
-
-Show a real response composer with:
-
-- selected film;
-- freeform response;
-- manually adjusted feeling mix;
-- optional photo;
-- visibility state;
-- saved record summary.
-
-State the contract beside the demonstration: freeform input, seven temporary feeling signals, optional media, and visibility per response. Rewatches remain separate records.
-
-### Recommendations
-
-Show the recommendation chain in one product frame:
-
-- the visitor asks for a feeling, with genre left open;
-- Whiplash is the shared film;
-- the visitor and Ananya describe it in a similar way;
-- Ananya remains visible as the source;
-- Scream satisfies a happy request because her actual viewing was joyful.
-
-The recommendation reason should read like product state, not a narrated tutorial. Do not show match percentages, universal emotion rules, or genre translation.
-
-### People feed
-
-Show a dense response feed with film, person, note, feeling trace, and poster kept together. The selected connection inspector explains why a person entered the feed and allows that person to be followed directly.
-
-### History
-
-Show film history as an application table, not a notebook or diary prop. A row contains the viewing, the person’s own words, the feeling trace, and the date. A secondary panel may summarize recent response patterns, but it must describe a window of time rather than assign a permanent identity.
+- No gradients as decoration, in any hue. A gradient is allowed only as a scrim that keeps text legible over artwork.
+- The accent is a deep red, not a pink or coral. It never fills large areas and never tints a background.
+- Shadows are neutral ink at low opacity. No coloured or hard-offset shadows.
+- The dark theme is defined in tokens. iOS follows the system appearance. The web uses light until each screen has been checked in dark.
 
 ## Typography
 
-Newsreader is the expressive display face. Oxygen is the product and reading face.
+- **Display:** Newsreader. Film and show titles, page headings, the rare human moment. Titles may be set in italic where they appear inside a sentence.
+- **Interface and reading:** Instrument Sans on the web, the system face (SF) on iOS. Controls, notes, metadata.
+- **Mono:** the system monospace, for catalogue numbers and dates where alignment matters.
 
-- Use Newsreader for the hero headline, section headings, film titles in prominent cards, and rare human moments.
-- Use Oxygen for controls, specifications, response copy, metadata, and product frames.
-- Landing section headings should normally stop near 4.35rem. They share the viewport with the product, rather than becoming the entire viewport.
-- Interface copy stays compact but readable. Metadata may be small only when contrast and hierarchy remain clear.
-- Uppercase labels are reserved for short functional categories such as Input and Feelings.
+| Role | Size / line | Face |
+| --- | --- | --- |
+| display | 56 / 60 | Display |
+| title1 | 40 / 44 | Display |
+| title2 | 30 / 36 | Display |
+| title3 | 22 / 28 | Display |
+| body | 17 / 26 | Sans |
+| callout | 15 / 22 | Sans |
+| caption | 13 / 18 | Sans |
+| label | 11 / 14, uppercase, tracked 0.08em, semibold | Sans |
 
-## Material and depth
+iOS maps each role to a Dynamic Type style so text follows the reader's size setting. Uppercase labels are for short functional categories only.
 
-Most product surfaces are dark, thin-bordered, and flat enough to scan. Depth is selective.
+## Space, shape and depth
 
-- The hero response card owns the strongest hard offset shadow.
-- Posters may use a smaller hard offset shadow.
-- Product frames use one restrained long shadow and a thin inside highlight.
-- Avoid repeated floating cards, oversized radii, and generic glass tiles.
-- Grain stays below content and never reduces text clarity.
-
-## Navigation and footer
-
-- The public header is a stable 62px layer with Moodie, Sign in, and Sign up.
-- It does not change color by section because the landing field is continuous.
-- The mobile header uses the same dark state and a compact menu.
-- The signed-in product has no header. A fixed 64px rail is the only persistent navigation.
-- The rail stays collapsed by default and contains icons for Home, Search, People, Activity, Diary, and Add response.
-- Hovering or focusing within the rail opens one temporary 210px menu that reveals every item name. It cannot be pinned open.
-- Navigation icons sit at the vertical center of the rail, not at the top.
-- The collapsed rail is transparent over the same Chalk canvas and grain. It should read as icons placed directly on the page. Active and hover states use color only, with no persistent pill, dot, or circle.
-- Recommendations do not appear in the rail. They enter through responses, people, films, and the moment after saving a response.
-- The footer stays compact and contains only the required TMDB attribution.
+- Spacing steps: 4, 8, 12, 16, 24, 32, 48, 64, 96. Prefer more space to another divider.
+- Radius: posters 2, controls 6, surfaces 10. Corners are close to square. No pills except true toggles.
+- Depth is rare. Most surfaces are flat with a hairline. One soft neutral shadow may lift artwork.
+- Avoid repeated floating cards, glass tiles and oversized radii.
 
 ## Motion
 
-Motion should express continuity and lived activity.
+Motion is smooth and has a reason: it shows where something came from or went.
 
-- Lenis supplies restrained smooth scrolling on the public landing page only.
-- The hero uses one synchronized 20-second loop. Content changes in place through crossfades.
-- The ambient field and projector light move on separate 22 to 28 second cycles.
-- Do not stack entrance animations on the product demonstrations.
-- Hover motion is limited to a small lift or color change.
-- Grain remains static and continuous across the public shell.
-- `prefers-reduced-motion` stops ambient motion and keeps the first complete hero state visible.
+- Durations: 120 ms for state changes, 220 ms for most transitions, 420 ms for a change of scene. Ease out.
+- Animate transform and opacity only.
+- Nothing moves on its own. No ambient drift, no perpetual loops in the signed-in product.
+- `prefers-reduced-motion` and Reduce Motion remove non-essential movement.
 
-## Feeling language and color
+## Feelings
 
-The current seven keys remain a temporary implementation constraint:
+Feelings are words a person chose. Colour is a secondary cue and never stands alone: every feeling is shown with its label and has an accessible name. Never present a feeling as a percentage or a score. The seven keys and their hues in `design/tokens.json` are a scaffold until the vocabulary is redesigned (see the roadmap).
 
-- Stillness: Mineral and Ink
-- Joy: Oxide
-- Melancholy: Blue
-- Friction: deep Oxide
-- Tension: Fig
-- Unease: Teal
-- Wonder: Mist
+## Components and patterns
 
-Color never stands alone. Every feeling trace has a text label or accessible name. Do not encode emotion-to-genre rules.
+- **Response:** person, title, first-person note and feelings stay together. Never a media-first social card.
+- **Recommendation:** leads with the person and their reason. The shared film and both people's responses can be compared. No score.
+- **Choice cards** (see the onboarding AI choice): a numeral, a serif title, one-line summary, a ruled list. Selection is an ink border, not a colour fill.
+- **Primary action:** ink on canvas. The accent is for the one action that matters most on a screen, if any.
+- **Navigation, web:** a slim icon rail when signed in, with no header. A plain header with Moodie, Sign in and Sign up when signed out.
+- **Navigation, iOS:** system tab bar with Home, Search, People, Diary. Activity lives off Home, Account off Diary. Add a response is a sheet.
+- **Onboarding:** one decision per screen, with no navigation competing with it.
 
-## Signed-in product
+## Copy
 
-The signed-in application remains calmer and denser than the landing page.
+Use film, show, response, feelings, note, person, diary, follow, recommend literally. Describe what happens before explaining why. Keep the person and the source visible in every recommendation.
 
-Its background carries the broadcast identity through warm mineral, oxide, slate-blue, and muted gold light bleed, continuous grain, faint scanlines, and a soft edge vignette. Existing dark product surfaces may carry quieter scanlines. Do not add a television frame, controls, channel labels, or fake broadcast copy.
-
-- The response stream is the signed-in default and contains complete responses from people, newest first. It does not repeat the word Feed as a page title.
-- The For you view combines one leading recommendation, more recommended films, responses from followed people, connected people, community films, and saved films. It must feel useful for more than one interaction.
-- Feed items keep the person, film, note, feeling trace, and optional photo together. They do not use generic media-first social cards.
-- A recommendation appears as a journey moment inside the stream or after a response is saved. It leads with a person, the shared film that created the connection, the feelings both people recorded there, and the public response behind the recommended film. Both written responses to the shared film can be compared without exposing a score.
-- Following the moment opens a focused continuation. Recommendations are never framed as a utility destination in the primary navigation.
-- Add response starts with film selection, then words and direct feeling controls.
-- Diary keeps chronological responses editable and saved films in a separate view.
-- Diary supports search, visibility filters, rewatches, chronological grouping, and a recent-viewing feeling summary.
-- People cards keep the latest film and response beside the person, and name a shared film when one exists.
-- Search covers films, desired feelings, and people without becoming a streaming grid. Desired-feeling results stay people-led and keep genre open. Activity links likes, comments, and follows back to their source.
-- Member pages use separate Responses and Films views. They do not assign a compatibility score or a defining feeling to a person.
-- Film pages lead with the film, carry the person and shared-film context when reached through a recommendation, then separate human responses from related catalog browsing.
-- Account access uses the existing visual system. New accounts begin with an empty diary and a clear first-response action. Account contains profile, account, and password views.
-
-The landing page may preview these surfaces, but it must not force the full product into the landing layout.
-
-## Copy rules
-
-Use film, response, feelings, note, person, feed, diary, follow, like, comment, and recommendation literally. Reserve reaction for the optional expression photo attached to a viewing.
-
-Describe what the product does before explaining its philosophy. Use plain specifications where they help a visitor evaluate the product. Keep people and source films visible in recommendation reasons.
-
-Avoid invented feature names, marketing buzzwords, privacy theater, technical architecture copy, and claims that Moodie understands or diagnoses a person.
+Avoid invented feature names, marketing language, technical architecture in the interface, and any claim that Moodie understands, detects or diagnoses a person.
 
 ## Do not
 
-- Reintroduce EmotionFlix or any name ending in “flix.”
-- Build a streaming catalog as the landing page.
-- Use alternating full-screen matte sections.
-- Turn the page into a magazine cover or consulting presentation.
-- Use a notebook, diary paper, film strip, clapperboard, or decorative camera prop.
-- Add ratings, stars, genre profiles, compatibility percentages, or popularity-first recommendations.
-- Add animated headline lines, flying quotes, particles, decorative circles, or wave dividers.
-- Center visibility language inside response cards.
-- Hide first-person notes, feelings, people, or recommendation sources behind hover.
-- Use a colored or heavy left border as a mark on a box, quote, or callout. Use a full border, horizontal rule, background shift, or spacing instead.
+- Add gradient fields, glows, fog, scanlines, grain or coloured light of any kind.
+- Add ratings, stars, percentages, compatibility scores or popularity-first ranking.
+- Build a streaming-style catalog wall.
+- Use film strips, clapperboards, notebooks or other props as decoration.
+- Use a coloured left border as a mark on a box or quote.
+- Hide a person's note, feelings or the source of a recommendation behind hover.
+- Reintroduce the name EmotionFlix or anything ending in "flix".
+
+## Known gaps
+
+The landing page was composed around the removed ambient field and needs a new centre. Many signed-in web screens still carry legacy values, and the iOS screens are close to system defaults. The app icon and brand mark are placeholders. All of this is tracked in [docs/ROADMAP.md](docs/ROADMAP.md).

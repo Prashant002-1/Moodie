@@ -50,7 +50,7 @@
 .product-wordmark {
   width: fit-content;
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.22rem;
   font-weight: 400;
   letter-spacing: -0.03em;
@@ -100,7 +100,7 @@
 }
 
 .product-tab--active::after {
-  background: #d76358;
+  background: var(--m-color-accent);
 }
 
 .product-header__actions {
@@ -119,7 +119,7 @@
   justify-content: center;
   gap: 8px;
   border-radius: 8px;
-  background: #d76358;
+  background: var(--m-color-accent);
   color: #1d2b33;
   font-size: 0.72rem;
   font-weight: 700;
@@ -190,7 +190,7 @@
 .app-shell--product .page-title {
   max-width: 740px;
   color: #1d2b33;
-  font-family: 'Oxygen', sans-serif;
+  font-family: var(--m-font-sans);
   font-size: 2rem;
   font-weight: 400;
   letter-spacing: -0.035em;
@@ -243,7 +243,7 @@
   bottom: 2px;
   left: 10px;
   height: 1px;
-  background: #d76358;
+  background: var(--m-color-accent);
   content: '';
 }
 
@@ -262,7 +262,7 @@
 
 .app-shell--product .button--primary {
   border: 0;
-  background: #d76358;
+  background: var(--m-color-accent);
   color: #1d2b33;
 }
 
@@ -354,7 +354,7 @@
   bottom: 1px;
   left: 11px;
   height: 1px;
-  background: #d76358;
+  background: var(--m-color-accent);
   content: '';
 }
 
@@ -449,7 +449,7 @@
 .feed-response__poster:focus-visible img,
 .feed-response__poster:hover > span,
 .feed-response__poster:focus-visible > span {
-  box-shadow: 6px 7px 0 rgba(113, 59, 66, 0.25);
+  box-shadow: 0 1px 2px rgba(22, 29, 33, 0.12), 0 10px 28px rgba(22, 29, 33, 0.1);
   transform: translate(-2px, -3px);
 }
 
@@ -459,7 +459,7 @@
 
 .feed-response__copy h2 {
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.42rem;
   font-weight: 400;
   letter-spacing: -0.025em;
@@ -468,7 +468,7 @@
 
 .feed-response__copy h2 span {
   color: rgba(29, 43, 51, 0.48);
-  font-family: 'Oxygen', sans-serif;
+  font-family: var(--m-font-sans);
   font-size: 0.64rem;
   font-weight: 400;
   letter-spacing: 0;
@@ -796,7 +796,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #d76358;
+  background: var(--m-color-accent);
 }
 
 .recommendation-spotlight {
@@ -836,7 +836,7 @@
 .recommendation-spotlight__poster:focus-visible img,
 .recommendation-spotlight__poster:hover > span,
 .recommendation-spotlight__poster:focus-visible > span {
-  box-shadow: 12px 13px 0 rgba(113, 59, 66, 0.3);
+  box-shadow: 0 1px 2px rgba(22, 29, 33, 0.12), 0 10px 28px rgba(22, 29, 33, 0.1);
   transform: translate(-3px, -6px);
 }
 
@@ -845,7 +845,7 @@
 }
 
 .recommendation-spotlight__eyebrow {
-  color: #d76358;
+  color: var(--m-color-accent);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -855,7 +855,7 @@
 .recommendation-spotlight__story h2 {
   margin-top: 14px;
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(3rem, 7vw, 5.7rem);
   font-weight: 400;
   letter-spacing: -0.045em;
@@ -902,7 +902,7 @@
   margin-top: 8px;
   overflow: hidden;
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(1.2rem, 2.2vw, 1.65rem);
   line-height: 1.42;
   text-wrap: pretty;
@@ -942,7 +942,7 @@
 
 .recommendation-cold-start .product-empty h2 {
   max-width: 18ch;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(2rem, 4vw, 3.4rem);
   font-weight: 400;
   letter-spacing: -0.035em;
@@ -963,7 +963,7 @@
 }
 
 .recommendation-search .browse-section__heading h2 {
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(2.2rem, 5vw, 4rem);
   font-weight: 400;
 }
@@ -1031,7 +1031,7 @@
 }
 
 .app-shell--product .diary-entry h3 {
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.3rem;
   font-weight: 400;
 }
@@ -1186,7 +1186,7 @@
 
 .app-shell--product .member-hero h1 {
   color: #1d2b33;
-  font-family: 'Oxygen', sans-serif;
+  font-family: var(--m-font-sans);
   font-size: clamp(2.3rem, 4vw, 3.35rem);
   font-weight: 400;
   letter-spacing: -0.035em;
@@ -1269,7 +1269,7 @@
 
 .app-shell--product .member-entries .public-entry h3 {
   margin-top: 8px;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.38rem;
   font-weight: 400;
 }
@@ -1302,7 +1302,7 @@
 }
 
 .member-connections h2 {
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.42rem;
   font-weight: 500;
 }
@@ -1398,7 +1398,7 @@
 }
 
 .member-shared-card h2 {
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.65rem;
   font-weight: 500;
 }
@@ -1456,7 +1456,7 @@
   margin-top: 12px;
   overflow: hidden;
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.05rem;
   font-weight: 500;
   text-overflow: ellipsis;
@@ -1523,7 +1523,7 @@
 
 .app-shell--product .details-hero__title {
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(2.6rem, 5vw, 4.25rem);
   font-weight: 400;
   line-height: 0.98;

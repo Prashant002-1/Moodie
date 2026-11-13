@@ -1,29 +1,13 @@
 .app-shell--product {
   --product-rail-width: 64px;
-  --product-canvas: #e2d9c8;
+  --product-canvas: var(--m-color-canvas);
   min-height: 100vh;
   background-color: var(--product-canvas);
-  background-image:
-    radial-gradient(ellipse at 8% -4%, rgba(215, 99, 88, 0.3), transparent 34%),
-    radial-gradient(ellipse at 94% 12%, rgba(85, 120, 144, 0.28), transparent 36%),
-    radial-gradient(ellipse at 48% 108%, rgba(198, 151, 63, 0.22), transparent 43%),
-    linear-gradient(112deg, rgba(113, 59, 66, 0.08), rgba(244, 239, 233, 0.38) 43%, rgba(215, 99, 88, 0.09)),
-    var(--grain-image);
-  background-attachment: fixed;
-  background-position: center, center, center, center, 17px 23px;
-  background-size: auto, auto, auto, auto, 144px 144px;
-  background-blend-mode: normal, normal, normal, normal, soft-light;
+  background-image: none;
 }
 
 .app-shell--product::before {
-  display: block;
-  background-image:
-    repeating-linear-gradient(0deg, rgba(29, 43, 51, 0.026) 0, rgba(29, 43, 51, 0.026) 1px, transparent 1px, transparent 4px),
-    radial-gradient(ellipse at center, transparent 55%, rgba(29, 43, 51, 0.09) 115%);
-  background-position: center;
-  background-size: auto;
-  mix-blend-mode: multiply;
-  opacity: 0.72;
+  display: none;
 }
 
 .app-shell--product > main {
@@ -168,7 +152,7 @@
 .entry-composer__prompt {
   margin-bottom: 28px;
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(2.25rem, 5vw, 4.6rem);
   font-weight: 400;
   letter-spacing: -0.05em;
@@ -204,7 +188,7 @@
 .completion-journey__waiting p {
   max-width: 480px;
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(1.7rem, 4vw, 3rem);
   line-height: 1.05;
   text-align: center;
@@ -219,7 +203,7 @@
 
 .log-start-grid > section > h2 {
   margin-bottom: 14px;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.55rem;
   font-weight: 400;
 }
@@ -362,8 +346,8 @@
 }
 
 .film-response:target {
-  border-color: rgba(215, 99, 88, 0.48);
-  background: rgba(215, 99, 88, 0.045);
+  border-color: rgba(166, 59, 44, 0.48);
+  background: rgba(166, 59, 44, 0.045);
 }
 
 /* Signed-in depth */
@@ -416,7 +400,7 @@
 .activity-circle > h2,
 .search-start__pulse > h2 {
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.62rem;
   font-weight: 400;
   letter-spacing: -0.035em;
@@ -447,9 +431,7 @@
   overflow: hidden;
   min-height: 350px;
   border-radius: 16px;
-  background:
-    radial-gradient(circle at 92% 10%, rgba(215, 99, 88, 0.18), transparent 35%),
-    #1d2b33;
+  background: var(--m-color-inverse);
   color: #f8f3ec;
   grid-template-columns: 152px minmax(0, 1fr);
 }
@@ -492,7 +474,7 @@
 .path-card h3 {
   margin-top: 19px;
   color: #f8f3ec;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(1.8rem, 3vw, 2.75rem);
   font-weight: 400;
   letter-spacing: -0.045em;
@@ -663,7 +645,7 @@
 }
 
 .community-film-card h3 {
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.26rem;
   font-weight: 500;
   line-height: 1.05;
@@ -741,7 +723,7 @@
   border-radius: 0;
   background: transparent;
   color: #1d2b33;
-  font-family: 'Oxygen', sans-serif;
+  font-family: var(--m-font-sans);
   font-size: 0.8rem;
   letter-spacing: 0;
   outline: 0;
@@ -791,7 +773,7 @@
 .search-start__pulse > h1 {
   margin-bottom: 20px;
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.8rem;
   font-weight: 400;
   letter-spacing: -0.035em;
@@ -818,9 +800,7 @@
   padding: 0;
   border: 0;
   border-radius: 16px;
-  background:
-    radial-gradient(circle at 85% 8%, rgba(215, 99, 88, 0.2), transparent 35%),
-    #1d2b33;
+  background: var(--m-color-inverse);
   color: #f4efe9;
   grid-template-columns: minmax(180px, 0.85fr) minmax(0, 1.15fr);
 }
@@ -852,7 +832,7 @@
 
 .community-film-card--feature blockquote {
   margin-top: 26px;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.02rem;
   line-height: 1.55;
   -webkit-line-clamp: 5;
@@ -905,7 +885,7 @@
 
 .feeling-search h1 {
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(1.95rem, 3.2vw, 2.8rem);
   font-weight: 400;
   letter-spacing: -0.045em;
@@ -1005,7 +985,7 @@
 
 .search-film h2,
 .search-person h2 {
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.55rem;
   font-weight: 500;
   line-height: 1;
@@ -1154,7 +1134,7 @@
   margin-top: 10px;
   overflow: hidden;
   color: rgba(29, 43, 51, 0.58);
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 0.94rem;
   line-height: 1.4;
   -webkit-box-orient: vertical;
@@ -1216,7 +1196,7 @@
 .activity-circle__entry strong {
   display: block;
   margin-top: 3px;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1rem;
   font-weight: 500;
 }
@@ -1358,7 +1338,7 @@
 .diary-overview__feelings > strong {
   display: block;
   margin-top: 7px;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(1.45rem, 3vw, 2.3rem);
   font-weight: 400;
   grid-column: 1 / -1;
@@ -1471,7 +1451,7 @@
   margin-bottom: 12px;
   padding-top: 0;
   color: rgba(29, 43, 51, 0.58);
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.12rem;
   font-weight: 500;
 }
@@ -1609,7 +1589,7 @@
 }
 
 .people-row__latest > strong {
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.45rem;
   font-weight: 500;
 }
@@ -1846,7 +1826,7 @@
 }
 
 .film-feeling-distribution h2 {
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.28rem;
   font-weight: 500;
 }
@@ -2004,7 +1984,7 @@
   border: 1px solid rgba(29, 43, 51, 0.18);
   border-radius: 50%;
   color: #1d2b33;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 0.76rem;
 }
 
@@ -2161,12 +2141,7 @@
   min-height: 370px;
   border: 1px solid rgba(29, 43, 51, 0.16);
   border-radius: 28px;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.012) 50%, rgba(0, 0, 0, 0.021) 50%),
-    radial-gradient(circle at 16% 88%, rgba(85, 120, 144, 0.14), transparent 34%),
-    radial-gradient(circle at 82% 18%, rgba(215, 99, 88, 0.23), transparent 37%),
-    #1d2b33;
-  background-size: 100% 4px, auto, auto, auto;
+  background: var(--m-color-inverse);
   color: #f8f3ec;
   grid-template-columns: minmax(210px, 0.72fr) minmax(0, 1.28fr);
 }
@@ -2216,7 +2191,7 @@
 .journey-moment h2 {
   max-width: 630px;
   color: #f8f3ec;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(2.65rem, 6vw, 5.8rem);
   font-weight: 400;
   letter-spacing: -0.055em;
@@ -2233,7 +2208,7 @@
   max-width: 570px;
   margin-top: 32px;
   color: rgba(248, 243, 236, 0.88);
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(1.15rem, 2vw, 1.55rem);
   line-height: 1.35;
 }
@@ -2242,7 +2217,7 @@
   display: block;
   margin-bottom: 8px;
   color: rgba(248, 243, 236, 0.52);
-  font-family: 'Oxygen', sans-serif;
+  font-family: var(--m-font-sans);
   font-size: 0.6rem;
   font-style: normal;
   letter-spacing: 0.065em;
@@ -2315,7 +2290,7 @@
   border-radius: 9px;
   background: rgba(248, 243, 236, 0.035);
   color: rgba(248, 243, 236, 0.8);
-  font-family: 'Oxygen', sans-serif;
+  font-family: var(--m-font-sans);
   font-size: 0.7rem;
   line-height: 1.52;
 }

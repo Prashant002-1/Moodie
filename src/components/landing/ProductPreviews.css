@@ -1,17 +1,10 @@
 .mf-product-frame.moodie-preview {
   min-height: 650px;
   border-color: rgba(29, 43, 51, 0.23);
-  background-color: #e2d9c8;
-  background-image:
-    radial-gradient(ellipse at 4% 0%, rgba(215, 99, 88, 0.22), transparent 34%),
-    radial-gradient(ellipse at 96% 7%, rgba(85, 120, 144, 0.2), transparent 38%),
-    radial-gradient(ellipse at 52% 108%, rgba(198, 151, 63, 0.14), transparent 45%),
-    var(--grain-image);
-  background-position: center, center, center, 17px 23px;
-  background-size: auto, auto, auto, 144px 144px;
-  background-blend-mode: normal, normal, normal, soft-light;
+  background-color: var(--m-color-canvas);
+  background-image: none;
   color: #1d2b33;
-  box-shadow: 0 38px 90px rgba(29, 43, 51, 0.24);
+  box-shadow: 0 1px 0 var(--m-color-rule), 0 24px 60px rgba(22, 29, 33, 0.12);
   pointer-events: none;
 }
 
@@ -19,9 +12,7 @@
   position: absolute;
   z-index: 0;
   inset: 0;
-  background-image:
-    repeating-linear-gradient(0deg, rgba(29, 43, 51, 0.023) 0, rgba(29, 43, 51, 0.023) 1px, transparent 1px, transparent 4px),
-    radial-gradient(ellipse at center, transparent 58%, rgba(29, 43, 51, 0.07) 120%);
+  background-image: none;
   content: '';
   mix-blend-mode: multiply;
   pointer-events: none;
@@ -103,7 +94,7 @@
   bottom: 2px;
   left: 11px;
   height: 1px;
-  background: #d76358;
+  background: var(--m-color-accent);
   content: '';
 }
 
@@ -153,7 +144,7 @@
 }
 
 .moodie-capture-film > div strong {
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.32rem;
   font-weight: 500;
 }
@@ -185,7 +176,7 @@
 
 .moodie-capture-record > h3 {
   max-width: 9ch;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(2.2rem, 4vw, 3.55rem);
   font-weight: 400;
   letter-spacing: -0.05em;
@@ -375,7 +366,7 @@
 }
 
 .moodie-preview-sliders > span:nth-child(2) em {
-  background: #d76358;
+  background: var(--m-color-accent);
 }
 
 .moodie-preview-sliders > span:nth-child(3) em {
@@ -393,7 +384,7 @@
   margin: 13px 0 0 auto;
   padding: 8px 12px;
   border-radius: 8px;
-  background: #d76358;
+  background: var(--m-color-accent);
   color: #1d2b33;
   font-size: 0.62rem;
   font-weight: 700;
@@ -413,11 +404,7 @@
   overflow: hidden;
   border: 1px solid rgba(29, 43, 51, 0.16);
   border-radius: 20px;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.012) 50%, rgba(0, 0, 0, 0.021) 50%),
-    radial-gradient(circle at 82% 18%, rgba(215, 99, 88, 0.23), transparent 37%),
-    #1d2b33;
-  background-size: 100% 4px, auto, auto;
+  background: var(--m-color-inverse);
   color: #f8f3ec;
   grid-template-columns: minmax(210px, 0.52fr) minmax(0, 1.48fr);
 }
@@ -470,7 +457,7 @@
 
 .moodie-journey-moment__story > h3 {
   color: #f8f3ec;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(2.5rem, 4.5vw, 4.1rem);
   font-weight: 400;
   letter-spacing: -0.055em;
@@ -488,7 +475,7 @@
 .moodie-journey-moment__story > blockquote {
   align-self: center;
   color: rgba(248, 243, 236, 0.86);
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(0.9rem, 1.4vw, 1.12rem);
   line-height: 1.42;
   grid-area: response;
@@ -498,7 +485,7 @@
   display: block;
   margin-bottom: 8px;
   color: rgba(248, 243, 236, 0.48);
-  font-family: 'Oxygen', sans-serif;
+  font-family: var(--m-font-sans);
   font-size: 0.55rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -675,7 +662,7 @@
 }
 
 .moodie-feed-response__content h3 {
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.22rem;
   font-weight: 400;
   letter-spacing: -0.025em;
@@ -684,7 +671,7 @@
 
 .moodie-feed-response__content h3 span {
   color: rgba(29, 43, 51, 0.46);
-  font-family: 'Oxygen', sans-serif;
+  font-family: var(--m-font-sans);
   font-size: 0.55rem;
 }
 
@@ -789,7 +776,7 @@
 .moodie-diary-overview > div > strong {
   display: block;
   margin-top: 6px;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: clamp(1.25rem, 2.4vw, 2rem);
   font-weight: 400;
   white-space: nowrap;
@@ -823,7 +810,7 @@
 }
 
 .moodie-diary-overview > div > p i:nth-of-type(3) {
-  background: #d76358;
+  background: var(--m-color-accent);
 }
 
 .moodie-diary-overview > div > p i:nth-of-type(4) {
@@ -891,7 +878,7 @@
   bottom: 2px;
   left: 9px;
   height: 1px;
-  background: #d76358;
+  background: var(--m-color-accent);
   content: '';
 }
 
@@ -902,7 +889,7 @@
 .moodie-diary-year > h3 {
   margin-bottom: 9px;
   color: rgba(29, 43, 51, 0.55);
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 0.95rem;
   font-weight: 500;
 }
@@ -947,14 +934,14 @@
 
 .moodie-diary-entry__body h3 {
   margin-top: 6px;
-  font-family: 'Newsreader', serif;
+  font-family: var(--m-font-display);
   font-size: 1.16rem;
   font-weight: 500;
 }
 
 .moodie-diary-entry__body h3 span {
   color: rgba(29, 43, 51, 0.45);
-  font-family: 'Oxygen', sans-serif;
+  font-family: var(--m-font-sans);
   font-size: 0.52rem;
   font-weight: 400;
 }

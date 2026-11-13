@@ -5,15 +5,15 @@
 .suggestion-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--line, #1d2b3329); color: inherit; text-decoration: none; }
 .suggestion-row > div { min-width: 0; }
 .suggestion-row__person, .suggestion-byline { font-weight: 700; font-size: .9rem; }
-.suggestion-row h2 { font-family: var(--font-display, Newsreader, serif); font-size: 1.9rem; margin: 9px 0; line-height: 1.15; }
+.suggestion-row h2 { font-family: var(--m-font-display); font-size: 1.9rem; margin: 9px 0; line-height: 1.15; }
 .suggestion-row p { line-height: 1.65; margin: 8px 0 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .suggestion-row small { opacity: .75; }
 .suggestion-row img { width: 58px; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
 .suggestion-row:hover h2 { color: var(--oxide, #a94337); }
 .suggestion-film { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin: 24px 0; }
-.suggestion-film h1, .suggestion-film h2 { font-family: var(--font-display, Newsreader, serif); font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 10px; }
+.suggestion-film h1, .suggestion-film h2 { font-family: var(--m-font-display); font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 10px; }
 .suggestion-film img { width: 80px; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 3px; }
-.suggestion-detail__heading blockquote { font-family: var(--font-display, Newsreader, serif); font-size: 1.6rem; line-height: 1.5; margin: 24px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.suggestion-detail__heading blockquote { font-family: var(--m-font-display); font-size: 1.6rem; line-height: 1.5; margin: 24px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .suggestion-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
 .suggestion-next, .suggestion-shared-reply, .suggestion-conversation { border-top: 1px solid var(--line, #1d2b3329); padding: 28px 0; }
 .suggestion-next > .text-link, .suggestion-next > .suggestion-actions { margin-bottom: 14px; }
