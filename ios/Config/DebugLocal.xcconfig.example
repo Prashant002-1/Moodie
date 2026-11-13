@@ -1,0 +1,2 @@
+// Private AWS API through the Mac SSM tunnel. Simulator only.
+MOODIE_API_URL = http:/$()/127.0.0.1:3301/api

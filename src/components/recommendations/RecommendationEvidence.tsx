@@ -21,7 +21,7 @@ export function RecommendationEvidence({ connection, movieTitle, requestedFeelin
     <div className="recommendation-evidence">
       <p className="recommendation-evidence__title">Why this film</p>
       <dl>
-        <div><dt>You both responded to</dt><dd>{connection.shared_film_title}</dd></div>
+        <div><dt>You both responded to</dt><dd>{connection.shared_response_id ? <Link to={`/response/${connection.shared_response_id}`}>{connection.shared_film_title}</Link> : connection.shared_movie_id ? <Link to={`/movie/${connection.shared_movie_id}`}>{connection.shared_film_title}</Link> : connection.shared_film_title}</dd></div>
         {shared.length > 0 && <div><dt>Feelings you shared</dt><dd>{feelingList(shared)}</dd></div>}
         {requestedFeelings.length > 0 && <div><dt>You wanted</dt><dd>{feelingList(requestedFeelings)}</dd></div>}
         {response.length > 0 && <div><dt><Link to={`/member/${connection.username}`}>@{connection.username}</Link> felt after {movieTitle}</dt><dd>{feelingList(response)}</dd></div>}

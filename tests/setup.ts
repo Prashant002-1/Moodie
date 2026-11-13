@@ -6,7 +6,11 @@
  */
 
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { beforeEach, vi } from 'vitest';
+import { IDBFactory } from 'fake-indexeddb';
+
+// Exercise the browser adapter itself, with isolated databases for each test.
+beforeEach(() => { vi.stubGlobal('indexedDB', new IDBFactory()); });
 
 /**
  * Mock URL object methods for blob handling

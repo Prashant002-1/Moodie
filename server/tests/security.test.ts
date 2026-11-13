@@ -1,87 +1,46 @@
 import request from 'supertest';
-import express from 'express';
 import jwt from 'jsonwebtoken';
-import { jest } from '@jest/globals';
-import { authenticateToken, optionalAuthentication } from '../src/middleware/auth';
-import { createEntry } from '../src/controllers/diaryController';
+import app from '../src/app';
+import pool from '../src/config/database';
+import { newSession } from '../src/services/sessionService';
 
-describe('Current API security boundaries', () => {
-  const app = express();
+let cookie: string;
+beforeAll(async () => {
+  const user = await pool.query("INSERT INTO users (email, username, password_hash) VALUES ('security@example.test','security','unused') RETURNING id");
+  cookie = `moodie_session=${await newSession(user.rows[0].id)}`;
+});
+const post = (path: string) => request(app).post(path).set('Cookie', cookie).set('X-Moodie-Request', '1');
+const emotions = { neutral: 0, happy: 1, sad: 0, angry: 0, fearful: 0, disgusted: 0, surprised: 0 };
 
-  beforeAll(() => {
-    process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
-    app.use(express.json({ limit: '100kb' }));
-    app.get('/public', optionalAuthentication, (req, res) => res.json({ ok: true, user: (req as any).user || null }));
-    app.get('/private', authenticateToken, (req, res) => res.json({ user: (req as any).user }));
-    app.post('/diary', authenticateToken, createEntry);
+describe('Account and request boundaries', () => {
+  it('rejects a legacy demo JWT even when its signature is valid', async () => {
+    const response = await request(app).get('/api/diary').set('Authorization', `Bearer ${jwt.sign({ id: 1 }, 'emotionflix-local-development-secret')}`);
+    expect(response.status).toBe(401);
   });
-
-  it('keeps public discovery available without a token', async () => {
-    const response = await request(app).get('/public');
+  it('rejects missing, invalid, and expired sessions', async () => {
+    expect((await request(app).get('/api/diary')).status).toBe(401);
+    expect((await request(app).get('/api/diary').set('Cookie', 'moodie_session=invalid')).status).toBe(401);
+    const token = await newSession(1);
+    await pool.query('UPDATE sessions SET expires_at = CURRENT_TIMESTAMP - INTERVAL \'1 second\' WHERE token_hash = $1', [require('../src/services/sessionService').hashToken(token)]);
+    expect((await request(app).get('/api/diary').set('Cookie', `moodie_session=${token}`)).status).toBe(401);
+  });
+  it('requires the same-origin mutation header and rejects cross-site requests', async () => {
+    expect((await request(app).post('/api/auth/logout').set('Cookie', cookie)).status).toBe(403);
+    expect((await post('/api/auth/logout').set('Sec-Fetch-Site', 'cross-site')).status).toBe(403);
+  });
+  it('rejects incomplete, zero-feeling, and invalid-date diary records', async () => {
+    for (const body of [{ movieId: 12 }, { movieId: 12, watchedOn: '2026-07-10', emotions: { ...emotions, happy: 0 } }, { movieId: 12, watchedOn: '2026-02-30', emotions }]) {
+      expect((await post('/api/diary').send(body)).status).toBe(400);
+    }
+  });
+  it('rejects invalid photo bytes, oversized payloads, and malformed JSON', async () => {
+    expect((await post('/api/diary').send({ movieId: 12, watchedOn: '2026-07-10', emotions, expressionImage: 'data:image/png;base64,/9j/4AAQSkZJRg==' })).status).toBe(400);
+    expect((await post('/api/diary').send({ note: 'x'.repeat(3_200_000) })).status).toBe(413);
+    expect((await post('/api/diary').set('Content-Type', 'application/json').send('{oops')).status).toBe(400);
+  });
+  it('does not cache personal API responses', async () => {
+    const response = await request(app).get('/api/auth/me').set('Cookie', cookie);
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ ok: true, user: null });
-  });
-
-  it('rejects invalid optional-auth tokens instead of silently accepting them', async () => {
-    const response = await request(app).get('/public').set('Authorization', 'Bearer invalid');
-    expect(response.status).toBe(401);
-  });
-
-  it('requires a valid token for private diary routes', async () => {
-    const response = await request(app).get('/private');
-    expect(response.status).toBe(401);
-  });
-
-  it('attaches the authenticated identity to private requests', () => {
-    const token = jwt.sign({ id: 42, email: 'reader@test.com', username: 'reader' }, process.env.JWT_SECRET!);
-    const req = { headers: { authorization: `Bearer ${token}` } } as any;
-    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() } as any;
-    const next = jest.fn();
-    authenticateToken(req, res, next);
-    expect(next).toHaveBeenCalledTimes(1);
-    expect(req.user.id).toBe(42);
-  });
-
-  it('rejects incomplete diary records before any database write', async () => {
-    const token = jwt.sign({ id: 42, email: 'reader@test.com', username: 'reader' }, process.env.JWT_SECRET!);
-    const response = await request(app)
-      .post('/diary')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ movieId: 12, watchedOn: '2026-07-10', note: '<script>alert(1)</script>' });
-    expect(response.status).toBe(400);
-    expect(response.body.error).toBe('Invalid diary entry');
-  });
-
-  it('rejects expression image bytes that do not match the declared type before any database write', async () => {
-    const token = jwt.sign({ id: 42, email: 'reader@test.com', username: 'reader' }, process.env.JWT_SECRET!);
-    const response = await request(app)
-      .post('/diary')
-      .set('Authorization', `Bearer ${token}`)
-      .send({
-        movieId: 12,
-        watchedOn: '2026-07-10',
-        note: 'I felt unexpectedly hopeful.',
-        visibility: 'public',
-        emotions: {
-          neutral: 0.1,
-          happy: 0.7,
-          sad: 0.1,
-          angry: 0.02,
-          fearful: 0.02,
-          disgusted: 0.01,
-          surprised: 0.2,
-        },
-        expressionImage: 'data:image/png;base64,/9j/4AAQSkZJRg==',
-      });
-    expect(response.status).toBe(400);
-    expect(response.body.error).toBe('Invalid diary entry');
-  });
-
-  it('rejects payloads above the API limit', async () => {
-    const response = await request(app)
-      .post('/diary')
-      .set('Authorization', `Bearer ${jwt.sign({ id: 42 }, process.env.JWT_SECRET!)}`)
-      .send({ note: 'x'.repeat(150_000) });
-    expect(response.status).toBe(413);
+    expect(response.headers['cache-control']).toBe('no-store');
   });
 });

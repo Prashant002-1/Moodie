@@ -1,9 +1,8 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
-import { Navigate, useOutletContext } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import HeroIdentity from '../components/landing/HeroIdentity';
 import { CapturePreview, DiaryPreview, FeedPreview, RecommendationPreview } from '../components/landing/ProductPreviews';
-import { LayoutOutletContext } from '../components/layout/Layout';
 import { useUser } from '../contexts/UserContext';
 import { EmotionScores } from '../types/emotion';
 import { emotionColors, imageUrl } from '../utils/display';
@@ -138,7 +137,6 @@ const FeelingTrace: React.FC<{ label: string; scores?: Partial<EmotionScores> }>
 
 const Home: React.FC = () => {
   const { user } = useUser();
-  const { enterDemo, demoLoading } = useOutletContext<LayoutOutletContext>();
   const [loadedBeatCount, setLoadedBeatCount] = React.useState(1);
 
   React.useEffect(() => {
@@ -158,10 +156,7 @@ const Home: React.FC = () => {
 
       <section className="mf-hero" aria-labelledby="landing-title" data-nav-tone="dark">
         <div aria-hidden="true" className="mf-hero__projector" />
-        <HeroIdentity
-          demoLoading={demoLoading}
-          onEnterDemo={() => void enterDemo()}
-        />
+        <HeroIdentity />
 
         <div className="mf-hero__scene" aria-label="A film response moving from one person to another through Moodie">
           <p className="sr-only">
@@ -308,9 +303,7 @@ const Home: React.FC = () => {
           <p>Add how it felt. Moodie uses that response to recommend films through people with similar experiences.</p>
         </div>
         <div className="mf-final__actions">
-          <button className="mf-primary-action" disabled={demoLoading} onClick={() => void enterDemo()} type="button">
-            {demoLoading ? 'Opening demo' : 'Enter demo'}<ArrowRight size={18} />
-          </button>
+          <Link className="mf-primary-action" to="/signup">Sign up<ArrowRight size={18} /></Link>
         </div>
       </section>
     </div>

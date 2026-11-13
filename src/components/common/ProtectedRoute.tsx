@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
 import { LoadingSpinner } from './index';
 
@@ -23,18 +23,21 @@ interface ProtectedRouteProps {
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  fallbackPath = '/' 
+  fallbackPath = '/signin'
 }) => {
-  const { user, loading } = useUser();
+  const { user, loading, sessionError, refreshSession, deletionReceipt } = useUser();
+  const location = useLocation();
 
   // Show loading spinner while checking authentication
   if (loading) {
-    return <LoadingSpinner message="Opening demo" />;
+    return <LoadingSpinner message="Checking your session" />;
   }
+
+  if (sessionError) return <div className="product-empty" role="alert"><p>{sessionError}</p><button className="button button--secondary" onClick={() => void refreshSession()}>Retry</button></div>;
 
   // If not authenticated, don't render children
   if (!user) {
-    return <Navigate replace to={fallbackPath} />;
+    return <Navigate replace to={deletionReceipt ? '/account-deleted' : fallbackPath} state={{ from: location.pathname + location.search + location.hash }} />;
   }
 
   // If authenticated, render children

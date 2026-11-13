@@ -1,6 +1,6 @@
-import { ArrowUpRight, Bookmark } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useDiary } from '../../contexts/DiaryContext';
+import { KeepRecommendation } from '../suggestions/KeepRecommendation';
 import { EmotionScores } from '../../types/emotion';
 import { Movie } from '../../types/movie';
 import { imageUrl, releaseYear } from '../../utils/display';
@@ -13,19 +13,12 @@ interface DiscoveryPathCardProps {
 }
 
 export function DiscoveryPathCard({ movie, requestedFeelings = [] }: DiscoveryPathCardProps) {
-  const { isSaved, saveFilm, unsaveFilm } = useDiary();
   const person = movie.recommended_by?.[0];
   const poster = imageUrl(movie.poster_path, 'w342');
-  const saved = isSaved(movie.id);
 
   if (!person) return null;
 
-  const filmLink = `/movie/${movie.id}?from=${encodeURIComponent(person.username)}&through=${encodeURIComponent(person.shared_film_title)}`;
-
-  const toggleSaved = async () => {
-    if (saved) await unsaveFilm(movie.id);
-    else await saveFilm(movie.id);
-  };
+  const filmLink = `/movie/${movie.id}?from=${encodeURIComponent(person.username)}&through=${encodeURIComponent(person.shared_film_title)}#response-${person.response_id}`;
 
   return (
     <article className="path-card">
@@ -40,10 +33,7 @@ export function DiscoveryPathCard({ movie, requestedFeelings = [] }: DiscoveryPa
         {person.response_note && <blockquote><span className="path-card__response-label">@{person.username} on {movie.title}</span>“{person.response_note}”</blockquote>}
         <div className="path-card__actions">
           <Link to={filmLink}>Open <ArrowUpRight aria-hidden="true" size={15} /></Link>
-          <button aria-label={`${saved ? 'Remove' : 'Save'} ${movie.title}`} aria-pressed={saved} onClick={() => void toggleSaved()} type="button">
-            <Bookmark aria-hidden="true" fill={saved ? 'currentColor' : 'none'} size={15} />
-            {saved ? 'Saved' : 'Save'}
-          </button>
+          <KeepRecommendation entryId={person.response_id} authorId={person.id} movieId={movie.id} />
         </div>
       </div>
     </article>

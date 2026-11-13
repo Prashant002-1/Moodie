@@ -1,0 +1,812 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Moodie library and shared viewing reads",
+    "version": "1.0.0",
+    "description": "Shared authenticated read contract for SwiftUI and React. Filtering precedes pagination. See ../PLATFORM_ALIGNMENT.md for acceptance and growth boundaries."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "session": []
+    }
+  ],
+  "paths": {
+    "/api/diary/summary": {
+      "get": {
+        "operationId": "getDiarySummary",
+        "summary": "Authoritative owner totals and recent feelings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiarySummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Member unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Read failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Recent means CURRENT_DATE minus 29 through CURRENT_DATE, inclusive, using watched_on. Overall feelings can be null for an empty diary. Rewatches count all owner entries after the first per movie."
+      }
+    },
+    "/api/library/saved": {
+      "get": {
+        "operationId": "getSavedFilms",
+        "summary": "Page or search the saved library",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedFilmPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Member unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Read failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "New clients must supply limit. Omitting it preserves legacy all-films reads. Literal title search applies before LIMIT; order is created_at DESC, id DESC. Continuation offsets can shift when saves are added or removed; refresh after mutations and deduplicate appended IDs."
+      }
+    },
+    "/api/library/status": {
+      "get": {
+        "operationId": "getLibraryStatus",
+        "summary": "Read saved and viewing state for visible films",
+        "parameters": [
+          {
+            "name": "movieIds",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 1500,
+              "example": "101,102"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Member unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Read failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Comma-separated list of 1 to 100 positive integer movie IDs. Duplicates collapse. Reads only the authenticated owner. Missing or unseen IDs return saved=false and viewing_count=0. This is independent of the saved-film preview."
+      }
+    },
+    "/api/discovery/people/{username}/shared": {
+      "get": {
+        "operationId": "getSharedFilms",
+        "summary": "Page shared viewing evidence",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedFilmPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Member unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Read failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Default limit 30. Each film pairs the authenticated viewer latest viewing, including private notes, with the member latest visible public viewing. Date ties use created_at then id. Blocks in either direction and moderation apply before paging. Never cache this projection across accounts. This comparison is not an authored recommendation."
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "moodie_session"
+      }
+    },
+    "schemas": {
+      "DiarySummary": {
+        "type": "object",
+        "required": [
+          "entries",
+          "public_entries",
+          "rewatches",
+          "saved",
+          "neutral",
+          "happy",
+          "sad",
+          "angry",
+          "fearful",
+          "disgusted",
+          "surprised",
+          "recent"
+        ],
+        "properties": {
+          "entries": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "public_entries": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "rewatches": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "saved": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "neutral": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "happy": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sad": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "angry": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fearful": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "disgusted": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "surprised": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "recent": {
+            "type": "object",
+            "required": [
+              "entries",
+              "feelings"
+            ],
+            "properties": {
+              "entries": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "feelings": {
+                "type": "object",
+                "required": [
+                  "neutral",
+                  "happy",
+                  "sad",
+                  "angry",
+                  "fearful",
+                  "disgusted",
+                  "surprised"
+                ],
+                "properties": {
+                  "neutral": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "happy": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "sad": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "angry": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "fearful": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "disgusted": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "surprised": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SavedFilm": {
+        "type": "object",
+        "required": [
+          "id",
+          "movie_id",
+          "created_at",
+          "title",
+          "overview",
+          "release_date",
+          "poster_path",
+          "backdrop_path",
+          "genre_ids"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "movie_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "overview": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "release_date": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "poster_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "backdrop_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "genre_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      },
+      "SavedFilmPage": {
+        "type": "object",
+        "required": [
+          "films",
+          "nextOffset"
+        ],
+        "properties": {
+          "films": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SavedFilm"
+            }
+          },
+          "nextOffset": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      },
+      "FilmLibraryState": {
+        "type": "object",
+        "required": [
+          "id",
+          "saved",
+          "viewing_count"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "saved": {
+            "type": "boolean"
+          },
+          "viewing_count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "LibraryStatus": {
+        "type": "object",
+        "required": [
+          "films"
+        ],
+        "properties": {
+          "films": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/FilmLibraryState"
+            }
+          }
+        }
+      },
+      "SharedFilm": {
+        "type": "object",
+        "required": [
+          "id",
+          "ownEntry",
+          "personEntry"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "ownEntry": {
+            "type": "object",
+            "required": [
+              "id",
+              "movie_id",
+              "watched_on",
+              "note",
+              "neutral",
+              "happy",
+              "sad",
+              "angry",
+              "fearful",
+              "disgusted",
+              "surprised",
+              "visibility"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "movie_id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "watched_on": {
+                "type": "string",
+                "format": "date"
+              },
+              "note": {
+                "type": "string"
+              },
+              "neutral": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "happy": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "sad": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "angry": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "fearful": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "disgusted": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "surprised": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "visibility": {
+                "type": "string",
+                "enum": [
+                  "private",
+                  "public"
+                ]
+              }
+            }
+          },
+          "personEntry": {
+            "type": "object",
+            "required": [
+              "id",
+              "movie_id",
+              "watched_on",
+              "note",
+              "neutral",
+              "happy",
+              "sad",
+              "angry",
+              "fearful",
+              "disgusted",
+              "surprised",
+              "created_at",
+              "title",
+              "poster_path",
+              "release_date"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "movie_id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "watched_on": {
+                "type": "string",
+                "format": "date"
+              },
+              "note": {
+                "type": "string"
+              },
+              "neutral": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "happy": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "sad": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "angry": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "fearful": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "disgusted": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "surprised": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "poster_path": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "release_date": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "SharedFilmPage": {
+        "type": "object",
+        "required": [
+          "films",
+          "nextOffset"
+        ],
+        "properties": {
+          "films": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharedFilm"
+            }
+          },
+          "nextOffset": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

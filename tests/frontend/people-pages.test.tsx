@@ -1,0 +1,40 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import People from '../../src/pages/People';
+const mocks = vi.hoisted(() => ({ people: vi.fn(), follow: vi.fn(), unfollow: vi.fn(), refresh: vi.fn() }));
+vi.mock('../../src/contexts/UserContext', () => ({ useUser: () => ({ user: { id: 1 } }) }));
+vi.mock('../../src/contexts/DiaryContext', () => ({ useDiary: () => ({ revision: 0, refresh: mocks.refresh }) }));
+vi.mock('../../src/services/discoveryService', () => ({ discoveryService: { peoplePage: mocks.people, follow: mocks.follow, unfollow: mocks.unfollow } }));
+const person = { id: 2, username: 'friend', bio: '', following: true, latest_title: null, latest_movie_id: null, latest_poster_path: null, latest_note: null, shared_film_title: null };
+beforeEach(() => { vi.resetAllMocks(); mocks.people.mockResolvedValue({ people: [person], nextOffset: null }); });
+it('loads one scoped page and reaches older connections explicitly', async () => {
+  mocks.people.mockResolvedValueOnce({ people: [person], nextOffset: 30 }).mockResolvedValueOnce({ people: [{ ...person, id: 3, username: 'older' }], nextOffset: null });
+  render(<MemoryRouter><People /></MemoryRouter>);
+  await screen.findByRole('link', { name: '@friend' });
+  expect(mocks.people).toHaveBeenCalledTimes(1);
+  await userEvent.click(screen.getByRole('button', { name: 'More people' }));
+  expect(await screen.findByRole('link', { name: '@older' })).toHaveAttribute('href', '/member/older');
+  expect(mocks.people).toHaveBeenLastCalledWith({ scope: 'following', q: undefined, limit: 30, offset: 30 }, expect.any(AbortSignal));
+});
+it('sends search and Discover scope to the server and clears the old scope while loading', async () => {
+  render(<MemoryRouter><People /></MemoryRouter>);
+  await screen.findByRole('link', { name: '@friend' });
+  await userEvent.type(screen.getByRole('searchbox', { name: 'Search people' }), 'shared film');
+  await userEvent.click(screen.getByRole('button', { name: 'Search people' }));
+  await waitFor(() => expect(mocks.people).toHaveBeenLastCalledWith({ scope: 'following', q: 'shared film', limit: 30, offset: undefined }, expect.any(AbortSignal)));
+  mocks.people.mockReturnValueOnce(new Promise(() => undefined));
+  await userEvent.click(screen.getByRole('button', { name: 'Discover' }));
+  expect(screen.queryByRole('link', { name: '@friend' })).not.toBeInTheDocument();
+  await waitFor(() => expect(mocks.people).toHaveBeenLastCalledWith({ scope: 'discover', q: 'shared film', limit: 30, offset: undefined }, expect.any(AbortSignal)));
+});
+it('retains a failed follow action and invalidates related reads only after success', async () => {
+  mocks.unfollow.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(undefined);
+  render(<MemoryRouter><People /></MemoryRouter>);
+  const button = await screen.findByRole('button', { name: 'Unfollow @friend' });
+  await userEvent.click(button);
+  expect(await screen.findByRole('alert')).toHaveTextContent('This connection could not be updated');
+  expect(mocks.refresh).not.toHaveBeenCalled();
+  await userEvent.click(button);
+  await waitFor(() => expect(mocks.refresh).toHaveBeenCalledTimes(1));
+});

@@ -1,3 +1,5 @@
+import { getResponse, getPersonConnections } from '../controllers/discoveryController';
+import { getSharedFilms } from '../controllers/sharedFilmsController';
 import express from 'express';
 import { addEntryComment, deleteEntryComment, getActivity, getCommunityPulse, getEntryComments, getFeed, getFilmEntries, getPeople, getPersonProfile, followPerson, likeEntry, removeLike, unfollowPerson } from '../controllers/discoveryController';
 import { authenticateToken, optionalAuthentication } from '../middleware/auth';
@@ -8,6 +10,8 @@ router.get('/activity', authenticateToken, getActivity);
 router.get('/pulse', optionalAuthentication, getCommunityPulse);
 router.get('/films/:movieId', optionalAuthentication, getFilmEntries);
 router.get('/people', optionalAuthentication, getPeople);
+router.get('/people/:username/connections', optionalAuthentication, getPersonConnections);
+router.get('/people/:username/shared', authenticateToken, getSharedFilms);
 router.get('/people/:username', optionalAuthentication, getPersonProfile);
 router.post('/people/:personId/follow', authenticateToken, followPerson);
 router.delete('/people/:personId/follow', authenticateToken, unfollowPerson);
@@ -16,5 +20,7 @@ router.delete('/entries/:entryId/like', authenticateToken, removeLike);
 router.get('/entries/:entryId/comments', optionalAuthentication, getEntryComments);
 router.post('/entries/:entryId/comments', authenticateToken, addEntryComment);
 router.delete('/comments/:commentId', authenticateToken, deleteEntryComment);
+
+router.get('/entries/:entryId', optionalAuthentication, getResponse);
 
 export default router;

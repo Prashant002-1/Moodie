@@ -1,7 +1,7 @@
 # ADR 0001: Product data, AWS deployment, and model-independent AI
 
 Date: 2026-09-25  
-Status: Accepted for application boundaries; AWS service selection and provisioning remain deferred.  
+Status: Accepted for application boundaries. October 1 implementation update: private EC2 and RDS PostgreSQL are provisioned; application deployment is pending. See [current AWS evidence](../AWS_DEVELOPMENT_VERIFICATION.md).
 Scope: Moodie's existing film product, native iPhone app, web app, and shared API.
 
 ## Decision
@@ -76,7 +76,7 @@ flowchart TD
 
 The diagram mixes implemented application boundaries with explicitly marked future infrastructure. It is not a deployment diagram of a running AWS environment.
 
-The later deployment review should start with managed PostgreSQL, containerized API/worker processes, private object storage and a queue. Likely AWS mappings are RDS PostgreSQL, ECS/Fargate, S3 and SQS, plus CloudFront for eligible static/media delivery. These are candidates, not provisioned choices or a cost commitment. [RDS PostgreSQL](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html) is the direct relational fit; evaluate Aurora, Lambda or other alternatives against available resources, traffic, connection handling and budget. No need to introduce EKS, Kafka, DynamoDB, Neptune or a vector database without a demonstrated requirement.
+For the September architecture review, the deployment candidates were managed PostgreSQL, containerized API/worker processes, private object storage and a queue. The October single-developer implementation selects EC2 plus RDS; object storage and queues remain future choices. Likely AWS mappings are RDS PostgreSQL, ECS/Fargate, S3 and SQS, plus CloudFront for eligible static/media delivery. These are candidates, not provisioned choices or a cost commitment. [RDS PostgreSQL](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html) is the direct relational fit; evaluate Aurora, Lambda or other alternatives against available resources, traffic, connection handling and budget. No need to introduce EKS, Kafka, DynamoDB, Neptune or a vector database without a demonstrated requirement.
 
 Keep authoritative writes synchronous. When a committed change must trigger work, write an outbox record in the same transaction and deliver it asynchronously. Use event IDs, aggregate/version IDs, retry budgets and idempotent consumers. Do not promise exactly-once business effects merely because a queue deduplicates messages. [AWS's transactional outbox guidance](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html) explains the database/message dual-write failure this avoids. We are not adopting event sourcing as the source of truth.
 

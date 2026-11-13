@@ -12,6 +12,7 @@ interface ManualEmotionInputProps {
   heading?: string;
   description?: string;
   submitLabel?: string;
+  disabled?: boolean;
 }
 
 const EMPTY_SCORES: EmotionScores = {
@@ -33,6 +34,7 @@ const ManualEmotionInput: React.FC<ManualEmotionInputProps> = ({
   heading = 'What did you feel?',
   description = 'Raise the feelings that belong to this viewing. They do not need to add up to 100%.',
   submitLabel = 'Use these feelings',
+  disabled = false,
 }) => {
   const [emotions, setEmotions] = useState<EmotionScores>(initialScores || EMPTY_SCORES);
 
@@ -55,7 +57,7 @@ const ManualEmotionInput: React.FC<ManualEmotionInputProps> = ({
         ))}
       </div>
       {showSubmitButton && (
-        <button className="button button--primary" disabled={Object.values(emotions).every(value => value === 0)} onClick={() => onSubmit?.(emotions)} type="button">{submitLabel}</button>
+        <button className="button button--primary" disabled={disabled || Object.values(emotions).every(value => value === 0)} onClick={() => onSubmit?.(emotions)} type="button">{submitLabel}</button>
       )}
     </div>
   );

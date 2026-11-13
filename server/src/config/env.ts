@@ -10,9 +10,6 @@ export const projectRoot = process.env.VERCEL
 dotenv.config({ path: path.join(projectRoot, '.env'), quiet: true });
 dotenv.config({ path: path.join(projectRoot, 'server/.env'), quiet: true });
 
-process.env.JWT_SECRET ||= 'emotionflix-local-development-secret';
-process.env.JWT_EXPIRES_IN ||= '7d';
-
 const configuredDatabasePath = process.env.DATABASE_PATH
   || (process.env.VERCEL ? 'memory://' : '.data/emotionflix');
 const configuredSnapshotPath = process.env.DATABASE_SNAPSHOT_PATH
@@ -21,6 +18,12 @@ const configuredSnapshotPath = process.env.DATABASE_SNAPSHOT_PATH
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 3001),
+  databaseDriver: process.env.DATABASE_DRIVER || 'embedded',
+  databaseUrl: process.env.DATABASE_URL || '',
+  databaseSslMode: process.env.DATABASE_SSL_MODE || 'verify-full',
+  databaseCaPath: process.env.DATABASE_CA_PATH || '',
+  databaseTlsServername: process.env.DATABASE_TLS_SERVERNAME || '',
+  databasePoolSize: Number(process.env.DATABASE_POOL_SIZE || 5),
   databasePath: configuredDatabasePath === 'memory://'
     ? configuredDatabasePath
     : path.resolve(projectRoot, configuredDatabasePath),

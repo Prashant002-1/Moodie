@@ -5,6 +5,7 @@ import { Movie } from '../../types/movie';
 import { imageUrl, releaseYear } from '../../utils/display';
 import BrandMark from '../brand/BrandMark';
 import { RecommendationEvidence } from './RecommendationEvidence';
+import { KeepRecommendation } from '../suggestions/KeepRecommendation';
 
 interface RecommendationSpotlightProps {
   movie: Movie;
@@ -19,7 +20,7 @@ export function RecommendationSpotlight({ movie, compact = false, requestedFeeli
 
   if (!person) return null;
 
-  const filmLink = `/movie/${movie.id}?from=${encodeURIComponent(person.username)}&through=${encodeURIComponent(person.shared_film_title)}`;
+  const filmLink = `/movie/${movie.id}?from=${encodeURIComponent(person.username)}&through=${encodeURIComponent(person.shared_film_title)}#response-${person.response_id}`;
 
   return (
     <section className={`journey-moment${compact ? ' journey-moment--compact' : ''}`} aria-labelledby={`recommendation-${movie.id}`}>
@@ -38,6 +39,7 @@ export function RecommendationSpotlight({ movie, compact = false, requestedFeeli
         )}
         <div className="journey-moment__actions">
           <Link className="journey-moment__open" to={filmLink}>Open film <ArrowUpRight aria-hidden="true" size={15} /></Link>
+          <KeepRecommendation entryId={person.response_id} authorId={person.id} movieId={movie.id} />
           {showAllLink && <Link className="journey-moment__continue" to="/recommendations">See recommendations</Link>}
         </div>
       </div>

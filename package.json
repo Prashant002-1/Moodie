@@ -11,11 +11,15 @@
     "node": ">=20 <26"
   },
   "scripts": {
+    "contracts:generate": "npm run contracts:suggestions && npm run contracts:library && npm run contracts:social",
+    "contracts:suggestions": "openapi-typescript docs/api/suggestions.openapi.json -o src/types/generated/suggestions.d.ts",
+    "contracts:library": "openapi-typescript docs/api/library.openapi.json -o src/types/generated/library.d.ts",
+    "contracts:check": "npm run contracts:suggestions -- --check && npm run contracts:library -- --check && npm run contracts:social -- --check",
     "dev": "concurrently --kill-others --names web,api \"npm:dev:web\" \"npm:dev:api\"",
     "dev:web": "vite",
     "dev:api": "npm --workspace server run dev",
     "build": "npm run build:web && npm run build:api",
-    "build:web": "tsc -b && vite build",
+    "build:web": "npm run contracts:check && tsc -b && vite build",
     "build:api": "npm --workspace server run build",
     "start": "npm --workspace server run start",
     "seed": "npm --workspace server run seed",
@@ -32,7 +36,12 @@
     "test:security": "vitest run --testNamePattern=\"Security\"",
     "test:coverage:full": "npm run test:coverage && npm --workspace server run test:coverage",
     "test:watch:all": "concurrently \"npm run test:watch\" \"npm --workspace server run test:watch\"",
-    "test:report": "npm run test:coverage:full && echo 'Test results updated in TESTING.md'"
+    "test:report": "npm run test:coverage:full && echo 'Test results updated in TESTING.md'",
+    "test:production": "node scripts/production-smoke.mjs",
+    "catalog:import": "npm --workspace server run catalog:import",
+    "recommendations:evaluate": "npm run build --workspace server && node server/dist/scripts/evaluateRecommendations.js",
+    "contracts:social": "openapi-typescript docs/api/social.openapi.json -o src/types/generated/social.d.ts",
+    "test:platform": "npm run build && node scripts/verify-platform-continuity.mjs"
   },
   "dependencies": {
     "@fontsource/newsreader": "^5.2.10",
@@ -60,8 +69,10 @@
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.19",
+    "fake-indexeddb": "6.2.5",
     "globals": "^15.15.0",
     "jsdom": "^26.1.0",
+    "openapi-typescript": "7.13.0",
     "postcss": "^8.5.6",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",

@@ -1,12 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
-interface HeroIdentityProps {
-  demoLoading: boolean;
-  onEnterDemo: () => void;
-}
-
-const HeroIdentity: React.FC<HeroIdentityProps> = ({ demoLoading, onEnterDemo }) => (
+const HeroIdentity: React.FC = () => (
   <div className="mf-hero-copy">
     <p className="mf-hero-copy__eyebrow">A social film journal and recommendation system</p>
     <div className="mf-hero-copy__statement">
@@ -17,9 +13,7 @@ const HeroIdentity: React.FC<HeroIdentityProps> = ({ demoLoading, onEnterDemo })
     </div>
 
     <div className="mf-hero-copy__actions">
-      <button className="mf-primary-action" disabled={demoLoading} onClick={onEnterDemo} type="button">
-        {demoLoading ? 'Opening demo' : 'Enter demo'}<ArrowRight size={18} />
-      </button>
+      <Link className="mf-primary-action" to="/signup">Sign up<ArrowRight size={18} /></Link>
     </div>
   </div>
 );

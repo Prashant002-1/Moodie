@@ -1,14 +1,15 @@
 import apiClient from './apiClient';
-import { DiaryEntry, DiaryEntryInput, DiarySummary, SavedFilm } from '../types/diary';
+import { DiaryEntry, DiaryEntryChanges, DiaryEntryInput, DiarySummary, FilmLibraryState, SavedFilm } from '../types/diary';
+
+export interface DiaryQuery { q?: string; visibility?: 'private' | 'public'; movieId?: number; limit?: number; offset?: number }
+export interface DiaryPage { entries: DiaryEntry[]; nextOffset: number | null }
 
 export const diaryService = {
-  async entries(limit = 60): Promise<DiaryEntry[]> {
-    const response = await apiClient.get('/diary', { params: { limit } });
-    return response.data.entries;
+  async page(params: DiaryQuery = {}, signal?: AbortSignal): Promise<DiaryPage> {
+    return (await apiClient.get<DiaryPage>('/diary', { params, signal })).data;
   },
-
-  async summary(): Promise<DiarySummary> {
-    const response = await apiClient.get('/diary/summary');
+  async summary(signal?: AbortSignal): Promise<DiarySummary> {
+    const response = await apiClient.get('/diary/summary', { signal });
     return response.data;
   },
 
@@ -17,7 +18,7 @@ export const diaryService = {
     return response.data.entry;
   },
 
-  async update(entryId: number, changes: Partial<Omit<DiaryEntryInput, 'movieId'>>): Promise<DiaryEntry> {
+  async update(entryId: number, changes: DiaryEntryChanges): Promise<DiaryEntry> {
     const response = await apiClient.patch(`/diary/${entryId}`, changes);
     return response.data.entry;
   },
@@ -26,9 +27,12 @@ export const diaryService = {
     await apiClient.delete(`/diary/${entryId}`);
   },
 
-  async saved(): Promise<SavedFilm[]> {
-    const response = await apiClient.get('/library/saved');
-    return response.data.films;
+  async savedPage(params: Pick<DiaryQuery, 'q' | 'limit' | 'offset'> = {}, signal?: AbortSignal): Promise<{ films: SavedFilm[]; nextOffset: number | null }> {
+    return (await apiClient.get('/library/saved', { params: { limit: 30, ...params }, signal })).data;
+  },
+
+  async status(movieIds: number[], signal?: AbortSignal): Promise<FilmLibraryState[]> {
+    return (await apiClient.get('/library/status', { params: { movieIds: movieIds.join(',') }, signal })).data.films;
   },
 
   async save(movieId: number): Promise<void> {

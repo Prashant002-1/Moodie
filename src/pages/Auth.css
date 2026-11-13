@@ -1,0 +1,23 @@
+.auth-page { min-height: 75vh; display: grid; place-items: center; padding: 110px 24px 64px; }
+.auth-card { width: min(100%, 460px); display: grid; gap: 22px; padding: 32px; background: var(--chalk, #f4efe9); border: 1px solid rgba(29,43,51,.2); border-radius: 12px; }
+.auth-card h1, .account-page h1 { margin: 0; font-family: Newsreader, serif; font-size: 2.6rem; }
+.auth-card p { margin: 0; line-height: 1.6; }
+.auth-card .field { display: grid; gap: 8px; }
+.auth-links { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; font-size: .9rem; }
+.auth-links a { text-decoration: underline; }
+.recovery-code { display: block; overflow-wrap: anywhere; padding: 18px; border: 1px solid rgba(29,43,51,.25); line-height: 1.7; user-select: all; }
+.auth-check { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.account-page { max-width: 820px; }
+.account-form { display: grid; gap: 24px; max-width: 560px; margin-top: 30px; }
+.account-form .field { display: grid; gap: 8px; }
+.account-form .button { justify-self: start; }
+.safety-actions { margin-block: 12px; font-size: .875rem; }
+.safety-actions summary { cursor: pointer; padding-block: 10px; }
+.safety-actions__body { display: grid; justify-items: start; gap: 14px; padding-block: 12px; max-width: 540px; }
+.blocked-people article { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-block: 16px; border-bottom: 1px solid currentColor; }
+.policy-page p { max-width: 65ch; line-height: 1.7; margin-block: 20px; }
+.people-header form { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.people-header form .people-search { min-width: 0; flex: 1 1 200px; }
+.account-facts { display: flex; gap: 30px; }
+.account-facts dd { margin: 8px 0; font-size: 1.4rem; }
+@media (max-width: 560px) { .auth-card { padding: 24px; } }

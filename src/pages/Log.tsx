@@ -1,245 +1,276 @@
-import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ImagePlus, Search, X } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
-import ManualEmotionInput from '../components/features/emotion/ManualEmotionInput';
-import { RecommendationSpotlight } from '../components/recommendations/RecommendationSpotlight';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ImagePlus, X } from 'lucide-react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 import { useDiary } from '../contexts/DiaryContext';
 import { catalogService } from '../services/catalogService';
 import { discoveryService } from '../services/discoveryService';
+import { suggestionService } from '../services/suggestionService';
 import { recommendationService } from '../services/recommendationService';
-import { DiaryVisibility, savedFilmMovie } from '../types/diary';
-import { EmotionScores } from '../types/emotion';
+import { apiError } from '../services/apiClient';
+import { DraftUnreadable, ResponseDraftSession, responseDraftStore, StoredResponseDraft } from '../services/responseDraftStore';
+import { useDraftAutosave } from '../hooks/useDraftAutosave';
+import { DraftFilm, ResponseDraft, draftFromResponse, localDay, newResponseDraft, responseDraftInput } from '../types/responseDraft';
+import { DiaryEntry } from '../types/diary';
+import { FilmSuggestion } from '../types/suggestion';
 import { Movie } from '../types/movie';
 import { imageUrl, releaseYear } from '../utils/display';
+import { prepareExpressionPhoto } from '../utils/expressionPhoto';
+import { FilmPicker } from '../components/diary/FilmPicker';
+import { FeelingChoices } from '../components/diary/FeelingChoices';
+import { AttributionPicker } from '../components/diary/AttributionPicker';
+import { ResponseDetailInputs, ResponseDetails } from '../components/diary/ResponseDetails';
+import { RecommendationSpotlight } from '../components/recommendations/RecommendationSpotlight';
 
-type Step = 'search' | 'entry' | 'done';
+interface ComposerRequest { movieId?: number; entryId?: number; suggestionId?: number }
+interface DraftChoice { stored: StoredResponseDraft; incoming: ResponseDraft | null }
 
-const prepareExpressionPhoto = async (file: File): Promise<string> => {
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Choose a JPEG, PNG, or WebP image.');
-  if (file.size > 8 * 1024 * 1024) throw new Error('Choose an image smaller than 8 MB.');
+export default function Log() {
+  const { user } = useUser();
+  const [params] = useSearchParams();
+  const location = useLocation();
+  if (!user) return null;
+  return <ResponseComposer key={`${user.id}:${location.key}`} ownerId={user.id} request={{
+    movieId: Number(params.get('movieId')) || undefined,
+    entryId: Number(params.get('entryId')) || undefined,
+    suggestionId: Number(params.get('suggestionId')) || undefined,
+  }} />;
+}
 
-  const source = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('The image could not be read.'));
-    reader.readAsDataURL(file);
-  });
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const next = new window.Image();
-    next.onload = () => resolve(next);
-    next.onerror = () => reject(new Error('The image could not be opened.'));
-    next.src = source;
-  });
-  const scale = Math.min(1, 1200 / image.naturalWidth, 1500 / image.naturalHeight);
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('The image could not be prepared.');
-  context.drawImage(image, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', 0.82);
-};
-
-const Log: React.FC = () => {
-  const { createEntry, savedFilms } = useDiary();
-  const [searchParams] = useSearchParams();
-  const [step, setStep] = useState<Step>('search');
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Movie[]>([]);
-  const [recentFilms, setRecentFilms] = useState<Movie[]>([]);
-  const [selected, setSelected] = useState<Movie | null>(null);
-  const [note, setNote] = useState('');
-  const [watchedOn, setWatchedOn] = useState(new Date().toISOString().slice(0, 10));
-  const [visibility, setVisibility] = useState<DiaryVisibility>('private');
-  const [expressionImage, setExpressionImage] = useState<string | null>(null);
-  const [nextFilm, setNextFilm] = useState<Movie | null>(null);
-  const [photoError, setPhotoError] = useState('');
-  const [searching, setSearching] = useState(false);
+function ResponseComposer({ ownerId, request }: { ownerId: number; request: ComposerRequest }) {
+  const navigate = useNavigate();
+  const { createEntry, updateEntry } = useDiary();
+  const [draft, setDraft] = useState<ResponseDraft | null>(null);
+  const [session, setSession] = useState<ResponseDraftSession | null>(null);
+  const [choice, setChoice] = useState<DraftChoice | null>(null);
+  const [revision, setRevision] = useState(0);
+  const [opening, setOpening] = useState(true);
+  const [choosingFilm, setChoosingFilm] = useState(false);
+  const [closeChoice, setCloseChoice] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [photoPreparing, setPhotoPreparing] = useState(false);
   const [error, setError] = useState('');
+  const [storageError, setStorageError] = useState('');
+  const [unreadable, setUnreadable] = useState<DraftUnreadable | null>(null);
+  const [savedEntry, setSavedEntry] = useState<DiaryEntry | null>(null);
+  const [nextFilm, setNextFilm] = useState<Movie | null>(null);
+  const [discoveryLoading, setDiscoveryLoading] = useState(false);
+  const [discoveryError, setDiscoveryError] = useState('');
+  const closed = useRef(false);
+  const resumed = useRef(false);
+  const mounted = useRef(true);
+  const auto = useDraftAutosave(session, draft, !savedEntry && !closed.current);
+  const { movieId, entryId, suggestionId } = request;
 
   useEffect(() => {
-    const movieId = Number(searchParams.get('movieId'));
-    if (!movieId) return;
-    catalogService.movie(movieId)
-      .then(movie => { setSelected(movie); setStep('entry'); })
-      .catch(() => setError('That film could not be loaded. Search for it below.'));
-  }, [searchParams]);
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   useEffect(() => {
     let active = true;
-    discoveryService.pulse()
-      .then(films => {
+    const controller = new AbortController();
+    setOpening(true); setError(''); setUnreadable(null); resumed.current = false;
+    const incoming = async () => {
+      if (entryId) {
+        const entry = await discoveryService.response(entryId, controller.signal);
+        if (entry.user_id !== ownerId) throw new Error('Only your own responses can be edited.');
+        return draftFromResponse(entry);
+      }
+      const film = movieId ? await catalogService.movie(movieId) : null;
+      const value = newResponseDraft(film ? { id: film.id, title: film.title, poster_path: film.poster_path ?? null, release_date: film.release_date ?? '' } : null);
+      if (suggestionId) {
+        const suggestion = await suggestionService.get(suggestionId, controller.signal);
+        if (suggestion.recipient_id !== ownerId || suggestion.movie_id !== film?.id) throw new Error('This recommendation does not match your viewing.');
+        value.suggestionId = suggestion.id;
+        value.suggestionName = suggestion.sender_username;
+      }
+      return value;
+    };
+    const open = async () => {
+      const stored = await responseDraftStore.read(ownerId);
+      if (!active) return;
+      if (stored && (movieId || entryId || suggestionId)) {
+        // Recovery stays available even if the newly requested film is offline.
+        setChoice({ stored, incoming: null }); setOpening(false);
+        const value = await incoming();
+        if (active) setChoice(current => current ? { stored, incoming: value } : null);
+      } else {
+        const value = stored?.draft ?? await incoming();
         if (!active) return;
-        setRecentFilms(films.slice(0, 8).map(film => ({
-          id: film.movie_id,
-          title: film.title,
-          overview: film.overview,
-          release_date: film.release_date,
-          poster_path: film.poster_path,
-          backdrop_path: film.backdrop_path,
-          genre_ids: [],
-          popularity: 0,
-          vote_average: 0,
-          vote_count: 0,
-        })));
-      })
-      .catch(() => undefined);
-    return () => { active = false; };
-  }, []);
+        setDraft(value);
+        setSession(new ResponseDraftSession(ownerId, stored?.revision ?? null, stored?.draft ?? null));
+      }
+    };
+    open().catch(error => {
+      if (active && !resumed.current) {
+        setError(apiError(error, error instanceof Error ? error.message : 'Your response could not be opened.'));
+        if (error instanceof DraftUnreadable) setUnreadable(error);
+      }
+    }).finally(() => { if (active) setOpening(false); });
+    return () => { active = false; controller.abort(); };
+  }, [ownerId, movieId, entryId, suggestionId, revision]);
 
-  const search = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!query.trim()) return;
-    setSearching(true);
-    setError('');
-    try {
-      const response = await catalogService.search(query.trim());
-      setResults(response.results.filter(movie => movie.poster_path).slice(0, 10));
-    } catch {
-      setError('Film search could not be loaded right now. Try again shortly.');
-    } finally {
-      setSearching(false);
-    }
+  const update = useCallback((changes: Partial<ResponseDraft>) => setDraft(current => current ? { ...current, ...changes } : current), []);
+  const chooseAttribution = useCallback((item: FilmSuggestion | null) => update({ suggestionId: item?.id, suggestionName: item?.sender_username }), [update]);
+  const chooseFilm = (film: DraftFilm) => {
+    update({ film: { ...film, poster_path: film.poster_path ?? null, release_date: film.release_date ?? '' }, suggestionId: undefined, suggestionName: undefined });
+    setChoosingFilm(false);
   };
 
-  const chooseMovie = (movie: Movie) => {
-    setSelected(movie);
-    setStep('entry');
-    setError('');
+  const resume = () => {
+    if (!choice) return;
+    resumed.current = true; setError('');
+    setSession(new ResponseDraftSession(ownerId, choice.stored.revision, choice.stored.draft));
+    setDraft(choice.stored.draft); setChoice(null);
   };
-
-  const chooseExpressionPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    setPhotoError('');
-    try {
-      setExpressionImage(await prepareExpressionPhoto(file));
-    } catch (caught) {
-      setPhotoError(caught instanceof Error ? caught.message : 'The image could not be prepared.');
-    }
-  };
-
-  const save = async (emotions: EmotionScores) => {
-    if (!selected) return;
+  const discardUnreadable = async () => {
+    if (!unreadable || saving) return;
+    if (!window.confirm('Discard the unreadable response draft on this browser? This cannot be undone.')) return;
     setSaving(true);
-    setError('');
+    try { await responseDraftStore.replace(ownerId, unreadable.revision, null); setRevision(value => value + 1); }
+    catch (error) { setError(error instanceof Error ? error.message : 'The draft could not be cleared.'); }
+    finally { setSaving(false); }
+  };
+  const replaceDraft = async () => {
+    if (!choice?.incoming || saving) return;
+    setSaving(true); setError('');
     try {
-      await createEntry({
-        movieId: selected.id,
-        watchedOn,
-        note,
-        expressionImage: expressionImage || undefined,
-        visibility,
-        emotions,
-      });
-      setStep('done');
-      recommendationService.get()
-        .then(result => setNextFilm(result.forYou.find(movie => movie.recommended_by?.length) || null))
-        .catch(() => setNextFilm(null));
-    } catch {
-      setError('The diary entry could not be saved. Try again.');
-    } finally {
-      setSaving(false);
-    }
+      const nextSession = new ResponseDraftSession(ownerId, choice.stored.revision, choice.stored.draft);
+      await nextSession.save(choice.incoming);
+      setSession(nextSession); setDraft(choice.incoming); setChoice(null);
+    } catch (error) { setError(error instanceof Error ? error.message : 'Your draft could not be replaced.'); }
+    finally { setSaving(false); }
+  };
+  const close = async (keep: boolean) => {
+    if (!session || !draft || saving) return;
+    setSaving(true); setError('');
+    try {
+      if (keep) await session.save(draft); else await session.finish();
+      closed.current = true;
+      navigate('/diary');
+    } catch (error) { setError(error instanceof Error ? error.message : 'Your draft could not be updated.'); }
+    finally { setSaving(false); }
   };
 
-  const reset = () => {
-    setStep('search');
-    setSelected(null);
-    setNote('');
-    setWatchedOn(new Date().toISOString().slice(0, 10));
-    setVisibility('private');
-    setExpressionImage(null);
-    setNextFilm(null);
-    setPhotoError('');
-    setQuery('');
-    setResults([]);
-    setError('');
+  const choosePhoto = async (file?: File) => {
+    if (!file) return;
+    setPhotoPreparing(true); setError('');
+    try {
+      const prepared = await prepareExpressionPhoto(file);
+      if (prepared.length > 2_800_000) throw new Error('Choose a smaller photo.');
+      if (mounted.current) update({ expressionImage: prepared });
+    } catch (error) { if (mounted.current) setError(error instanceof Error ? error.message : 'The image could not be prepared.'); }
+    finally { if (mounted.current) setPhotoPreparing(false); }
   };
 
-  return (
-    <div className="page-shell log-page">
-      {error && <div className="notice notice--error" role="alert">{error}</div>}
+  const findNextFilm = async () => {
+    setDiscoveryLoading(true); setDiscoveryError('');
+    try {
+      const result = await recommendationService.get();
+      if (mounted.current) setNextFilm(result.forYou.find(movie => movie.recommended_by?.length) ?? null);
+    } catch { if (mounted.current) setDiscoveryError('Your response is saved. Recommendations could not be loaded.'); }
+    finally { if (mounted.current) setDiscoveryLoading(false); }
+  };
+  const clearSavedDraft = async () => {
+    try { await session?.finish(); setStorageError(''); }
+    catch { setStorageError('Your response is saved, but the local draft could not be cleared.'); }
+  };
+  const save = async () => {
+    const input = draft && responseDraftInput(draft);
+    if (!draft || !session || !input || saving || photoPreparing) return;
+    setSaving(true); setError('');
+    try {
+      // Durably record the same request ID and payload before sending a create.
+      await session.save(draft);
+      const { watchedOn, note, visibility, emotions, enjoyment, highlights, expressionImage } = input;
+      const entry = draft.editingId
+        ? await updateEntry(draft.editingId, { watchedOn, note, visibility, emotions, enjoyment, highlights, expressionImage })
+        : await createEntry(input);
+      closed.current = true;
+      if (!mounted.current) { await session.finish().catch(() => undefined); return; }
+      setSavedEntry(entry);
+      await clearSavedDraft();
+      if (!draft.editingId && !draft.suggestionId) void findNextFilm();
+    } catch (error) {
+      if (mounted.current) setError(apiError(error, error instanceof Error && /draft|tab|storage/i.test(error.message) ? error.message : 'The diary entry could not be saved. Try again.'));
+    } finally { if (mounted.current) setSaving(false); }
+  };
 
-      {step === 'search' && (
-        <>
-          <form className="search-bar" id="film-search-form" onSubmit={search} role="search">
-            <Search aria-hidden="true" size={20} />
-            <input aria-label="Search for a film to log" className="input" onChange={event => setQuery(event.target.value)} placeholder="Search by film title" type="search" value={query} />
-            <button className="button button--primary" disabled={searching || !query.trim()} type="submit"><Search size={17} />{searching ? 'Searching' : 'Search films'}</button>
-          </form>
-          {searching && <div className="loading-state"><div className="loading-spinner" /><span>Searching films</span></div>}
-          {!searching && results.length > 0 && (
-            <div className="film-picker">
-              {results.map(movie => (
-                <button className="film-picker__row" key={movie.id} onClick={() => chooseMovie(movie)} type="button">
-                  {imageUrl(movie.poster_path, 'w154') ? <img alt="" aria-hidden="true" src={imageUrl(movie.poster_path, 'w154')!} /> : <div className="film-picker__placeholder" />}
-                  <span><strong>{movie.title}</strong><small>{releaseYear(movie.release_date)}</small></span>
-                  <span className="text-link">Choose film</span>
-                </button>
-              ))}
-            </div>
-          )}
-          {!searching && results.length === 0 && <div className="log-start-grid">
-            {savedFilms.length > 0 && <section><h2>Saved films</h2><div className="film-picker film-picker--suggestions">{savedFilms.slice(0, 5).map(saved => { const movie = savedFilmMovie(saved); return <button className="film-picker__row" key={movie.id} onClick={() => chooseMovie(movie)} type="button">{imageUrl(movie.poster_path, 'w154') ? <img alt="" aria-hidden="true" src={imageUrl(movie.poster_path, 'w154')!} /> : <div className="film-picker__placeholder" />}<span><strong>{movie.title}</strong><small>{releaseYear(movie.release_date)}</small></span><span className="text-link">Choose</span></button>; })}</div></section>}
-            {recentFilms.length > 0 && <section><h2>Recent responses</h2><div className="film-picker film-picker--suggestions">{recentFilms.slice(0, 5).map(movie => <button className="film-picker__row" key={movie.id} onClick={() => chooseMovie(movie)} type="button">{imageUrl(movie.poster_path, 'w154') ? <img alt="" aria-hidden="true" src={imageUrl(movie.poster_path, 'w154')!} /> : <div className="film-picker__placeholder" />}<span><strong>{movie.title}</strong><small>{releaseYear(movie.release_date)}</small></span><span className="text-link">Choose</span></button>)}</div></section>}
-          </div>}
-        </>
-      )}
-
-      {step === 'entry' && selected && (
-        <div className="entry-composer">
-          <aside className="entry-composer__film">
-            {imageUrl(selected.poster_path, 'w342') && <img alt={`Poster for ${selected.title}`} src={imageUrl(selected.poster_path, 'w342')!} />}
-            <div><h2>{selected.title}</h2><p>{releaseYear(selected.release_date)}</p></div>
-            <button className="button button--quiet" onClick={() => setStep('search')} type="button"><ArrowLeft size={17} />Choose another film</button>
-          </aside>
-
-          <div className="entry-composer__record">
-            <h1 className="entry-composer__prompt">How did it make you feel?</h1>
-            <div className="entry-fields">
-              <div className="field"><label htmlFor="watched-on">Watched on</label><input id="watched-on" onChange={event => setWatchedOn(event.target.value)} type="date" value={watchedOn} /></div>
-              <div className="field field--full"><label htmlFor="entry-note">What did it mean to you?</label><textarea id="entry-note" maxLength={2000} onChange={event => setNote(event.target.value)} placeholder="I felt..." value={note} /><span className="field__hint">{note.length} / 2000</span></div>
-              <div className="field field--full">
-                <span className="field-label">Add a photo <small>Optional</small></span>
-                {expressionImage ? (
-                  <figure className="expression-photo-preview">
-                    <img alt="Optional expression photo preview" src={expressionImage} />
-                    <button aria-label="Remove attached photo" className="icon-button" onClick={() => setExpressionImage(null)} type="button"><X size={18} /></button>
-                  </figure>
-                ) : (
-                  <label className="expression-photo-picker">
-                    <ImagePlus aria-hidden="true" size={22} />
-                    <span><strong>Choose a photo</strong><small>Share the expression that stayed with you. Your feelings still come from you.</small></span>
-                    <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={chooseExpressionPhoto} type="file" />
-                  </label>
-                )}
-                {photoError && <span className="error-text" role="alert">{photoError}</span>}
-              </div>
-              <fieldset className="visibility-control field--full"><legend>Visibility</legend><label><input checked={visibility === 'private'} name="visibility" onChange={() => setVisibility('private')} type="radio" />Private</label><label><input checked={visibility === 'public'} name="visibility" onChange={() => setVisibility('public')} type="radio" />Public</label><p>Public responses appear in the feed.</p></fieldset>
-            </div>
-
-            <div className="feeling-divider"><span>Add your feelings</span></div>
-            {saving ? (
-              <div className="loading-state" role="status"><div className="loading-spinner" /><span>Saving response</span></div>
-            ) : (
-              <ManualEmotionInput onSubmit={save} showSubmitButton submitLabel="Save response" />
-            )}
-          </div>
-        </div>
-      )}
-
-      {step === 'done' && selected && (
-        <div className="completion-journey">
-          <div className="completion-journey__saved"><p><strong>{selected.title}</strong> is in your diary.</p></div>
-          {nextFilm ? <RecommendationSpotlight movie={nextFilm} /> : <div className="completion-journey__waiting"><p>Your response is saved. A path will appear when it connects with someone else's.</p></div>}
-          <div className="completion-state__actions"><Link className="button button--secondary" to="/feed">Return home</Link><button className="button button--quiet" onClick={reset} type="button">Add another film</button></div>
-        </div>
-      )}
+  if (opening) return <div className="page-shell loading-state" role="status">Opening your response</div>;
+  if (choice) return <section className="page-shell draft-choice" aria-labelledby="draft-choice-title">
+    <h1 id="draft-choice-title">Continue your saved response?</h1>
+    <p>You have an unfinished response{choice.stored.draft.film ? ` for ${choice.stored.draft.film.title}` : ''}.</p>
+    {error && <p className="notice notice--error" role="alert">{error}</p>}
+    <div className="suggestion-actions">
+      <button className="button button--primary" disabled={saving} onClick={resume}>Continue draft</button>
+      <button className="button button--secondary" disabled={saving || !choice.incoming} onClick={() => void replaceDraft()}>Discard draft and start new</button>
+      <Link className="text-link" to="/diary">Cancel</Link>
     </div>
-  );
-};
+  </section>;
+  if (!draft) return <div className="page-shell product-empty"><p role="alert">{error || 'Your response could not be opened.'}</p><button className="button button--secondary" disabled={saving} onClick={() => setRevision(value => value + 1)}>Try again</button>{unreadable && <button className="button button--quiet" disabled={saving} onClick={() => void discardUnreadable()}>Discard unreadable draft</button>}<Link className="text-link" to="/diary">Open Diary</Link></div>;
 
-export default Log;
+  if (savedEntry) return <div className="page-shell completion-journey">
+    <section className="completion-journey__saved">
+      <p><strong>{savedEntry.title ?? draft.film?.title}</strong> is in your diary.</p>
+      <p className="metadata">{savedEntry.visibility === 'public' ? 'Shared with everyone' : 'Only you can see this response'}</p>
+      <ResponseDetails enjoyment={savedEntry.enjoyment} highlights={savedEntry.highlights} />
+      <div className="suggestion-actions">
+        {draft.suggestionId && <Link className="button button--primary" to={`/suggestions/${draft.suggestionId}`}>Tell {draft.suggestionName || 'them'} how it landed</Link>}
+        <Link className="button button--secondary" to={`/response/${savedEntry.id}`}>Read your response</Link>
+        <Link className="text-link" to="/diary">Open Diary</Link>
+      </div>
+      {draft.suggestionId && <p className="metadata">Your diary note has not been sent. Choose what to share in a separate reply.</p>}
+    </section>
+    {storageError && <p className="notice notice--error" role="alert">{storageError} <button className="text-link" onClick={() => void clearSavedDraft()}>Clear saved draft</button></p>}
+    {discoveryLoading && <p role="status">Finding a film through your response</p>}
+    {discoveryError && <p role="alert">{discoveryError} <button className="text-link" onClick={() => void findNextFilm()}>Retry recommendations</button></p>}
+    {nextFilm && <RecommendationSpotlight movie={nextFilm} />}
+    <div className="completion-state__actions"><Link className="button button--secondary" to="/feed">Return home</Link><button className="button button--quiet" onClick={() => navigate('/log', { replace: true, state: { newDraft: crypto.randomUUID() } })}>Add another film</button></div>
+  </div>;
+
+  return <div className="page-shell log-page">
+    <header className="composer-toolbar">
+      <div><h1>{draft.editingId ? 'Edit response' : 'Add a response'}</h1><p className="metadata" role="status">{auto.error ? 'Draft not saved on this browser' : auto.saved ? 'Draft saved on this browser' : 'Saving draft'}</p></div>
+      <button className="button button--quiet" disabled={saving || photoPreparing} onClick={() => setCloseChoice(true)}>Close</button>
+    </header>
+    {(error || auto.error) && <p className="notice notice--error" role="alert">{error || auto.error}{auto.error && <button className="text-link" onClick={() => void auto.persist().catch(() => undefined)}>Retry draft save</button>}</p>}
+    {closeChoice && <section className="draft-choice" aria-label="Close your response">
+      <h2>Keep writing later?</h2><div className="suggestion-actions">
+        <button className="button button--primary" disabled={saving} onClick={() => void close(true)}>Keep draft</button>
+        <button className="button button--quiet" disabled={saving} onClick={() => void close(false)}>Discard changes</button>
+        <button className="button button--quiet" disabled={saving} onClick={() => setCloseChoice(false)}>Keep writing</button>
+      </div>
+    </section>}
+    {!draft.film || choosingFilm ? <>
+      {draft.film && <button className="text-link" onClick={() => setChoosingFilm(false)}>Keep {draft.film.title}</button>}
+      <FilmPicker onChoose={chooseFilm} />
+    </> : <form className="entry-composer" onSubmit={event => { event.preventDefault(); void save(); }}>
+      <aside className="entry-composer__film">
+        {imageUrl(draft.film.poster_path, 'w342') && <img alt={`Poster for ${draft.film.title}`} src={imageUrl(draft.film.poster_path, 'w342')!} />}
+        <div><h2>{draft.film.title}</h2><p>{releaseYear(draft.film.release_date)}</p></div>
+        {!draft.editingId && <button className="button button--quiet" disabled={saving || photoPreparing} onClick={() => setChoosingFilm(true)} type="button">Choose another film</button>}
+      </aside>
+      <fieldset className="entry-composer__record composer-record" disabled={saving || photoPreparing}>
+        <legend className="sr-only">Your response to {draft.film.title}</legend>
+        {!draft.editingId && <AttributionPicker ownerId={ownerId} movieId={draft.film.id} value={draft.suggestionId} name={draft.suggestionName} onChange={chooseAttribution} />}
+        <div className="field"><label htmlFor="entry-note">What did it mean to you?</label><textarea id="entry-note" maxLength={2000} rows={6} value={draft.note} placeholder="What will you remember?" onChange={event => update({ note: event.target.value })} /><span className="field__hint">{draft.note.length} / 2000</span></div>
+        <FeelingChoices value={draft.emotions} onChange={emotions => update({ emotions })} />
+        <ResponseDetailInputs enjoyment={draft.enjoyment} highlights={draft.highlights} onEnjoyment={enjoyment => update({ enjoyment })} onHighlights={highlights => update({ highlights })} />
+        <div className="entry-fields">
+          <div className="field"><label htmlFor="watched-on">Watched on</label><input id="watched-on" required max={localDay()} type="date" value={draft.watchedOn} onChange={event => update({ watchedOn: event.target.value })} /></div>
+          <fieldset className="visibility-control field--full"><legend>Who can see this?</legend>
+            <label><input type="radio" name="visibility" checked={draft.visibility === 'private'} onChange={() => update({ visibility: 'private' })} />Only me</label>
+            <label><input type="radio" name="visibility" checked={draft.visibility === 'public'} onChange={() => update({ visibility: 'public' })} />Everyone</label>
+          </fieldset>
+          <details className="field--full"><summary>Add a photo <small>Optional</small></summary>
+            {draft.expressionImage ? <figure className="expression-photo-preview"><img alt="Optional expression photo preview" src={draft.expressionImage} /><button aria-label="Remove attached photo" className="icon-button" type="button" onClick={() => update({ expressionImage: null })}><X size={18} /></button></figure>
+              : <label className="expression-photo-picker"><ImagePlus aria-hidden="true" size={22} /><span>Choose a photo</span><input accept="image/jpeg,image/png,image/webp" className="sr-only" type="file" onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void choosePhoto(file); }} /></label>}
+          </details>
+        </div>
+        {draft.suggestionId && <p className="metadata">After saving, you can choose a separate reply for {draft.suggestionName || 'the person who recommended it'}.</p>}
+        <button className="button button--primary" disabled={!responseDraftInput(draft) || saving || photoPreparing}>{saving ? 'Saving response' : draft.editingId ? 'Save changes' : 'Save response'}</button>
+      </fieldset>
+    </form>}
+  </div>;
+}

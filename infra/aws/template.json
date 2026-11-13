@@ -1,0 +1,837 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Moodie private developer backend. EC2 via SSM only, isolated encrypted RDS PostgreSQL, no public app listener.",
+  "Parameters": {
+    "AppInstanceType": {
+      "Type": "String",
+      "Default": "t4g.small",
+      "AllowedValues": [
+        "t4g.small",
+        "t4g.medium"
+      ]
+    },
+    "DatabaseInstanceType": {
+      "Type": "String",
+      "Default": "db.t4g.small",
+      "AllowedValues": [
+        "db.t4g.small",
+        "db.t4g.medium"
+      ]
+    },
+    "DatabaseEngineVersion": {
+      "Type": "String",
+      "Default": "18.6"
+    },
+    "AmiId": {
+      "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+      "Default": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
+    }
+  },
+  "Resources": {
+    "Vpc": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.46.0.0/16",
+        "EnableDnsSupport": true,
+        "EnableDnsHostnames": true,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "Gateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "GatewayAttachment": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "InternetGatewayId": {
+          "Ref": "Gateway"
+        }
+      }
+    },
+    "AppSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.46.1.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "DatabaseSubnetA": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.46.10.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "DatabaseSubnetB": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.46.11.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "PublicRoutes": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "InternetRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PublicRoutes"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "Gateway"
+        }
+      },
+      "DependsOn": "GatewayAttachment"
+    },
+    "AppRouteAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "AppSubnet"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRoutes"
+        }
+      }
+    },
+    "AppSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Moodie API: no inbound ports; Session Manager access only",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0",
+            "Description": "AWS services, package updates and TMDB over HTTPS"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "DatabaseSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Moodie PostgreSQL from the app host only",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "DatabaseIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "DatabaseSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "SourceSecurityGroupId": {
+          "Ref": "AppSecurityGroup"
+        }
+      }
+    },
+    "AppDatabaseEgress": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "AppSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "DestinationSecurityGroupId": {
+          "Ref": "DatabaseSecurityGroup"
+        }
+      }
+    },
+    "DatabaseSubnets": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "Moodie private database subnets",
+        "SubnetIds": [
+          {
+            "Ref": "DatabaseSubnetA"
+          },
+          {
+            "Ref": "DatabaseSubnetB"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "DatabaseParameters": {
+      "Type": "AWS::RDS::DBParameterGroup",
+      "Properties": {
+        "Description": "Moodie PostgreSQL TLS and bounded idle transactions",
+        "Family": "postgres18",
+        "Parameters": {
+          "rds.force_ssl": "1",
+          "idle_in_transaction_session_timeout": "10000",
+          "log_min_duration_statement": "-1"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "RuntimeSecret": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "Description": "Moodie moodie_app credential",
+        "GenerateSecretString": {
+          "SecretStringTemplate": "{\"username\": \"moodie_app\", \"dbname\": \"moodie\"}",
+          "GenerateStringKey": "password",
+          "PasswordLength": 40,
+          "ExcludePunctuation": true
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "MigrationSecret": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "Description": "Moodie moodie_migrator credential",
+        "GenerateSecretString": {
+          "SecretStringTemplate": "{\"username\": \"moodie_migrator\", \"dbname\": \"moodie\"}",
+          "GenerateStringKey": "password",
+          "PasswordLength": 40,
+          "ExcludePunctuation": true
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "Database": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DBInstanceIdentifier": "moodie-dev-db",
+        "DBName": "moodie",
+        "Engine": "postgres",
+        "EngineVersion": {
+          "Ref": "DatabaseEngineVersion"
+        },
+        "DBInstanceClass": {
+          "Ref": "DatabaseInstanceType"
+        },
+        "AllocatedStorage": "20",
+        "StorageType": "gp3",
+        "StorageEncrypted": true,
+        "MasterUsername": "moodie_owner",
+        "ManageMasterUserPassword": true,
+        "DBSubnetGroupName": {
+          "Ref": "DatabaseSubnets"
+        },
+        "DBParameterGroupName": {
+          "Ref": "DatabaseParameters"
+        },
+        "VPCSecurityGroups": [
+          {
+            "Ref": "DatabaseSecurityGroup"
+          }
+        ],
+        "PubliclyAccessible": false,
+        "MultiAZ": false,
+        "BackupRetentionPeriod": 7,
+        "PreferredBackupWindow": "08:00-08:30",
+        "PreferredMaintenanceWindow": "sun:09:00-sun:09:30",
+        "DeletionProtection": true,
+        "AutoMinorVersionUpgrade": true,
+        "CopyTagsToSnapshot": true,
+        "EnableCloudwatchLogsExports": [
+          "postgresql"
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      },
+      "DeletionPolicy": "Snapshot",
+      "UpdateReplacePolicy": "Snapshot"
+    },
+    "Repository": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": "moodie-dev/api",
+        "ImageTagMutability": "IMMUTABLE",
+        "ImageScanningConfiguration": {
+          "ScanOnPush": true
+        },
+        "EncryptionConfiguration": {
+          "EncryptionType": "AES256"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "AppLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/moodie/development/api",
+        "RetentionInDays": 14,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      },
+      "DeletionPolicy": "Retain"
+    },
+    "DbLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/rds/instance/moodie-dev-db/postgresql",
+        "RetentionInDays": 7,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      },
+      "DeletionPolicy": "Retain"
+    },
+    "InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        ],
+        "Policies": [
+          {
+            "PolicyName": "MoodieRuntimeOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": {
+                    "Ref": "RuntimeSecret"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecr:GetAuthorizationToken"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:BatchGetImage"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Repository",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "AppLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudwatch:PutMetricData"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "cloudwatch:namespace": "Moodie/Development"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          }
+        ]
+      }
+    },
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      }
+    },
+    "AppInstance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "AmiId"
+        },
+        "InstanceType": {
+          "Ref": "AppInstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "InstanceProfile"
+        },
+        "NetworkInterfaces": [
+          {
+            "DeviceIndex": "0",
+            "SubnetId": {
+              "Ref": "AppSubnet"
+            },
+            "GroupSet": [
+              {
+                "Ref": "AppSecurityGroup"
+              }
+            ],
+            "AssociatePublicIpAddress": true
+          }
+        ],
+        "MetadataOptions": {
+          "HttpEndpoint": "enabled",
+          "HttpTokens": "required",
+          "HttpPutResponseHopLimit": 1
+        },
+        "CreditSpecification": {
+          "CPUCredits": "unlimited"
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "VolumeSize": 16,
+              "VolumeType": "gp3",
+              "Encrypted": true,
+              "DeleteOnTermination": true
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": "#!/bin/bash\nset -euo pipefail\ndnf install -y docker\nsystemctl enable --now docker amazon-ssm-agent\ninstall -d -m 0700 /etc/moodie\ninstall -d -m 0755 /opt/moodie\nprintf '%s\\n' 'Moodie host bootstrap complete; app deployment is a separate verified step.'\n"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Moodie"
+          },
+          {
+            "Key": "Environment",
+            "Value": "development"
+          },
+          {
+            "Key": "Name",
+            "Value": "moodie-dev-api"
+          }
+        ]
+      },
+      "DependsOn": [
+        "InternetRoute",
+        "AppRouteAssociation"
+      ]
+    },
+    "AppCpuAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Moodie capacity signal; inspect before resizing",
+        "Namespace": "AWS/EC2",
+        "MetricName": "CPUUtilization",
+        "Dimensions": [
+          {
+            "Name": "InstanceId",
+            "Value": {
+              "Ref": "AppInstance"
+            }
+          }
+        ],
+        "Statistic": "Average",
+        "Period": 300,
+        "EvaluationPeriods": 3,
+        "Threshold": 75,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "missing"
+      }
+    },
+    "DbCpuAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Moodie capacity signal; inspect before resizing",
+        "Namespace": "AWS/RDS",
+        "MetricName": "CPUUtilization",
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": {
+              "Ref": "Database"
+            }
+          }
+        ],
+        "Statistic": "Average",
+        "Period": 300,
+        "EvaluationPeriods": 3,
+        "Threshold": 75,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "missing"
+      }
+    },
+    "InstanceRecovery": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Recover the Moodie host on underlying EC2 system failure",
+        "Namespace": "AWS/EC2",
+        "MetricName": "StatusCheckFailed_System",
+        "Dimensions": [
+          {
+            "Name": "InstanceId",
+            "Value": {
+              "Ref": "AppInstance"
+            }
+          }
+        ],
+        "Statistic": "Maximum",
+        "Period": 60,
+        "EvaluationPeriods": 2,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:${AWS::Partition}:automate:${AWS::Region}:ec2:recover"
+          }
+        ],
+        "TreatMissingData": "missing"
+      }
+    },
+    "ApiHealthAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Moodie private development health and capacity",
+        "Namespace": "Moodie/Development",
+        "MetricName": "ApiHealthy",
+        "Statistic": "Average",
+        "Period": 60,
+        "EvaluationPeriods": 3,
+        "Threshold": 1,
+        "ComparisonOperator": "LessThanThreshold",
+        "TreatMissingData": "missing"
+      }
+    },
+    "AppMemoryAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Moodie private development health and capacity",
+        "Namespace": "Moodie/Development",
+        "MetricName": "ContainerMemoryPercent",
+        "Statistic": "Average",
+        "Period": 60,
+        "EvaluationPeriods": 3,
+        "Threshold": 80,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "missing"
+      }
+    },
+    "AppDiskAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Moodie private development health and capacity",
+        "Namespace": "Moodie/Development",
+        "MetricName": "DiskUsedPercent",
+        "Statistic": "Average",
+        "Period": 60,
+        "EvaluationPeriods": 3,
+        "Threshold": 80,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "missing"
+      }
+    }
+  },
+  "Outputs": {
+    "InstanceId": {
+      "Value": {
+        "Ref": "AppInstance"
+      }
+    },
+    "DatabaseId": {
+      "Value": {
+        "Ref": "Database"
+      }
+    },
+    "DatabaseHost": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Database",
+          "Endpoint.Address"
+        ]
+      }
+    },
+    "DatabaseSecurityGroup": {
+      "Value": {
+        "Ref": "DatabaseSecurityGroup"
+      }
+    },
+    "DatabaseSubnetGroup": {
+      "Value": {
+        "Ref": "DatabaseSubnets"
+      }
+    },
+    "DatabaseParameterGroup": {
+      "Value": {
+        "Ref": "DatabaseParameters"
+      }
+    },
+    "MasterSecretArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Database",
+          "MasterUserSecret.SecretArn"
+        ]
+      }
+    },
+    "RuntimeSecretArn": {
+      "Value": {
+        "Ref": "RuntimeSecret"
+      }
+    },
+    "MigrationSecretArn": {
+      "Value": {
+        "Ref": "MigrationSecret"
+      }
+    },
+    "RepositoryUri": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Repository",
+          "RepositoryUri"
+        ]
+      }
+    },
+    "AppLogGroup": {
+      "Value": {
+        "Ref": "AppLogs"
+      }
+    }
+  }
+}

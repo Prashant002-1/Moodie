@@ -24,8 +24,8 @@ export const cacheMovie = async (movie: TMDBMovie): Promise<void> => {
       movie.title,
       movie.overview || '',
       movie.release_date || '',
-      movie.poster_path,
-      movie.backdrop_path,
+      movie.poster_path || null,
+      movie.backdrop_path || null,
       movie.vote_average || 0,
       movie.vote_count || 0,
       movie.popularity || 0,
@@ -36,7 +36,7 @@ export const cacheMovie = async (movie: TMDBMovie): Promise<void> => {
 
   for (const genreId of genreIds) {
     await pool.query(
-      `INSERT INTO movie_genres (movie_id, genre_id) VALUES ($1, $2)
+      `INSERT INTO movie_genres (movie_id, genre_id) SELECT $1, $2 WHERE EXISTS (SELECT 1 FROM genres WHERE id = $2)
        ON CONFLICT (movie_id, genre_id) DO NOTHING`,
       [movie.id, genreId],
     );

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Search, SlidersHorizontal, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ManualEmotionInput from '../components/features/emotion/ManualEmotionInput';
@@ -14,7 +14,12 @@ import { Movie } from '../types/movie';
 import { emotionLabels } from '../utils/display';
 
 const Recommendations: React.FC = () => {
-  const { currentSignal, setCurrentSignal } = useDiary();
+  const { currentSignal, setCurrentSignal, revision } = useDiary();
+  const searchRequest = useRef<AbortController | null>(null);
+  useEffect(() => () => searchRequest.current?.abort(), []);
+  const [filmPage, setFilmPage] = useState(1);
+  const [filmPages, setFilmPages] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [data, setData] = useState<RecommendationResponse | null>(null);
   const [browseFilms, setBrowseFilms] = useState<Movie[]>([]);
   const [query, setQuery] = useState('');
@@ -39,7 +44,7 @@ const Recommendations: React.FC = () => {
       .catch(() => active && setError('Recommendations could not be loaded.'))
       .finally(() => active && setLoading(false));
     return () => { active = false; };
-  }, [currentSignal, requestVersion]);
+  }, [currentSignal, revision, requestVersion]);
 
   useEffect(() => {
     let active = true;
@@ -56,18 +61,36 @@ const Recommendations: React.FC = () => {
     event.preventDefault();
     const next = query.trim();
     if (!next) return;
+    searchRequest.current?.abort();
+    const request = new AbortController(); searchRequest.current = request;
+    setLoadingMore(false);
     setSearchTerm(next);
     setSearchResults([]);
     setSearching(true);
     setSearchError('');
     try {
-      const response = await catalogService.search(next);
-      setSearchResults(response.results.filter(movie => movie.poster_path));
+      const response = await catalogService.search(next, 1, request.signal);
+      if (request.signal.aborted) return;
+      setSearchResults(response.results);
+      setFilmPage(1); setFilmPages(Math.min(100, response.total_pages));
     } catch {
-      setSearchError('Film search could not be loaded.');
+      if (!request.signal.aborted) setSearchError('Film search could not be loaded.');
     } finally {
-      setSearching(false);
+      if (!request.signal.aborted) setSearching(false);
     }
+  };
+
+  const loadMoreFilms = async () => {
+    if (loadingMore || filmPage >= filmPages) return;
+    const request = new AbortController(); searchRequest.current = request;
+    setLoadingMore(true);
+    try {
+      const response = await catalogService.search(searchTerm, filmPage + 1, request.signal);
+      if (request.signal.aborted) return;
+      setSearchResults(current => [...new Map([...current, ...response.results].map(movie => [movie.id, movie])).values()]);
+      setFilmPage(response.page); setFilmPages(response.total_pages);
+    } catch { if (!request.signal.aborted) setSearchError('More films could not be loaded. Try again.'); }
+    finally { if (!request.signal.aborted) setLoadingMore(false); }
   };
 
   const acceptSignal = (signal: EmotionScores) => {
@@ -131,7 +154,7 @@ const Recommendations: React.FC = () => {
 
       {view === 'recommendations' && (loading ? (
         <div className="loading-state"><div className="loading-spinner" /><span>Finding recommendations</span></div>
-      ) : error && !data ? (
+      ) : error ? (
         <div className="error-state"><p>{error}</p><button className="button button--secondary" onClick={() => setRequestVersion(version => version + 1)} type="button">Try again</button></div>
       ) : data && leadRecommendation ? (
         <div className="recommendation-story" data-reveal>
@@ -141,8 +164,8 @@ const Recommendations: React.FC = () => {
       ) : data ? (
         <div className="recommendation-cold-start">
           <section className="product-empty">
-            <h2>Recommendations need a shared film.</h2>
-            <p>Add how a film felt. When someone else responded to the same film, their other responses can become recommendations.</p>
+            <h2>{data.profile.connectedPeople > 0 ? selectedFeelings.length ? 'No connected films match these feelings yet.' : 'You have caught up with these connected films.' : 'Recommendations need a shared film.'}</h2>
+            <p>{data.profile.connectedPeople > 0 ? 'Try another feeling or return as people add more responses.' : 'Add how a film felt. When someone else responded to the same film, their other responses can become recommendations.'}</p>
             <div className="product-empty__actions">
               <Link className="button button--primary" to="/log">Add a response</Link>
               <button className="text-link" onClick={() => setView('search')} type="button">Search films</button>
@@ -161,7 +184,7 @@ const Recommendations: React.FC = () => {
         {searchError && <p className="error-text" role="alert">{searchError}</p>}
         {searchTerm ? (
           <>
-            <button className="text-link search-reset" onClick={() => { setSearchTerm(''); setQuery(''); setSearchResults([]); setSearchError(''); }} type="button">Clear search</button>
+            <button className="text-link search-reset" onClick={() => { searchRequest.current?.abort(); setSearching(false); setLoadingMore(false); setFilmPages(0); setSearchTerm(''); setQuery(''); setSearchResults([]); setSearchError(''); }} type="button">Clear search</button>
             {searching ? <div className="loading-state"><div className="loading-spinner" /></div> : searchResults.length ? <div className="poster-grid">{searchResults.map(movie => <FilmPoster key={movie.id} movie={movie} />)}</div> : <div className="empty-state"><h3>No films found</h3></div>}
           </>
         ) : browseLoading ? (
@@ -171,6 +194,7 @@ const Recommendations: React.FC = () => {
         ) : browseFilms.length ? <FilmRail movies={browseFilms} title="Films people are watching" /> : (
           <div className="product-empty"><p>No films found.</p></div>
         )}
+        {!!searchResults.length && !searching && filmPage < filmPages && <button className="button button--secondary" disabled={loadingMore} onClick={() => void loadMoreFilms()} type="button">{loadingMore ? 'Loading films' : 'Load more films'}</button>}
       </section>}
     </div>
   );

@@ -1,0 +1,27 @@
+{
+  "verifiedAt": "2026-10-01T05:51:30.708079+00:00",
+  "source": "moodie-dev-db",
+  "restored": "moodie-dev-restore-check-20261001",
+  "matchingTables": 25,
+  "rows": 21,
+  "users": 0,
+  "permissions": {
+    "tls": true,
+    "canCreate": false,
+    "canUpdateMigrations": false,
+    "forceTls": true
+  },
+  "tableDigest": "212f36173ee5e1536d93a7e3e6b4c4b7944b6101ba76598f25496934ef231fa1",
+  "schemaDigest": "4d322828c0a489a9be8b66f8675b724b595f0c4ea7e6b2a5b122ad21cf3f5fdc",
+  "scope": "Initial schema, genres and migration records; no account-data recovery claim.",
+  "cleanup": {
+    "verifiedAt": "2026-10-01T05:54:55.151121+00:00",
+    "temporaryInstanceAbsent": true,
+    "temporarySnapshotAbsent": true,
+    "temporaryAutomatedBackupsAbsent": true,
+    "primaryAvailable": true,
+    "primaryRetentionDays": 7,
+    "primaryDeletionProtection": true,
+    "tunnelsClosed": true
+  }
+}

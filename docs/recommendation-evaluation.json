@@ -1,0 +1,302 @@
+{
+  "version": "response-transfer-v1",
+  "evaluation": "Global temporal holdout. Validation and test targets are disjoint.",
+  "limitations": [
+    "The bundled snapshot is scripted demonstration data. The generated cohorts are controlled simulations.",
+    "These results test learnability and implementation, not real-world recommendation quality or research novelty.",
+    "The target is a person's later self-reported feeling vector, not enjoyment, a rating, or a probability of watching.",
+    "The benchmark has no external data, services, or private account records."
+  ],
+  "bundledDemo": {
+    "responses": 104,
+    "publicPeople": 12,
+    "cutoff": 1780341420000,
+    "trainingResponses": 83,
+    "testTargets": 4,
+    "testPaths": 6,
+    "model": {
+      "status": "collecting",
+      "targets": 9,
+      "lambda": null,
+      "validation": null
+    },
+    "test": {
+      "baselines": {
+        "sourceCopy": 0.006171428571428572,
+        "sharedFilmOffset": 0.0036491071428571423,
+        "populationMean": 0.05389542230885677
+      },
+      "sourceCopyMse": 0.006171428571428572,
+      "transferMse": 0.006171428571428572,
+      "transferMae": 0.04750000000000001,
+      "relativeMseReduction": 0
+    },
+    "intentRanking": null,
+    "trainMilliseconds": 0
+  },
+  "controlled": [
+    {
+      "seed": 17,
+      "responses": 905,
+      "publicPeople": 20,
+      "cutoff": 5430174,
+      "trainingResponses": 724,
+      "testTargets": 171,
+      "testPaths": 1307,
+      "model": {
+        "status": "learning",
+        "targets": 649,
+        "lambda": 0.1,
+        "validation": {
+          "targets": 130,
+          "baselineMse": 0.010151899508176503,
+          "modelMse": 0.00731365520066174,
+          "bestBaseline": "sharedFilmOffset",
+          "baselines": {
+            "sourceCopy": 0.07096485877367263,
+            "sharedFilmOffset": 0.010151899508176503,
+            "populationMean": 0.0886634600841418
+          }
+        }
+      },
+      "test": {
+        "baselines": {
+          "sourceCopy": 0.06734040683735684,
+          "sharedFilmOffset": 0.009531814780152258,
+          "populationMean": 0.10070457392017064
+        },
+        "sourceCopyMse": 0.06734040683735684,
+        "transferMse": 0.007483041701989674,
+        "transferMae": 0.06355637206435831,
+        "relativeMseReduction": 0.8888773909539482
+      },
+      "intentRanking": {
+        "queries": 49,
+        "transferRegretAt1": 0.009489174777809362,
+        "sourceRegretAt1": 0.02102611003960749,
+        "transferTop1Agreement": 0.7755102040816326,
+        "sourceTop1Agreement": 0.5918367346938775
+      },
+      "trainMilliseconds": 79
+    },
+    {
+      "seed": 29,
+      "responses": 878,
+      "publicPeople": 20,
+      "cutoff": 5395993,
+      "trainingResponses": 702,
+      "testTargets": 166,
+      "testPaths": 1262,
+      "model": {
+        "status": "learning",
+        "targets": 628,
+        "lambda": 0.1,
+        "validation": {
+          "targets": 126,
+          "baselineMse": 0.008798630053631325,
+          "modelMse": 0.007058979559109932,
+          "bestBaseline": "sharedFilmOffset",
+          "baselines": {
+            "sourceCopy": 0.04763897865006511,
+            "sharedFilmOffset": 0.008798630053631325,
+            "populationMean": 0.08575438756437541
+          }
+        }
+      },
+      "test": {
+        "baselines": {
+          "sourceCopy": 0.057765334432784796,
+          "sharedFilmOffset": 0.009324752278384633,
+          "populationMean": 0.09301148293981261
+        },
+        "sourceCopyMse": 0.057765334432784796,
+        "transferMse": 0.007306916095393853,
+        "transferMae": 0.06437521728684273,
+        "relativeMseReduction": 0.8735069022426225
+      },
+      "intentRanking": {
+        "queries": 45,
+        "transferRegretAt1": 0.0004805217683045587,
+        "sourceRegretAt1": 0.012254444190776488,
+        "transferTop1Agreement": 0.9777777777777777,
+        "sourceTop1Agreement": 0.7777777777777778
+      },
+      "trainMilliseconds": 66
+    },
+    {
+      "seed": 43,
+      "responses": 902,
+      "publicPeople": 20,
+      "cutoff": 5401563,
+      "trainingResponses": 721,
+      "testTargets": 171,
+      "testPaths": 1299,
+      "model": {
+        "status": "learning",
+        "targets": 647,
+        "lambda": 0.1,
+        "validation": {
+          "targets": 130,
+          "baselineMse": 0.010053994336216093,
+          "modelMse": 0.00832397453415073,
+          "bestBaseline": "sharedFilmOffset",
+          "baselines": {
+            "sourceCopy": 0.06707125261421236,
+            "sharedFilmOffset": 0.010053994336216093,
+            "populationMean": 0.09751022988696778
+          }
+        }
+      },
+      "test": {
+        "baselines": {
+          "sourceCopy": 0.06416294526073664,
+          "sharedFilmOffset": 0.009230109682670067,
+          "populationMean": 0.09252532979997391
+        },
+        "sourceCopyMse": 0.06416294526073664,
+        "transferMse": 0.00745480735181875,
+        "transferMae": 0.063660676151515,
+        "relativeMseReduction": 0.8838144458374703
+      },
+      "intentRanking": {
+        "queries": 42,
+        "transferRegretAt1": 0.0037092907336865625,
+        "sourceRegretAt1": 0.018108878547008912,
+        "transferTop1Agreement": 0.8333333333333334,
+        "sourceTop1Agreement": 0.7380952380952381
+      },
+      "trainMilliseconds": 105
+    },
+    {
+      "seed": 67,
+      "responses": 886,
+      "publicPeople": 20,
+      "cutoff": 5417396,
+      "trainingResponses": 708,
+      "testTargets": 168,
+      "testPaths": 1268,
+      "model": {
+        "status": "learning",
+        "targets": 633,
+        "lambda": 0.1,
+        "validation": {
+          "targets": 127,
+          "baselineMse": 0.009505170207134815,
+          "modelMse": 0.008691982886187168,
+          "bestBaseline": "sharedFilmOffset",
+          "baselines": {
+            "sourceCopy": 0.058939725759002304,
+            "sharedFilmOffset": 0.009505170207134815,
+            "populationMean": 0.10627738011735387
+          }
+        }
+      },
+      "test": {
+        "baselines": {
+          "sourceCopy": 0.06494469451542116,
+          "sharedFilmOffset": 0.012317451457178582,
+          "populationMean": 0.10478813233634011
+        },
+        "sourceCopyMse": 0.06494469451542116,
+        "transferMse": 0.009921505278589366,
+        "transferMae": 0.0736424662450784,
+        "relativeMseReduction": 0.8472314736004571
+      },
+      "intentRanking": {
+        "queries": 28,
+        "transferRegretAt1": 0.0044319803896764225,
+        "sourceRegretAt1": 0.01842159181579006,
+        "transferTop1Agreement": 0.7142857142857143,
+        "sourceTop1Agreement": 0.5
+      },
+      "trainMilliseconds": 88
+    },
+    {
+      "seed": 101,
+      "responses": 904,
+      "publicPeople": 20,
+      "cutoff": 5395477,
+      "trainingResponses": 723,
+      "testTargets": 171,
+      "testPaths": 1291,
+      "model": {
+        "status": "learning",
+        "targets": 646,
+        "lambda": 0.1,
+        "validation": {
+          "targets": 130,
+          "baselineMse": 0.0098835284515241,
+          "modelMse": 0.008244518319924246,
+          "bestBaseline": "sharedFilmOffset",
+          "baselines": {
+            "sourceCopy": 0.060616956488216724,
+            "sharedFilmOffset": 0.0098835284515241,
+            "populationMean": 0.09061476851079249
+          }
+        }
+      },
+      "test": {
+        "baselines": {
+          "sourceCopy": 0.05889773699922149,
+          "sharedFilmOffset": 0.009016271207810754,
+          "populationMean": 0.08833309673155167
+        },
+        "sourceCopyMse": 0.05889773699922149,
+        "transferMse": 0.007447407254795918,
+        "transferMae": 0.06262287059304751,
+        "relativeMseReduction": 0.8735535924768322
+      },
+      "intentRanking": {
+        "queries": 44,
+        "transferRegretAt1": 0,
+        "sourceRegretAt1": 0.012753381246097898,
+        "transferTop1Agreement": 1,
+        "sourceTop1Agreement": 0.8181818181818182
+      },
+      "trainMilliseconds": 74
+    }
+  ],
+  "unrelatedFeelings": {
+    "responses": 870,
+    "publicPeople": 20,
+    "cutoff": 5547905,
+    "trainingResponses": 696,
+    "testTargets": 165,
+    "testPaths": 1311,
+    "model": {
+      "status": "collecting",
+      "targets": 618,
+      "lambda": null,
+      "validation": {
+        "targets": 124,
+        "baselineMse": 0.08458245428213182,
+        "modelMse": 0.1646111064372945,
+        "bestBaseline": "populationMean",
+        "baselines": {
+          "sourceCopy": 0.1646111064372945,
+          "sharedFilmOffset": 0.1675096734373945,
+          "populationMean": 0.08458245428213182
+        }
+      }
+    },
+    "test": {
+      "baselines": {
+        "sourceCopy": 0.16763096366298952,
+        "sharedFilmOffset": 0.17245644218050019,
+        "populationMean": 0.0833546906923346
+      },
+      "sourceCopyMse": 0.16763096366298952,
+      "transferMse": 0.16763096366298952,
+      "transferMae": 0.3346641072906588,
+      "relativeMseReduction": 0
+    },
+    "intentRanking": {
+      "queries": 56,
+      "transferRegretAt1": 0.11204234845585563,
+      "sourceRegretAt1": 0.11204234845585563,
+      "transferTop1Agreement": 0.2857142857142857,
+      "sourceTop1Agreement": 0.2857142857142857
+    },
+    "trainMilliseconds": 57
+  }
+}

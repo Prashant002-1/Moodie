@@ -1,0 +1,470 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		16830DE2E332C43FCAD741C4 /* MoodieUITests/MoodieUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3A63DF586BA5CCAE22CFF1 /* MoodieUITests/MoodieUITests.swift */; };
+		2019F26CCBA3400EE3726F5F /* Moodie/Resources/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E3A4F343E1FC01A9FB39B83F /* Moodie/Resources/PrivacyInfo.xcprivacy */; };
+		24556FEB00A132414E0D2EA3 /* Moodie/Features/AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5308ACFCFE7D446D31AB285E /* Moodie/Features/AccountView.swift */; };
+		24BCEE8C2CC459F14906EAD8 /* Moodie/Features/ComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0463265E0CDA903B34E1E630 /* Moodie/Features/ComposerView.swift */; };
+		2623D802E8DFCD0CC7A24866 /* Moodie/Features/SuggestionReplyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA04D5185EED09C57A822E49 /* Moodie/Features/SuggestionReplyView.swift */; };
+		27473856371196A176E756E7 /* MoodieUITests/AdaptiveJourneyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0A23C19C51981AEE0E1A81 /* MoodieUITests/AdaptiveJourneyTests.swift */; };
+		294EF6C98F8D5E45E3282D32 /* Moodie/App/AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E58035A3A1E273811CF4B8D /* Moodie/App/AppState.swift */; };
+		377D69E58485C0A31E07AEF5 /* Moodie/Features/SuggestionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 330058A1A840BFF6EC34E224 /* Moodie/Features/SuggestionDetailView.swift */; };
+		3876931120FB9644970DEC79 /* Moodie/Services/KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FCDA1FD1163124640CAADE7 /* Moodie/Services/KeychainStore.swift */; };
+		44FF44D7A9AB268E36878935 /* Moodie/Features/AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839A988956FC6A19A3E3B29F /* Moodie/Features/AuthView.swift */; };
+		505E569E9F3A96E668D01C23 /* Moodie/Features/SafetyViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E57985A225A3555F10CED01 /* Moodie/Features/SafetyViews.swift */; };
+		55FE36C6342A712A5C9B5525 /* MoodieUITests/RecommendationJourneyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC16ADE500C2B5CA61C6A978 /* MoodieUITests/RecommendationJourneyTests.swift */; };
+		57958622B27D55CF62DB5113 /* Moodie/Features/SuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4020F81FD289DCCDB67CE78 /* Moodie/Features/SuggestionsView.swift */; };
+		58F6FF4A91CEAF87548536BF /* Moodie/Design/MoodieTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D689E0C3FE1947D425B27464 /* Moodie/Design/MoodieTheme.swift */; };
+		5ECD46BC4438EC4CE46B8229 /* Moodie/Features/PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6590D51F115B9A86290CF164 /* Moodie/Features/PeopleView.swift */; };
+		632C3B349660558015AC658D /* Moodie/Features/ResponseInputs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C31465B132534C4B5D8FF0 /* Moodie/Features/ResponseInputs.swift */; };
+		8D30BB1C9C1E039F53AC2DAA /* Moodie/Features/HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E130AED9541672511591D444 /* Moodie/Features/HomeView.swift */; };
+		92A9521D765F6DD4510A71F0 /* Moodie/Design/NativeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58E1B96A6CAA659CDA5C1364 /* Moodie/Design/NativeComponents.swift */; };
+		93E256571CCB304FF341793C /* Moodie/Features/SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A3E0A3C0675351F9D0C541 /* Moodie/Features/SearchView.swift */; };
+		A22DCC1AE98254D843692239 /* Moodie/Features/SendSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E333A384C7E409D0C0A5C502 /* Moodie/Features/SendSuggestionView.swift */; };
+		A6C61932A0D29515B7F711CD /* Moodie/Features/ResponseViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6C75C173BCB6CBAB75767FA /* Moodie/Features/ResponseViews.swift */; };
+		C59C257E48667BA7AD305A28 /* Moodie/Features/DiaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47A4D76AF422336DF4AB8C0B /* Moodie/Features/DiaryView.swift */; };
+		C6C9E9F08DA160762E3A3677 /* Moodie/Features/FilmDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A061E535C31E5C177576EC /* Moodie/Features/FilmDetailView.swift */; };
+		C760F22A99FB3A283559615F /* Moodie/Features/SavedResponseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95D100C15E3B3B0E8AE47DB9 /* Moodie/Features/SavedResponseView.swift */; };
+		D7A04A60BEA021B667BA4879 /* Moodie/App/MoodieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65E156D4A21A8563469D62E3 /* Moodie/App/MoodieApp.swift */; };
+		D9F82689E8F760ECED47CA3E /* MoodieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6A224FA1D1DD751157EB0C /* MoodieCore */; };
+		FE0D9FFE46E0473A74806B80 /* Moodie/Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AD0848C178CD57A5ACE0FFB2 /* Moodie/Resources/Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		EEE53D504AFCC8D4B0AA715A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98F54143AB4E86B28C3AFEE0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F75109BEB4DD8800DA6B45F8;
+			remoteInfo = Moodie;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0463265E0CDA903B34E1E630 /* Moodie/Features/ComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/ComposerView.swift; sourceTree = "<group>"; };
+		1A0A23C19C51981AEE0E1A81 /* MoodieUITests/AdaptiveJourneyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodieUITests/AdaptiveJourneyTests.swift; sourceTree = "<group>"; };
+		2E57985A225A3555F10CED01 /* Moodie/Features/SafetyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/SafetyViews.swift; sourceTree = "<group>"; };
+		2E58035A3A1E273811CF4B8D /* Moodie/App/AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/App/AppState.swift; sourceTree = "<group>"; };
+		2FCDA1FD1163124640CAADE7 /* Moodie/Services/KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Services/KeychainStore.swift; sourceTree = "<group>"; };
+		330058A1A840BFF6EC34E224 /* Moodie/Features/SuggestionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/SuggestionDetailView.swift; sourceTree = "<group>"; };
+		36C31465B132534C4B5D8FF0 /* Moodie/Features/ResponseInputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/ResponseInputs.swift; sourceTree = "<group>"; };
+		47A4D76AF422336DF4AB8C0B /* Moodie/Features/DiaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/DiaryView.swift; sourceTree = "<group>"; };
+		4E783A9E10D2A8ABA38CD11C /* Moodie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Moodie.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5308ACFCFE7D446D31AB285E /* Moodie/Features/AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/AccountView.swift; sourceTree = "<group>"; };
+		58E1B96A6CAA659CDA5C1364 /* Moodie/Design/NativeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Design/NativeComponents.swift; sourceTree = "<group>"; };
+		6590D51F115B9A86290CF164 /* Moodie/Features/PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/PeopleView.swift; sourceTree = "<group>"; };
+		65E156D4A21A8563469D62E3 /* Moodie/App/MoodieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/App/MoodieApp.swift; sourceTree = "<group>"; };
+		6C7CCDEB3609F1FAA874E941 /* MoodieUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoodieUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		839A988956FC6A19A3E3B29F /* Moodie/Features/AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/AuthView.swift; sourceTree = "<group>"; };
+		8E9149AE80645709DB17E03D /* Config/Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Release.xcconfig; sourceTree = "<group>"; };
+		95D100C15E3B3B0E8AE47DB9 /* Moodie/Features/SavedResponseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/SavedResponseView.swift; sourceTree = "<group>"; };
+		A6C75C173BCB6CBAB75767FA /* Moodie/Features/ResponseViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/ResponseViews.swift; sourceTree = "<group>"; };
+		AD0848C178CD57A5ACE0FFB2 /* Moodie/Resources/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Moodie/Resources/Assets.xcassets; sourceTree = "<group>"; };
+		B1A3E0A3C0675351F9D0C541 /* Moodie/Features/SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/SearchView.swift; sourceTree = "<group>"; };
+		B7200FF34C79FB0FB045E4D3 /* Config/Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Debug.xcconfig; sourceTree = "<group>"; };
+		C4020F81FD289DCCDB67CE78 /* Moodie/Features/SuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/SuggestionsView.swift; sourceTree = "<group>"; };
+		C7A061E535C31E5C177576EC /* Moodie/Features/FilmDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/FilmDetailView.swift; sourceTree = "<group>"; };
+		D689E0C3FE1947D425B27464 /* Moodie/Design/MoodieTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Design/MoodieTheme.swift; sourceTree = "<group>"; };
+		DC16ADE500C2B5CA61C6A978 /* MoodieUITests/RecommendationJourneyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodieUITests/RecommendationJourneyTests.swift; sourceTree = "<group>"; };
+		E130AED9541672511591D444 /* Moodie/Features/HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/HomeView.swift; sourceTree = "<group>"; };
+		E333A384C7E409D0C0A5C502 /* Moodie/Features/SendSuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/SendSuggestionView.swift; sourceTree = "<group>"; };
+		E3A4F343E1FC01A9FB39B83F /* Moodie/Resources/PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Moodie/Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		FA04D5185EED09C57A822E49 /* Moodie/Features/SuggestionReplyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moodie/Features/SuggestionReplyView.swift; sourceTree = "<group>"; };
+		FB3A63DF586BA5CCAE22CFF1 /* MoodieUITests/MoodieUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodieUITests/MoodieUITests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BD92572B49AC16A86614498D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9F82689E8F760ECED47CA3E /* MoodieCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E05DB79C430AA1B0BA487AFC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		870B3294C0CBD48AF6BBCC1B = {
+			isa = PBXGroup;
+			children = (
+				2E58035A3A1E273811CF4B8D /* Moodie/App/AppState.swift */,
+				65E156D4A21A8563469D62E3 /* Moodie/App/MoodieApp.swift */,
+				D689E0C3FE1947D425B27464 /* Moodie/Design/MoodieTheme.swift */,
+				58E1B96A6CAA659CDA5C1364 /* Moodie/Design/NativeComponents.swift */,
+				5308ACFCFE7D446D31AB285E /* Moodie/Features/AccountView.swift */,
+				839A988956FC6A19A3E3B29F /* Moodie/Features/AuthView.swift */,
+				0463265E0CDA903B34E1E630 /* Moodie/Features/ComposerView.swift */,
+				47A4D76AF422336DF4AB8C0B /* Moodie/Features/DiaryView.swift */,
+				C7A061E535C31E5C177576EC /* Moodie/Features/FilmDetailView.swift */,
+				E130AED9541672511591D444 /* Moodie/Features/HomeView.swift */,
+				6590D51F115B9A86290CF164 /* Moodie/Features/PeopleView.swift */,
+				36C31465B132534C4B5D8FF0 /* Moodie/Features/ResponseInputs.swift */,
+				A6C75C173BCB6CBAB75767FA /* Moodie/Features/ResponseViews.swift */,
+				2E57985A225A3555F10CED01 /* Moodie/Features/SafetyViews.swift */,
+				95D100C15E3B3B0E8AE47DB9 /* Moodie/Features/SavedResponseView.swift */,
+				B1A3E0A3C0675351F9D0C541 /* Moodie/Features/SearchView.swift */,
+				E333A384C7E409D0C0A5C502 /* Moodie/Features/SendSuggestionView.swift */,
+				330058A1A840BFF6EC34E224 /* Moodie/Features/SuggestionDetailView.swift */,
+				FA04D5185EED09C57A822E49 /* Moodie/Features/SuggestionReplyView.swift */,
+				C4020F81FD289DCCDB67CE78 /* Moodie/Features/SuggestionsView.swift */,
+				2FCDA1FD1163124640CAADE7 /* Moodie/Services/KeychainStore.swift */,
+				AD0848C178CD57A5ACE0FFB2 /* Moodie/Resources/Assets.xcassets */,
+				E3A4F343E1FC01A9FB39B83F /* Moodie/Resources/PrivacyInfo.xcprivacy */,
+				B7200FF34C79FB0FB045E4D3 /* Config/Debug.xcconfig */,
+				8E9149AE80645709DB17E03D /* Config/Release.xcconfig */,
+				1A0A23C19C51981AEE0E1A81 /* MoodieUITests/AdaptiveJourneyTests.swift */,
+				FB3A63DF586BA5CCAE22CFF1 /* MoodieUITests/MoodieUITests.swift */,
+				DC16ADE500C2B5CA61C6A978 /* MoodieUITests/RecommendationJourneyTests.swift */,
+				FBDC4F23F93125BBEEAE800C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FBDC4F23F93125BBEEAE800C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4E783A9E10D2A8ABA38CD11C /* Moodie.app */,
+				6C7CCDEB3609F1FAA874E941 /* MoodieUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C062A5A4A7F4F37DD90F54CB /* MoodieUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 19170B56EA5642A46C383F29 /* Build configuration list for PBXNativeTarget "MoodieUITests" */;
+			buildPhases = (
+				77A03FEE20FE96AD9384861E /* Sources */,
+				E05DB79C430AA1B0BA487AFC /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				73996D0FF31A2C017A5EAC0F /* PBXTargetDependency */,
+			);
+			name = MoodieUITests;
+			productName = MoodieUITests;
+			productReference = 6C7CCDEB3609F1FAA874E941 /* MoodieUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		F75109BEB4DD8800DA6B45F8 /* Moodie */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4867F1BF372A84237FA0A5A7 /* Build configuration list for PBXNativeTarget "Moodie" */;
+			buildPhases = (
+				7F1C4FCDFBE97A54F0065C1D /* ShellScript */,
+				949D493B91791558E87BC5D7 /* Sources */,
+				BD92572B49AC16A86614498D /* Frameworks */,
+				8ECC8B5D05B79F879ACDF1A2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Moodie;
+			packageProductDependencies = (
+				8D6A224FA1D1DD751157EB0C /* MoodieCore */,
+			);
+			productName = Moodie;
+			productReference = 4E783A9E10D2A8ABA38CD11C /* Moodie.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		98F54143AB4E86B28C3AFEE0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					C062A5A4A7F4F37DD90F54CB = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = F75109BEB4DD8800DA6B45F8;
+					};
+					F75109BEB4DD8800DA6B45F8 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+				};
+			};
+			buildConfigurationList = 640DC9EFD529235A8D9E2727 /* Build configuration list for PBXProject "Moodie" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 870B3294C0CBD48AF6BBCC1B;
+			packageReferences = (
+				B747EAD6A8D7189EE159E1E4 /* XCLocalSwiftPackageReference "MoodieCore" */,
+			);
+			productRefGroup = FBDC4F23F93125BBEEAE800C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F75109BEB4DD8800DA6B45F8 /* Moodie */,
+				C062A5A4A7F4F37DD90F54CB /* MoodieUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8ECC8B5D05B79F879ACDF1A2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE0D9FFE46E0473A74806B80 /* Moodie/Resources/Assets.xcassets in Resources */,
+				2019F26CCBA3400EE3726F5F /* Moodie/Resources/PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7F1C4FCDFBE97A54F0065C1D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/validate_release.py",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/bin/python3 \"$SRCROOT/scripts/validate_release.py\"";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		77A03FEE20FE96AD9384861E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27473856371196A176E756E7 /* MoodieUITests/AdaptiveJourneyTests.swift in Sources */,
+				16830DE2E332C43FCAD741C4 /* MoodieUITests/MoodieUITests.swift in Sources */,
+				55FE36C6342A712A5C9B5525 /* MoodieUITests/RecommendationJourneyTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		949D493B91791558E87BC5D7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				294EF6C98F8D5E45E3282D32 /* Moodie/App/AppState.swift in Sources */,
+				D7A04A60BEA021B667BA4879 /* Moodie/App/MoodieApp.swift in Sources */,
+				58F6FF4A91CEAF87548536BF /* Moodie/Design/MoodieTheme.swift in Sources */,
+				92A9521D765F6DD4510A71F0 /* Moodie/Design/NativeComponents.swift in Sources */,
+				24556FEB00A132414E0D2EA3 /* Moodie/Features/AccountView.swift in Sources */,
+				44FF44D7A9AB268E36878935 /* Moodie/Features/AuthView.swift in Sources */,
+				24BCEE8C2CC459F14906EAD8 /* Moodie/Features/ComposerView.swift in Sources */,
+				C59C257E48667BA7AD305A28 /* Moodie/Features/DiaryView.swift in Sources */,
+				C6C9E9F08DA160762E3A3677 /* Moodie/Features/FilmDetailView.swift in Sources */,
+				8D30BB1C9C1E039F53AC2DAA /* Moodie/Features/HomeView.swift in Sources */,
+				5ECD46BC4438EC4CE46B8229 /* Moodie/Features/PeopleView.swift in Sources */,
+				632C3B349660558015AC658D /* Moodie/Features/ResponseInputs.swift in Sources */,
+				A6C61932A0D29515B7F711CD /* Moodie/Features/ResponseViews.swift in Sources */,
+				505E569E9F3A96E668D01C23 /* Moodie/Features/SafetyViews.swift in Sources */,
+				C760F22A99FB3A283559615F /* Moodie/Features/SavedResponseView.swift in Sources */,
+				93E256571CCB304FF341793C /* Moodie/Features/SearchView.swift in Sources */,
+				A22DCC1AE98254D843692239 /* Moodie/Features/SendSuggestionView.swift in Sources */,
+				377D69E58485C0A31E07AEF5 /* Moodie/Features/SuggestionDetailView.swift in Sources */,
+				2623D802E8DFCD0CC7A24866 /* Moodie/Features/SuggestionReplyView.swift in Sources */,
+				57958622B27D55CF62DB5113 /* Moodie/Features/SuggestionsView.swift in Sources */,
+				3876931120FB9644970DEC79 /* Moodie/Services/KeychainStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		73996D0FF31A2C017A5EAC0F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F75109BEB4DD8800DA6B45F8 /* Moodie */;
+			targetProxy = EEE53D504AFCC8D4B0AA715A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		00F209874A1F7309F6DCEAA7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C449802CFC00FE43A29E0F19 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.prashant.moodie.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Moodie;
+			};
+			name = Debug;
+		};
+		C4D458CFDB61996E24F4F16F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.prashant.moodie.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Moodie;
+			};
+			name = Release;
+		};
+		ED8772ADEC3A6C25161BC957 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		F72D4F08E84CA4C7F809A7CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8E9149AE80645709DB17E03D /* Config/Release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(MOODIE_TEAM_ID)";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Moodie/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MOODIE_BUNDLE_ID)";
+				PRODUCT_NAME = Moodie;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F8975E934DA2067E0E497395 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B7200FF34C79FB0FB045E4D3 /* Config/Debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(MOODIE_TEAM_ID)";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Moodie/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MOODIE_BUNDLE_ID)";
+				PRODUCT_NAME = Moodie;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		19170B56EA5642A46C383F29 /* Build configuration list for PBXNativeTarget "MoodieUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C449802CFC00FE43A29E0F19 /* Debug */,
+				C4D458CFDB61996E24F4F16F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4867F1BF372A84237FA0A5A7 /* Build configuration list for PBXNativeTarget "Moodie" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F8975E934DA2067E0E497395 /* Debug */,
+				F72D4F08E84CA4C7F809A7CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		640DC9EFD529235A8D9E2727 /* Build configuration list for PBXProject "Moodie" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ED8772ADEC3A6C25161BC957 /* Debug */,
+				00F209874A1F7309F6DCEAA7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		B747EAD6A8D7189EE159E1E4 /* XCLocalSwiftPackageReference "MoodieCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = MoodieCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8D6A224FA1D1DD751157EB0C /* MoodieCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B747EAD6A8D7189EE159E1E4 /* XCLocalSwiftPackageReference "MoodieCore" */;
+			productName = MoodieCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 98F54143AB4E86B28C3AFEE0 /* Project object */;
+}
