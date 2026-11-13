@@ -1,5 +1,7 @@
 # Emotional signal model
 
+> Superseded in part on 2026-11-13 by [FEELINGS.md](FEELINGS.md): intensity is no longer entered or shown as an amount. Where the two disagree, FEELINGS.md is current.
+
 ## Decision
 
 Moodie saves how a person says a film felt. The person is the source of that record.

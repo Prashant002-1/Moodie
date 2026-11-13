@@ -1,25 +1,25 @@
 ---
 name: Moodie
-description: Social film discovery through people and their responses.
-direction: "The Programme"
+description: Films and shows, found through people.
+direction: "Gallery and screening room"
 tokens: design/tokens.json
 ---
 
 # Design system: Moodie
 
-Revised 2026-11-13. This replaces the earlier "Living Afterimage" direction. The reasons are in [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md), principle 6.
+Revised 2026-11-13 (second revision the same day, after the paper-and-red palette was rejected as muddy and the type as too loose). The reasons are in [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md), principles 6 and 11.
 
-## Creative direction: The Programme
+## Direction: a gallery wall and a screening room
 
-Moodie should feel like walking into a cinémathèque: a festival programme, a museum wall, an archive of film. The references are MUBI, the catalogues of film institutions, Cannes, and the shops that used to be lined with discs.
+Two neutral rooms and nothing else. In light, a white wall with black type. In dark, a near-black room. The only colour on screen is film artwork.
 
-Those places look premium for one reason: the work is the decoration. Nothing competes with the films.
+The references are Letterboxd and Beli for clarity, MUBI and film-institution catalogues for restraint. What they share: you never notice the interface.
 
-Three rules carry the direction.
-
-1. **The canvas is still.** One flat, warm paper surface. No ambient colour, no gradient fields, no glows, no scanlines, no grain. Colour on screen comes from film artwork and, sparingly, from one accent.
-2. **Typography is the ornament.** Hierarchy comes from a serif display face against a quiet grotesque, generous space and thin rules. Not from boxes, shadows or tints.
-3. **Films are hung, not piled.** Artwork sits on the canvas like a work on a wall: square corners, a caption, room around it.
+1. **Neutral, not tinted.** White and near-black with grey rules. No beige, no cream, no warm or cool cast, no gradients, no glows, no grain.
+2. **Ink is the emphasis.** Selection, the primary action and the current tab are ink on canvas. There is no brand colour doing that job.
+3. **Titles are serif, everything else is quiet.** A film's title is the only thing set in the display face. The rest is one tight sans.
+4. **Lists, not cards.** Content sits on the canvas in rows separated by hairlines. No boxes inside boxes, no shadows.
+5. **Nothing is said twice.** One control per action, one label per thing.
 
 ## Tokens
 
@@ -28,97 +28,101 @@ Three rules carry the direction.
 - `src/styles/tokens.css`: CSS custom properties prefixed `--m-`.
 - `ios/Moodie/Design/Tokens.swift` and the semantic colorsets in the iOS asset catalog.
 
-Android will read the same file. `npm run tokens:check` runs in the web build and fails if a generated file is stale. Never edit a generated file, and never introduce a raw colour, size or radius in a component: add or reuse a token.
-
-Older stylesheets still use legacy names such as `--color-chalk` and `--color-oxide`. They now resolve to tokens in `src/index.css`. New rules use `--m-*` directly, and legacy names are removed as each screen is revisited.
+Android will read the same file. `npm run tokens:check` runs in the web build and fails if a generated file is stale. Never edit a generated file. Never introduce a raw colour, size or radius in a component.
 
 ## Colour
 
-| Role | Light | Dark (screening room) | Use |
+| Role | Light | Dark | Use |
 | --- | --- | --- | --- |
-| canvas | `#F4F1EA` | `#0F1214` | The page. |
-| surface | `#FBF9F5` | `#181C1F` | Fields, cards, sheets. |
-| sunken | `#EAE6DD` | `#0A0C0E` | Wells and quiet secondary areas. |
-| ink | `#161D21` | `#EFEBE2` | Text, primary buttons, selection. |
-| inkSecondary | `#465056` | `#B4B8B6` | Supporting copy. |
-| inkMuted | `#626B70` | `#8C9294` | Metadata and labels. Lowest contrast allowed for text. |
-| rule / ruleStrong | `#DAD6CD` / `#B4B0A7` | `#2A2F33` / `#454B50` | Hairlines and control borders. |
-| accent | `#A63B2C` | `#E0705F` | One deliberate mark per screen: an active state, a single call to action. |
-| laurel | `#8F7437` | `#C9A961` | Rare. Reserved for honours and programme marks. |
-| inverse / onInverse | `#161D21` / `#F4F1EA` | reversed | A dark frame on the light canvas, used for one featured item. |
+| canvas | `#FFFFFF` | `#0B0B0C` | The page. |
+| surface | `#FFFFFF` | `#141415` | Fields and raised sheets. |
+| sunken | `#F5F5F3` | `#060607` | Wells, avatar and poster placeholders, hover. |
+| ink | `#0E0E0E` | `#F3F2EF` | Text, primary buttons, selection. |
+| inkSecondary | `#454545` | `#B9B8B4` | Supporting copy. |
+| inkMuted | `#6E6E6E` | `#8B8A87` | Metadata. Lowest contrast allowed for text. |
+| rule / ruleStrong | `#E8E8E5` / `#CFCFCB` | `#242425` / `#3B3B3D` | Hairlines and control borders. |
+| accent | `#2B3FD0` | `#96A2FF` | The keyboard focus ring. Reserved, otherwise unused. |
+| laurel | `#8F7437` | `#C9A961` | Reserved for honours. Unused today. |
+| error / success | `#B3261E` / `#1F6B4F` | `#F08C86` / `#7FBFA9` | Messages only. |
 
 Rules:
 
-- No gradients as decoration, in any hue. A gradient is allowed only as a scrim that keeps text legible over artwork.
-- The accent is a deep red, not a pink or coral. It never fills large areas and never tints a background.
-- Shadows are neutral ink at low opacity. No coloured or hard-offset shadows.
-- The dark theme is defined in tokens. iOS follows the system appearance. The web uses light until each screen has been checked in dark.
+- The web follows the system light or dark setting. A person can fix it in Account, Appearance.
+- No decorative colour. A gradient is allowed only as a scrim under text on artwork.
+- Feelings have no colour. The per-feeling hues in the token file remain only because the iPhone app still reads them; they go when it is redesigned.
 
 ## Typography
 
-- **Display:** Newsreader. Film and show titles, page headings, the rare human moment. Titles may be set in italic where they appear inside a sentence.
-- **Interface and reading:** Instrument Sans on the web, the system face (SF) on iOS. Controls, notes, metadata.
-- **Mono:** the system monospace, for catalogue numbers and dates where alignment matters.
+- **Display:** Newsreader. Film and show titles and page headings only.
+- **Interface and reading:** Inter on the web and Android, the system face (SF) on iOS. They are close enough to read as one identity.
+- **Mono:** system monospace, where digits must align.
 
-| Role | Size / line | Face |
-| --- | --- | --- |
-| display | 56 / 60 | Display |
-| title1 | 40 / 44 | Display |
-| title2 | 30 / 36 | Display |
-| title3 | 22 / 28 | Display |
-| body | 17 / 26 | Sans |
-| callout | 15 / 22 | Sans |
-| caption | 13 / 18 | Sans |
-| label | 11 / 14, uppercase, tracked 0.08em, semibold | Sans |
+| Role | Size / line | Tracking | Face |
+| --- | --- | --- | --- |
+| display | 44 / 48 | -0.02em | Display |
+| title1 | 32 / 36 | -0.015em | Display |
+| title2 | 24 / 28 | -0.01em | Display |
+| title3 | 19 / 24 | -0.005em | Display |
+| body | 16 / 24 | -0.011em | Sans |
+| callout | 14 / 20 | -0.006em | Sans |
+| caption | 13 / 18 | 0 | Sans |
+| label | 12 / 16, medium | 0 | Sans |
 
-iOS maps each role to a Dynamic Type style so text follows the reader's size setting. Uppercase labels are for short functional categories only.
+No uppercase labels and no wide letter-spacing anywhere. Section headings are 14px semibold sans, not small capitals.
 
 ## Space, shape and depth
 
-- Spacing steps: 4, 8, 12, 16, 24, 32, 48, 64, 96. Prefer more space to another divider.
-- Radius: posters 2, controls 6, surfaces 10. Corners are close to square. No pills except true toggles.
-- Depth is rare. Most surfaces are flat with a hairline. One soft neutral shadow may lift artwork.
-- Avoid repeated floating cards, glass tiles and oversized radii.
+- Spacing steps: 4, 8, 12, 16, 24, 32, 48, 64, 96.
+- Radius: posters 4, controls 8, surfaces 12, pills for chips and avatars only.
+- No shadows. Separation is a hairline or space.
+
+## Navigation: one identity on every platform
+
+Five destinations in a fixed order: **Home, Watchlist, add a response, Search, Diary.** Activity (a bell) and Account (the person's initial) sit at the top right.
+
+- Wide screens: a top bar with the wordmark, the destinations as text, and the add button.
+- Phones: the same destinations as a custom bottom bar with the add button in the middle.
+- iOS and Android use this bar, drawn by the app, not the platform's default tab bar, so the three clients look like one product. (The iPhone app still uses the system tab bar; it changes when the phone is redesigned.)
+
+The mark is the word "Moodie" set in the display face. There is no pictorial logo yet; the old film-strip mark is retired from the interface.
 
 ## Motion
 
-Motion is smooth and has a reason: it shows where something came from or went.
-
 - Durations: 120 ms for state changes, 220 ms for most transitions, 420 ms for a change of scene. Ease out.
-- Animate transform and opacity only.
-- Nothing moves on its own. No ambient drift, no perpetual loops in the signed-in product.
-- `prefers-reduced-motion` and Reduce Motion remove non-essential movement.
+- Animate transform and opacity only. Nothing moves on its own.
+- Native scrolling. No scroll hijacking.
+- `prefers-reduced-motion` removes non-essential movement.
 
-## Feelings
+## Components
 
-Feelings are words a person chose. Colour is a secondary cue and never stands alone: every feeling is shown with its label and has an accessible name. Never present a feeling as a percentage or a score. The seven keys and their hues in `design/tokens.json` are a scaffold until the vocabulary is redesigned (see the roadmap).
+All in `src/styles/app.css`. The working brief for building a screen is [design/WEB_UI_RULES.md](design/WEB_UI_RULES.md).
 
-## Components and patterns
+- **Response:** person, film title, feelings as words, note, verdict and what stood out, then like, comment and add to watchlist. One component (`ResponseCard`).
+- **Recommendation:** leads with the person and their reason. The shared film and both people's words are the evidence. No score.
+- **Feelings:** words in order, strongest first, in ink. See [docs/FEELINGS.md](docs/FEELINGS.md).
+- **Chips** for choosing words; selected is ink. **Tabs** are text with a hairline. **Options** (visibility, appearance, AI) are bordered radio blocks; selected is an ink border.
+- **Buttons:** primary is ink, secondary is outlined, quiet is text. One primary action per screen at most.
+- **Forms:** label above field, 44px controls, one column.
 
-- **Response:** person, title, first-person note and feelings stay together. Never a media-first social card.
-- **Recommendation:** leads with the person and their reason. The shared film and both people's responses can be compared. No score.
-- **Choice cards** (see the onboarding AI choice): a numeral, a serif title, one-line summary, a ruled list. Selection is an ink border, not a colour fill.
-- **Primary action:** ink on canvas. The accent is for the one action that matters most on a screen, if any.
-- **Navigation, web:** a slim icon rail when signed in, with no header. A plain header with Moodie, Sign in and Sign up when signed out.
-- **Navigation, iOS:** system tab bar with Home, Search, People, Diary. Activity lives off Home, Account off Diary. Add a response is a sheet.
-- **Onboarding:** one decision per screen, with no navigation competing with it.
+## Words
 
-## Copy
+The person using Moodie is the most intelligent part of the system.
 
-Use film, show, response, feelings, note, person, diary, follow, recommend literally. Describe what happens before explaining why. Keep the person and the source visible in every recommendation.
-
-Avoid invented feature names, marketing language, technical architecture in the interface, and any claim that Moodie understands, detects or diagnoses a person.
+- The product never sells itself from inside. No slogans, no taglines, no "start your journey".
+- A screen is not explained. A heading, labels and content are enough.
+- Empty states are one factual sentence and at most one action.
+- Plain nouns and verbs: Watchlist, Diary, Follow, Reply, Save, Send.
+- Errors and confirmations that protect data or privacy are kept and written plainly.
 
 ## Do not
 
-- Add gradient fields, glows, fog, scanlines, grain or coloured light of any kind.
-- Add ratings, stars, percentages, compatibility scores or popularity-first ranking.
-- Build a streaming-style catalog wall.
-- Use film strips, clapperboards, notebooks or other props as decoration.
-- Use a coloured left border as a mark on a box or quote.
-- Hide a person's note, feelings or the source of a recommendation behind hover.
-- Reintroduce the name EmotionFlix or anything ending in "flix".
+- Add gradients, glows, tints, grain, shadows or coloured decoration.
+- Add ratings, stars, percentages, compatibility scores, charts of a person's feelings or popularity ranking.
+- Add a mood picker of any kind.
+- Use icons as decoration, or two controls for one action.
+- Use uppercase tracked labels.
+- Reintroduce the name EmotionFlix.
 
 ## Known gaps
 
-The landing page was composed around the removed ambient field and needs a new centre. Many signed-in web screens still carry legacy values, and the iOS screens are close to system defaults. The app icon and brand mark are placeholders. All of this is tracked in [docs/ROADMAP.md](docs/ROADMAP.md).
+The iPhone app has not been moved to this system: it still uses the system tab bar, the old feeling sliders and colours. There is no pictorial brand mark or app icon. The signed-out front page is a single statement and two buttons; a real product page is separate work. Tracked in [docs/ROADMAP.md](docs/ROADMAP.md).

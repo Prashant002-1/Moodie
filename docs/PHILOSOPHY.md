@@ -72,8 +72,9 @@ So there has to be a system for recording sentiment that stays honest:
 - Feelings are never shown back as percentages, charts of the self, "taste DNA" or a diagnosis.
 - Mixed and contradictory feelings are normal. A horror film can be joyful. Sadness is not a low score.
 - Feelings are a way for two people to recognise each other on a title. They are not a mood picker that prescribes what to watch.
+- Strength is an order, not an amount: a person names up to three feelings and the first is the strongest.
 
-*In the product:* the feeling vocabulary and the way it is captured are still a scaffold (see the divergences below). Getting this right matters more than shipping it quickly.
+*In the product:* [FEELINGS.md](FEELINGS.md) is the working model. The web follows it. The words themselves are still a scaffold.
 
 ### 5. AI is a choice
 
@@ -87,17 +88,15 @@ Every person chooses, on the first page of onboarding, between Moodie with AI an
 
 The people-led matching (comparing feelings two people entered on the same title) is ordinary arithmetic on what they wrote down. It is not what this switch controls and it works in both modes.
 
-### 6. It should feel like walking into a cinémathèque
+### 6. It should feel like a gallery, and a screening room
 
-Moodie should be beautiful, smooth, fluid and artistic. The references are MUBI, the archives and directories of film institutions, a film festival such as Cannes, an art museum, and the shops that used to be lined with film discs.
+Moodie should be beautiful, smooth and quiet. The references are Letterboxd and Beli, which are clean and intuitive and feel right for their purpose, and MUBI, film archives, a festival such as Cannes and an art museum, where the work is the decoration.
 
-What those places share: the work is the decoration. Composition, hierarchy and typography are clean and deliberate. It looks premium because nothing is competing with the films.
-
-- Films and people's words carry the colour. The interface stays still.
-- No ambient colour: no pink, orange or red gradient fields, no glows, no fog. They are visually distracting. They suit a product marketing page and do not belong in the product. (Direct feedback, 2026-11-13.)
-- Typography does the work that ornament would otherwise do.
-- Motion is smooth and has a reason.
-- It should feel like a celebration of film, not a utility.
+- Films carry the colour. The interface is neutral: white, near-black and grey.
+- No ambient colour: no pink, orange or red gradient fields, no glows, no fog. (Direct feedback, 2026-11-13.) No beige paper either, and no red accent that fights it. (Direct feedback, later the same day.)
+- Type is tight and plain. Nothing is spaced out to look expensive.
+- One identity on iOS, Android and the web. The navigation is Moodie's own, not each platform's default.
+- It should feel like a celebration of film, not a utility, and it gets there by restraint.
 
 ### 7. A celebration of film and of television
 
@@ -114,6 +113,12 @@ An iOS app first, on the App Store as soon as it is good enough. Then the web, a
 ### 10. Built to last, built to change
 
 This will run for months. Good foundations and scaffolding matter more than any single feature. Goals, principles and this philosophy will evolve. Work that no longer fits the direction can be dropped without ceremony.
+
+### 11. The person is the most intelligent part of the system
+
+The product does not sell itself from the inside, explain itself or hold a hand. No slogans in the interface, no sentence telling someone that a connection starts with a film. Persuasion belongs on a product page. Inside, a heading, a label and the content are enough, and nothing is said or shown twice.
+
+*In the product:* simple, well-rounded solutions over clever ones. When a screen needs explaining, the screen is wrong.
 
 ## What should make Moodie different
 
@@ -133,9 +138,10 @@ Recorded honestly so the gap is visible. Each item is tracked in [ROADMAP.md](RO
 | --- | --- |
 | 2. Recommendation as relationship | Built on both clients: reason, linked viewing, reply, conversation. |
 | 3. Response, not rating | Built. No stars. "Who would like it and why" is only captured when sending a recommendation, not as part of a response. |
-| 4. Recorded, not measured | Partly. Feelings are chosen directly, but the scaffold still stores seven keys inherited from a facial-emotion model (`happy`, `angry`, `disgusted`…), offers 0 to 100 intensity sliders behind a disclosure, and iOS reads intensity aloud as a percentage. This is the gimmick risk in concrete form. |
+| 4. Recorded, not measured | On the web: up to three words in order, no sliders, no percentages, no colours, no averaged summary, no mood pickers. Still scaffold: the seven words are inherited from a facial-emotion model, the server stores decimals, and the iPhone app still has sliders. |
 | 5. AI is a choice | The choice exists at onboarding and in Account on web and iOS, and the server enforces it. No AI feature or agent connection is live yet, so today "on" changes nothing visible. |
-| 6. Cinémathèque | The ambient gradient field, scanlines and grain were removed and a shared token system introduced. The landing page and several signed-in screens still need to be recomposed to this standard. |
+| 6. Gallery and screening room | The web was rebuilt on one stylesheet and one token set, light and dark, with one navigation. The iPhone app has not been moved over. |
+| 11. No selling inside | Web copy was stripped of slogans and explanations. The iPhone app has not been reviewed for this. |
 | 7. Television | Not built. The catalog and data model are film-only. |
 | 8. Gentle memory | Not built. There are no notifications of any kind, and an earlier decision ruled reminders out. That decision is reversed by this document. |
 | 9. Everywhere | iOS (SwiftUI) and web (React) exist and run. Android does not exist. Nothing is deployed for real use. |
@@ -143,7 +149,7 @@ Recorded honestly so the gap is visible. Each item is tracked in [ROADMAP.md](RO
 ## Open questions
 
 - What is the feeling vocabulary, and how is strength expressed without a number?
-- Is the name right, given what the market research says about "mood"?
+- Is the name right, given what the market research says about "mood"? See [IDENTITY.md](IDENTITY.md).
 - What exactly does a person get from AI mode on day one?
 - How does a nudge decide when to speak, and how does a person quiet it?
 - How does a brand-new person get value before any friend has joined?
@@ -152,3 +158,4 @@ Recorded honestly so the gap is visible. Each item is tracked in [ROADMAP.md](RO
 ## Change log
 
 - 2026-11-13: First version, from Prashant's spoken brief. Added the instruction to remove gradient colour fields the same day.
+- 2026-11-13: Principle 6 rewritten after the paper-and-red palette and loose type were rejected. Principle 11 added. Principle 4 gained "order, not amount".

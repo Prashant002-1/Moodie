@@ -1,6 +1,6 @@
 # Roadmap
 
-Last updated 2026-11-13. This follows [PHILOSOPHY.md](PHILOSOPHY.md). It is an ordering, not a schedule. Reorder it freely.
+Last updated 2026-11-13. This follows [PHILOSOPHY.md](PHILOSOPHY.md) and [IDENTITY.md](IDENTITY.md). It is an ordering, not a schedule. Reorder it freely.
 
 ## Where things stand
 
@@ -24,7 +24,9 @@ The shortest path to the App Store. Nothing here is a design question; it is plu
 
 In rough priority order.
 
-- [ ] **Feelings without measurement.** Replace the seven inherited keys with a versioned vocabulary made for film. Remove percentage language and the 0 to 100 sliders. Decide how strength is expressed (present, or strongly present). Needs a product decision before code.
+- [ ] **Feelings without measurement.** The web now records up to three words in order with no numbers shown ([FEELINGS.md](FEELINGS.md)). Remaining: decide the vocabulary (a sixteen-word proposal is in that file), then store an ordered word list on the server and rebuild matching on word overlap.
+- [ ] **A recommendation link for someone without an account.** The strongest answer to the empty-network problem ([IDENTITY.md](IDENTITY.md)).
+- [ ] **Letterboxd import.**
 - [ ] **"Who would like this and why"** as part of a response, not only when sending a recommendation.
 - [ ] **Gentle memory.** Notifications that carry the person and the reason: push on iOS (APNs), an in-app return trail everywhere. Quiet by default, never a streak.
 - [ ] **Television.** Titles need an identity that is not a TMDB movie id: a `titles` table keyed by media type and catalog id, with shows, and later seasons. This touches every table that references a film, both clients and the three OpenAPI contracts, so it should happen before real accounts exist.
@@ -34,14 +36,13 @@ In rough priority order.
 
 ## 3. Design system
 
-Tokens live in `design/tokens.json` and generate the web and iOS files. The ambient gradients, scanlines and grain are gone.
+The web runs on one stylesheet (`src/styles/app.css`) built from `design/tokens.json`, in light and dark, with one navigation. See [DESIGN.md](../DESIGN.md).
 
-- [ ] Recompose the landing page to the cinémathèque standard. It was built around the removed ambient field and now needs a new centre.
-- [ ] Move the remaining hard-coded values in `src/index.css` and the layout stylesheets (about 14,000 lines) onto tokens, screen by screen, deleting dead rules as they are found.
-- [ ] A dark "screening room" theme on the web. The tokens exist; no screen has been checked in it.
-- [ ] Bring the iOS screens up from system defaults to the same typographic hierarchy.
-- [ ] An original app icon and brand mark. The current mark is a placeholder.
-- [ ] Motion: one considered set of transitions shared by both clients.
+- [ ] Your review of the web design: palette, type, navigation, composer. Everything else waits on this.
+- [ ] Move the iPhone app to the same system: its own bottom bar instead of the system tab bar, the new feelings picker, no feeling colours, the same copy rules.
+- [ ] A pictorial brand mark and app icon. The interface uses a wordmark only.
+- [ ] A separate product page for people who have never heard of Moodie. The signed-out front page is deliberately one sentence.
+- [ ] Motion: one considered set of transitions shared by the clients.
 
 ## 4. Android
 
