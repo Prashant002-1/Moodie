@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
-import { authService, type AuthResponse, type AuthUser } from '../services/authService';
+import { authService, type AiMode, type AuthResponse, type AuthUser } from '../services/authService';
 import { responseDraftStore } from '../services/responseDraftStore';
 
 export interface User extends AuthUser { displayName: string }
@@ -14,6 +14,7 @@ interface UserContextType {
   recover: (input: { identifier: string; recoveryCode: string; password: string }) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
   updateProfile: (bio: string) => Promise<void>;
+  setAiMode: (mode: AiMode) => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
   deletionReceipt: { cleanupOwner: number | null } | null;
   retryDraftCleanup: () => Promise<void>;
@@ -73,6 +74,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     recover: input => accept(authService.recover(input)),
     signOut: async () => { await authService.logout(); setUser(null); authService.clear(); broadcast(); },
     updateProfile: async bio => setUser(asUser(await authService.profile(bio))),
+    setAiMode: async mode => setUser(asUser(await authService.preferences(mode))),
     deleteAccount: async password => {
       const owner = user?.id;
       await authService.deleteAccount(password);

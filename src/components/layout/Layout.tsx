@@ -17,6 +17,8 @@ const Layout: React.FC = () => {
     return () => window.removeEventListener('moodie:action-error', failed);
   }, []);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Onboarding is one focused decision: no navigation competes with it.
+  const onboarding = Boolean(user) && location.pathname === '/welcome';
 
   const productLinks = [
     { path: '/feed', label: 'Home', icon: House },
@@ -34,10 +36,10 @@ const Layout: React.FC = () => {
   }, [location.pathname]);
 
   return (
-    <div className={`app-shell${user ? ' app-shell--product' : ' app-shell--public'}`}>
+    <div className={`app-shell${user ? ' app-shell--product' : ' app-shell--public'}${onboarding ? ' app-shell--onboarding' : ''}`}>
       <a className="skip-link" href="#main-content">Skip to content</a>
 
-      {user ? (
+      {onboarding ? null : user ? (
         <aside className="product-rail">
           <Link aria-label="Moodie home" className="product-rail__mark" to="/feed">
             <BrandMark />

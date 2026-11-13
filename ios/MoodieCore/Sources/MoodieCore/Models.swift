@@ -65,6 +65,8 @@ public struct Member: Codable, Identifiable, Hashable, Sendable {
     public let latestTitle: String?
     public let latestPosterPath: String?
     public let latestNote: String?
+    /// "on", "off", or nil until the person chooses during onboarding. Only present on the signed-in account.
+    public let aiMode: String?
 }
 
 public struct RecommendationSource: Codable, Hashable, Sendable, Identifiable {

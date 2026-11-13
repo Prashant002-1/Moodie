@@ -4,13 +4,14 @@ import { useUser } from '../contexts/UserContext';
 import { useDiary } from '../contexts/DiaryContext';
 import { authService } from '../services/authService';
 import { apiError } from '../services/apiClient';
+import AiModeChoice from '../components/account/AiModeChoice';
 import './Auth.css';
 
 export default function Account() {
-  const { user, updateProfile, signOut, deleteAccount } = useUser();
+  const { user, updateProfile, setAiMode, signOut, deleteAccount } = useUser();
   const { summary } = useDiary();
   const navigate = useNavigate();
-  const [view, setView] = useState<'profile' | 'account' | 'password'>('profile');
+  const [view, setView] = useState<'profile' | 'ai' | 'account' | 'password'>('profile');
   const [bio, setBio] = useState(user?.bio || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +34,7 @@ export default function Account() {
   };
   return <section className="page-shell account-page">
     <h1>Account</h1>
-    <div className="product-section-tabs" role="group" aria-label="Account views">{(['profile', 'account', 'password'] as const).map(tab => <button key={tab} aria-pressed={view === tab} onClick={() => { setView(tab); setError(''); setNotice(''); }} type="button">{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div>
+    <div className="product-section-tabs" role="group" aria-label="Account views">{(['profile', 'ai', 'account', 'password'] as const).map(tab => <button key={tab} aria-pressed={view === tab} onClick={() => { setView(tab); setError(''); setNotice(''); }} type="button">{tab === 'ai' ? 'AI' : tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div>
     {error && <p className="error-text" role="alert">{error}</p>}
     {notice && <p role="status">{notice}</p>}
     {view === 'profile' && <form className="account-form" onSubmit={event => { event.preventDefault(); void run(() => updateProfile(bio), 'Profile saved.'); }}>
@@ -43,6 +44,11 @@ export default function Account() {
       <button className="button button--primary" disabled={busy} type="submit">{busy ? 'Saving' : 'Save profile'}</button>
       <button className="button button--quiet" disabled={busy} type="button" onClick={() => void run(async () => { await signOut(); navigate('/signin', { replace: true }); }, '')}>Sign out</button>
     </form>}
+    {view === 'ai' && <div className="account-form account-form--wide">
+      <p>Moodie runs on people either way. This decides whether AI is part of your account. The change applies immediately.</p>
+      <AiModeChoice disabled={busy} legend="Choose how Moodie works" value={user?.ai_mode ?? null}
+        onChange={mode => { if (mode !== user?.ai_mode) void run(() => setAiMode(mode), mode === 'on' ? 'AI is on for your account.' : 'AI is off for your account.'); }} />
+    </div>}
     {view === 'password' && <form className="account-form" onSubmit={savePassword}>
       <label className="field">Current password<input required type="password" autoComplete="current-password" maxLength={128} value={currentPassword} onChange={event => setCurrentPassword(event.target.value)} /></label>
       <label className="field">New password<input required type="password" autoComplete="new-password" minLength={10} maxLength={128} value={password} onChange={event => setPassword(event.target.value)} /></label>

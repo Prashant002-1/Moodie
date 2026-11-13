@@ -37,6 +37,11 @@ struct AccountView: View {
                         NavigationLink(value: MemberRoute(username: user.username)) { Label("Your public profile", systemImage: "person.crop.rectangle") }
                     }
                 }
+                Section {
+                    NavigationLink { AIModeSettingsView() } label: {
+                        LabeledContent("AI", value: state.user?.aiMode == "on" ? "On" : "Off")
+                    }.accessibilityIdentifier("account-ai")
+                } footer: { Text("Moodie runs on people either way. This decides whether AI is part of your account.") }
                 Section("Account") {
                     NavigationLink("Change password") { PasswordView() }
                     NavigationLink("Blocked people") { BlockedPeopleView() }

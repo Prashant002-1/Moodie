@@ -27,7 +27,10 @@ struct RootView: View {
             switch state.session {
             case .loading: LaunchView()
             case .signedOut: AuthView()
-            case .signedIn: MainTabs()
+            case .signedIn:
+                // A new account makes one choice before anything else is shown. The
+                // recovery-code sheet comes first so the two never compete.
+                if state.user?.aiMode == nil && state.recoveryCode == nil { WelcomeChoiceView() } else { MainTabs() }
             case .unavailable:
                 ContentUnavailableView {
                     Label("Couldn’t reconnect", systemImage: "wifi.exclamationmark")

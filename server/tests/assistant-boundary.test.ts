@@ -4,10 +4,14 @@ import pool from '../src/config/database';
 import { AssistantAccessError, executeAssistantTool, RecommendationEvidence } from '../src/assistant/tools';
 import { explainRecommendation } from '../src/assistant/explanation';
 const feelings = { neutral: 0, happy: 1, sad: 0, angry: 0, fearful: 0, disgusted: 0, surprised: 0 };
-async function account(username: string) {
+async function account(username: string, aiMode: 'on' | 'off' | null = 'on') {
   const r = await request(app).post('/api/auth/register').set('X-Moodie-Request', '1').send({ username, email: `${username}@example.test`, password: 'boundary-test-password' });
-  expect(r.status).toBe(201); return { id: r.body.user.id, cookie: r.headers['set-cookie'][0].split(';')[0] };
+  expect(r.status).toBe(201);
+  const created = { id: r.body.user.id, cookie: r.headers['set-cookie'][0].split(';')[0] };
+  if (aiMode) expect((await preference(created.cookie, aiMode)).status).toBe(200);
+  return created;
 }
+const preference = (cookie: string, aiMode: unknown) => request(app).patch('/api/auth/preferences').set('Cookie', cookie).set('X-Moodie-Request', '1').send({ aiMode });
 async function entry(cookie: string, movieId: number, visibility: string, note: string) {
   const r = await request(app).post('/api/diary').set('Cookie', cookie).set('X-Moodie-Request', '1').send({ movieId, visibility, note, emotions: feelings, watchedOn: '2026-07-01' });
   expect(r.status).toBe(201); return r.body.entry.id;
@@ -15,6 +19,24 @@ async function entry(cookie: string, movieId: number, visibility: string, note: 
 beforeEach(async () => {
   await pool.query('TRUNCATE users, movies, auth_attempts, moderation_actions RESTART IDENTITY CASCADE');
   await pool.query("INSERT INTO movies(id,title) VALUES (101,'Shared film'),(102,'Recommended film')");
+});
+it('keeps every assistant tool closed until the person turns AI on, and closes it again when they turn it off', async () => {
+  const a = await account('alice', null), b = await account('bob');
+  const publicId = await entry(b.cookie, 102, 'public', 'A public response');
+  const context = { userId: a.id, allowedTools: ['read_public_response', 'recommendation_evidence'] as const };
+  const me = () => request(app).get('/api/auth/me').set('Cookie', a.cookie);
+  expect((await me()).body.user.ai_mode).toBeNull();
+  await expect(executeAssistantTool(context, 'read_public_response', { responseId: publicId })).rejects.toThrow('AI features are off');
+  expect((await preference(a.cookie, 'maybe')).status).toBe(400);
+  expect((await preference(a.cookie, 'off')).body.user.ai_mode).toBe('off');
+  await expect(executeAssistantTool(context, 'recommendation_evidence', {})).rejects.toBeInstanceOf(AssistantAccessError);
+  expect((await preference(a.cookie, 'on')).body.user.ai_mode).toBe('on');
+  expect((await me()).body.user.ai_mode).toBe('on');
+  expect(await executeAssistantTool(context, 'read_public_response', { responseId: publicId })).toMatchObject({ response: { id: publicId } });
+  expect((await preference(a.cookie, 'off')).status).toBe(200);
+  await expect(executeAssistantTool(context, 'read_public_response', { responseId: publicId })).rejects.toThrow('AI features are off');
+  // The choice never changes ordinary people-led discovery.
+  expect((await request(app).post('/api/recommendations').set('Cookie', a.cookie).set('X-Moodie-Request', '1').send({})).status).toBe(200);
 });
 it('uses authenticated capabilities, denies model-supplied identities and private responses even for their owner', async () => {
   const a = await account('alice'), b = await account('bob');

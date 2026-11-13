@@ -40,6 +40,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate replace to={deletionReceipt ? '/account-deleted' : fallbackPath} state={{ from: location.pathname + location.search + location.hash }} />;
   }
 
+  // A new account chooses how Moodie works before anything else. Strict null:
+  // an older server that does not report the choice never traps the person here.
+  if (user.ai_mode === null && location.pathname !== '/welcome') {
+    return <Navigate replace to="/welcome" state={{ from: location.pathname + location.search + location.hash }} />;
+  }
+
   // If authenticated, render children
   return <>{children}</>;
 };

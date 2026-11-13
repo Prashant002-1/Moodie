@@ -1,50 +1,25 @@
-/**
- * API Client Service
- * 
- * Centralized HTTP client configuration using Axios.
- * Handles authentication tokens, request/response interceptors,
- * and automatic token-based authentication for all API calls.
- */
-
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-
-/**
- * Pre-configured Axios instance for API communication.
- * Automatically includes authentication headers and handles common scenarios.
- */
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  timeout: 20000,
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json', 'X-Moodie-Request': '1' },
 });
 
-apiClient.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem('auth-token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+apiClient.interceptors.response.use(response => response, error => {
+  // A request the screen cancelled on purpose (navigation, account change, a
+  // superseded read) is not a failed action and must not raise the error banner.
+  if (axios.isCancel(error)) return Promise.reject(error);
+  if (error.response?.status === 401 && !/\/auth\/(login|register|recover|me)$/.test(error.config?.url || '')) {
+    window.dispatchEvent(new Event('moodie:session-expired'));
   }
-  return config;
+  if (['post', 'patch', 'delete', 'put'].includes(error.config?.method) && !error.config?.url?.startsWith('/auth/')) {
+    window.dispatchEvent(new CustomEvent('moodie:action-error', { detail: apiError(error) }));
+  }
+  return Promise.reject(error);
 });
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      const isDemoRequest = error.config?.url?.includes('/auth/demo');
-      
-      if (!isDemoRequest) {
-        sessionStorage.removeItem('auth-token');
-        sessionStorage.removeItem('auth-user');
-        localStorage.removeItem('auth-token');
-        localStorage.removeItem('auth-user');
-        window.location.href = '/';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
+export const apiError = (error: unknown, fallback = 'That change could not be saved. Try again.') =>
+  axios.isAxiosError(error) && typeof error.response?.data?.error === 'string' ? error.response.data.error : fallback;
 export default apiClient;

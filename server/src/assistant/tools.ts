@@ -57,7 +57,10 @@ export async function executeAssistantTool(context: AssistantContext, name: stri
   if (!Number.isSafeInteger(context.userId) || context.userId <= 0 || !context.allowedTools.includes(name as AssistantToolName)) throw new AssistantAccessError('Tool access is not granted.');
   context.signal?.throwIfAborted();
   // Reject stale/deleted accounts as well as tools outside the caller's capability set.
-  if (!(await database.query('SELECT 1 FROM users WHERE id=$1', [context.userId])).rowCount) throw new AssistantAccessError('Account is unavailable.');
+  const account = await database.query('SELECT ai_mode FROM users WHERE id=$1', [context.userId]);
+  if (!account.rowCount) throw new AssistantAccessError('Account is unavailable.');
+  // The person's own choice outranks any tool grant. Unset counts as off.
+  if (account.rows[0].ai_mode !== 'on') throw new AssistantAccessError('AI features are off for this account.');
   let result: unknown;
   if (name === 'recommendation_evidence') {
     result = await recommendationEvidence(context.userId, recommendationInput.parse(args));

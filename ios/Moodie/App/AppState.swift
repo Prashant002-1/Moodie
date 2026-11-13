@@ -44,6 +44,11 @@ final class AppState {
         session = .signedIn; revision += 1
         await refreshSaved()
     }
+    /// The AI choice belongs to the account, so it is saved on the server, never only on this device.
+    func setAIMode(_ mode: AIMode) async throws {
+        let result: AuthResult = try await api.send("auth/preferences", method: "PATCH", body: ["aiMode": mode.rawValue])
+        user = result.user
+    }
     func handle(_ error: Error) {
         if error is CancellationError || (error as? URLError)?.code == .cancelled { return }
         if error as? APIError == .signedOut { clearLocalState() }

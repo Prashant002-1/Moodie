@@ -35,6 +35,9 @@ CREATE TABLE IF NOT EXISTS users (
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS bio VARCHAR(240) DEFAULT '';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS recovery_hash VARCHAR(255);
+-- NULL means the person has not chosen yet. 'off' keeps every language-model
+-- feature and external assistant connection away from the account.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_mode VARCHAR(8) CHECK (ai_mode IN ('on', 'off'));
 
 CREATE TABLE IF NOT EXISTS sessions (
     token_hash CHAR(64) PRIMARY KEY,

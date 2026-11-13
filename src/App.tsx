@@ -26,6 +26,7 @@ const BlockedPeople = lazy(() => import('./pages/BlockedPeople'));
 const AccountDeleted = lazy(() => import('./pages/AccountDeleted'));
 const About = lazy(() => import('./pages/About'));
 const Response = lazy(() => import('./pages/Response'));
+const Welcome = lazy(() => import('./pages/Welcome'));
 
 function App() {
   return <ErrorBoundary><UserProvider><BrowserRouter>
@@ -41,6 +42,7 @@ function App() {
         {/* Cache resets belong inside authenticated routes. Signing up must not
             remount Auth before the person can keep their recovery code. */}
         <Route element={<ProtectedRoute><DiaryProvider><Outlet /></DiaryProvider></ProtectedRoute>}>
+          <Route path="welcome" element={<Welcome />} />
           <Route path="account" element={<Account />} />
           <Route path="account/blocked" element={<BlockedPeople />} />
           <Route path="report/:kind/:id" element={<Report />} />

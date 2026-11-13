@@ -20,7 +20,8 @@ const people = [
   ['elena', 'Small moments, on screen and off.'],
   ['hiro', 'Usually thinking about the last scene.'],
 ];
-for (const [username,bio] of people) await pool.query('INSERT INTO users(username,email,password_hash,bio) VALUES ($1,$2,$3,$4)',[username,username+'@example.test',hash,bio]);
+// Sample accounts have already made the onboarding choice. Sign up to see the first-run screen.
+for (const [username,bio] of people) await pool.query("INSERT INTO users(username,email,password_hash,bio,ai_mode) VALUES ($1,$2,$3,$4,'off')",[username,username+'@example.test',hash,bio]);
 const films = [
   [244786, 'Whiplash', 'A young drummer enters a demanding music conservatory, where ambition and obsession collide.', '2014-10-10', '/7fn624j5lj3xTme2SgiLCeuedmO.jpg', '/6bbZ6XyvgfjhQwbplnUh1LSj1ky.jpg', 107],
   [4232, 'Scream', 'A year after the murder of her mother, a teenager and her friends become the targets of a masked killer.', '1996-12-20', '/lr9ZIrmuwVmZhpZuTCW8D9g0ZJe.jpg', null, 112],

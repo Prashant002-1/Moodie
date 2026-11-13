@@ -1,0 +1,29 @@
+.ai-choice { min-width: 0; margin: 0; padding: 0; border: 0; }
+.ai-choice__legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ai-choice__options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--m-space-4); }
+.ai-choice__option {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--m-space-3);
+  padding: var(--m-space-5);
+  border: 1px solid var(--m-color-rule-strong);
+  border-radius: var(--m-radius-surface);
+  background: var(--m-color-surface);
+  color: var(--m-color-ink);
+  cursor: pointer;
+  transition: border-color var(--m-motion-fast) var(--m-ease-out), box-shadow var(--m-motion-fast) var(--m-ease-out);
+}
+.ai-choice__option:hover { border-color: var(--m-color-ink-muted); }
+.ai-choice__option[data-selected='true'] { border-color: var(--m-color-ink); box-shadow: inset 0 0 0 1px var(--m-color-ink); }
+.ai-choice__option:focus-within { outline: 2px solid var(--m-color-ink); outline-offset: 3px; }
+.ai-choice__option input { position: absolute; top: var(--m-space-5); right: var(--m-space-5); width: 20px; height: 20px; margin: 0; accent-color: var(--m-color-ink); }
+.ai-choice__numeral { font-family: var(--m-font-display); font-size: var(--m-type-callout-size); font-style: italic; color: var(--m-color-ink-muted); }
+.ai-choice__title { font-family: var(--m-font-display); font-size: var(--m-type-title2-size); line-height: var(--m-type-title2-line); }
+.ai-choice__summary { color: var(--m-color-ink-secondary); font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); }
+.ai-choice__option ul { display: grid; gap: var(--m-space-3); margin: var(--m-space-2) 0 0; padding: var(--m-space-4) 0 0; border-top: 1px solid var(--m-color-rule); list-style: none; }
+.ai-choice__option li { font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); }
+.ai-choice__footnote { color: var(--m-color-ink-muted); font-size: var(--m-type-caption-size); line-height: var(--m-type-caption-line); }
+.ai-choice:disabled .ai-choice__option { cursor: default; opacity: 0.6; }
+@media (max-width: 720px) { .ai-choice__options { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .ai-choice__option { transition: none; } }
