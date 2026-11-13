@@ -39,24 +39,25 @@ export function FilmPicker({ onChoose }: { onChoose: (film: DraftFilm) => void }
     } catch { if (version === request.current) setError('Film search could not be loaded. Try again.'); }
     finally { if (version === request.current) setBusy(false); }
   };
-  const row = (film: DraftFilm) => <button className="film-picker__row" key={film.id} type="button" onClick={() => onChoose(film)}>
-    {imageUrl(film.poster_path, 'w154') ? <img alt="" src={imageUrl(film.poster_path, 'w154')!} /> : <div className="film-picker__placeholder" />}
-    <span><strong>{film.title}</strong><small>{releaseYear(film.release_date)}</small></span><span className="text-link">Choose film</span>
-  </button>;
-  return <section aria-label="Choose a film">
-    <form className="search-bar" role="search" onSubmit={event => { event.preventDefault(); void search(); }}>
-      <input aria-label="Search for a film to log" type="search" placeholder="Search by film title" value={query} onChange={event => setQuery(event.target.value)} />
-      <button className="button button--primary" disabled={busy || !query.trim()}>Search films</button>
+  const row = (film: DraftFilm) => <li key={film.id}><button className="row row--center" style={{ width: '100%', textAlign: 'left' }} type="button" onClick={() => onChoose(film)}>
+    <span className="poster poster--xs">{imageUrl(film.poster_path, 'w154') && <img alt="" src={imageUrl(film.poster_path, 'w154')!} />}</span>
+    <span className="row__main"><span className="row__title">{film.title}</span><span className="t-caption muted">{releaseYear(film.release_date)}</span></span>
+    <span className="sr-only">Choose film</span>
+  </button></li>;
+  return <section aria-label="Choose a film" className="stack">
+    <form className="search" role="search" onSubmit={event => { event.preventDefault(); void search(); }}>
+      <input aria-label="Search for a film to log" autoFocus className="input" type="search" placeholder="Film title" value={query} onChange={event => setQuery(event.target.value)} />
+      <button className="btn btn--primary" disabled={busy || !query.trim()}>Search</button>
     </form>
     {error && <p className="notice notice--error" role="alert">{error}</p>}
-    {busy && <p role="status">Searching films</p>}
-    {term ? <><div className="film-picker">{results.map(row)}</div>
-      {!busy && !results.length && !error && <p>No films found. Try another title.</p>}
-      {page < pages && <button className="button button--secondary" disabled={busy} onClick={() => void search(page + 1)}>Load more films</button>}
-      <button className="button button--quiet" disabled={busy} onClick={() => { setTerm(''); setQuery(''); setResults([]); }}>Clear search</button>
-    </> : <div className="log-start-grid">
-      {!!savedFilms.length && <section><h2>Saved films</h2><div className="film-picker">{savedFilms.slice(0, 6).map(film => row({ ...film, id: film.movie_id, release_date: film.release_date ?? '' }))}</div></section>}
-      {!!recent.length && <section><h2>Recent responses</h2><div className="film-picker">{recent.map(row)}</div></section>}
-    </div>}
+    {busy && <p className="status" role="status">Searching films</p>}
+    {term ? <><ul className="list list--flush">{results.map(row)}</ul>
+      {!busy && !results.length && !error && <p className="status">No films found.</p>}
+      <div className="actions">{page < pages && <button className="btn btn--secondary" disabled={busy} onClick={() => void search(page + 1)}>Load more films</button>}
+        <button className="btn btn--quiet" disabled={busy} onClick={() => { setTerm(''); setQuery(''); setResults([]); }}>Clear search</button></div>
+    </> : <>
+      {!!savedFilms.length && <section className="section"><header className="section__head"><h2>From your watchlist</h2></header><ul className="list">{savedFilms.slice(0, 6).map(film => row({ ...film, id: film.movie_id, release_date: film.release_date ?? '' }))}</ul></section>}
+      {!!recent.length && <section className="section"><header className="section__head"><h2>Recent responses</h2></header><ul className="list">{recent.map(row)}</ul></section>}
+    </>}
   </section>;
 }

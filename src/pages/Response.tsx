@@ -1,16 +1,17 @@
 import { SafetyActions } from '../components/discovery/SafetyActions';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Heart } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useDiary } from '../contexts/DiaryContext';
 import { discoveryService, ResponseEntry } from '../services/discoveryService';
 import { apiError } from '../services/apiClient';
-import { ResponseFeelingTrace } from '../components/discovery/ResponseFeelingTrace';
+import { Feelings } from '../components/response/Feelings';
 import { ResponseComments } from '../components/discovery/ResponseComments';
 import { ResponseDetails } from '../components/diary/ResponseDetails';
 import { KeepRecommendation } from '../components/suggestions/KeepRecommendation';
-import { formatCalendarDate } from '../utils/display';
+import { formatCalendarDate, imageUrl, releaseYear } from '../utils/display';
 
 export default function Response() {
   const { id } = useParams();
@@ -52,17 +53,38 @@ function ResponseReader({ id, viewerId }: { id: number; viewerId: number }) {
     catch (error) { setError(apiError(error)); }
     finally { setBusy(false); }
   };
-  return <article className="page-shell response-reader">
-    {error && <p role="alert" className="notice notice--error">{error} <button className="text-link" onClick={() => setRevision(value => value + 1)}>Retry</button></p>}
-    {loading && !entry && <p role="status">Loading response</p>}
-    {entry && <><Link className="text-link" to={`/member/${encodeURIComponent(entry.username)}`}>{entry.username}</Link><Link to={`/movie/${entry.movie_id}`}><h1>{entry.title}</h1></Link>
-      <p className="metadata">Watched {formatCalendarDate(entry.watched_on, { dateStyle: 'long' })}{entry.visibility === 'private' && ' · Private response'}</p>
-      <blockquote>{entry.note || 'No note on this viewing.'}</blockquote><ResponseDetails enjoyment={entry.enjoyment} highlights={entry.highlights} /><ResponseFeelingTrace entry={entry} />
-        {entry.expression_image_path && <img className="response-reader__photo" src={entry.expression_image_path} alt={entry.expression_image_alt || 'Expression photo attached to this viewing'} />}
-        {entry.visibility === 'public' && <div className="suggestion-actions"><button className="button button--quiet" disabled={busy} aria-pressed={entry.liked} onClick={() => void toggleLike()}>{entry.liked ? 'Unlike' : 'Like'} · {entry.like_count}</button><KeepRecommendation entryId={entry.id} authorId={entry.user_id} movieId={entry.movie_id} /></div>}
-        {viewerId === entry.user_id && <div className="suggestion-actions"><Link className="button button--quiet" to={`/log?entryId=${entry.id}`}>Edit response</Link><button className="button button--quiet" disabled={busy} onClick={() => void remove()}>Delete viewing</button><Link className="text-link" to={`/suggestions?entryId=${entry.id}`}>Recommendations for this viewing</Link></div>}
-        <SafetyActions kind="response" targetId={entry.id} personId={entry.user_id} username={entry.username} />
-        {entry.visibility === 'public' && <ResponseComments entryId={entry.id} initialCount={entry.comment_count} />}
+  const poster = imageUrl(entry?.poster_path, 'w342');
+  const likes = entry?.like_count || 0;
+  return <article className="page page--narrow stack">
+    {error && <p role="alert" className="notice notice--error">{error} <button className="link" onClick={() => setRevision(value => value + 1)} type="button">Retry</button></p>}
+    {loading && !entry && <p className="status" role="status">Loading response</p>}
+    {entry && <>
+      <header className="response__head">
+        <span aria-hidden="true" className="avatar">{entry.username.charAt(0)}</span>
+        <p className="byline"><Link to={`/member/${encodeURIComponent(entry.username)}`}>@{entry.username}</Link></p>
+      </header>
+      <div className="response__body">
+        <div className="response__text">
+          <h1><Link to={`/movie/${entry.movie_id}`}>{entry.title}</Link><span className="title-year">{releaseYear(entry.release_date)}</span></h1>
+          <p className="meta"><span>Watched {formatCalendarDate(entry.watched_on, { dateStyle: 'long' })}</span>{entry.visibility === 'private' && <span>Private</span>}</p>
+          <Feelings entry={entry} />
+          {entry.note && <p className="note note--lead">{entry.note}</p>}
+          <ResponseDetails enjoyment={entry.enjoyment} highlights={entry.highlights} />
+          {entry.expression_image_path && <img className="response__photo" src={entry.expression_image_path} alt={entry.expression_image_alt || 'Photo attached to this viewing'} />}
+        </div>
+        <Link className="poster" tabIndex={-1} to={`/movie/${entry.movie_id}`}>{poster && <img alt={`Poster for ${entry.title}`} src={poster} />}</Link>
+      </div>
+      {viewerId === entry.user_id && <div className="actions">
+        <Link className="btn btn--secondary btn--small" to={`/log?entryId=${entry.id}`}>Edit response</Link>
+        <button className="btn btn--quiet btn--small" disabled={busy} onClick={() => void remove()} type="button">Delete viewing</button>
+        <Link className="link t-callout" to={`/suggestions?entryId=${entry.id}`}>Recommendations for this viewing</Link>
+      </div>}
+      {entry.visibility === 'public' && <footer className="response__foot">
+        <button aria-label={`${entry.liked ? 'Unlike' : 'Like'} ${entry.username}'s response`} aria-pressed={entry.liked} disabled={busy} onClick={() => void toggleLike()} type="button"><Heart aria-hidden="true" fill={entry.liked ? 'currentColor' : 'none'} size={16} />{likes > 0 && <span>{likes}<span className="sr-only"> {likes === 1 ? 'like' : 'likes'}</span></span>}</button>
+        <ResponseComments entryId={entry.id} initialCount={entry.comment_count} />
+        <span className="push"><KeepRecommendation entryId={entry.id} authorId={entry.user_id} movieId={entry.movie_id} /></span>
+      </footer>}
+      <SafetyActions kind="response" targetId={entry.id} personId={entry.user_id} username={entry.username} />
     </>}
   </article>;
 }

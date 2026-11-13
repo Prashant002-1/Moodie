@@ -13,7 +13,7 @@ export type Enjoyment = components['schemas']['Enjoyment'];
 export type ResponseHighlight = components['schemas']['Highlights'][number];
 
 export const enjoymentLabels: Record<Enjoyment, string> = {
-  loved: 'Loved it', liked: 'Liked it', mixed: 'Mixed feelings', not_for_me: 'Not for me',
+  loved: 'Loved it', liked: 'Liked it', mixed: 'Mixed', not_for_me: 'Not for me',
 };
 export const highlightLabels: Record<ResponseHighlight, string> = {
   story: 'Story', characters: 'Characters', performances: 'Performances', dialogue: 'Dialogue',

@@ -58,13 +58,15 @@ it('loads connections only when opened and continues independently from profile 
   expect(mocks.profile).toHaveBeenCalledTimes(1);
 });
 
-it('keeps cached film and public responses when catalog fails, with summary totals and lazy related loading', async () => {
+it('keeps cached film and public responses when catalog fails, with the response total, feelings as words and lazy related loading', async () => {
   mocks.movie.mockRejectedValue(new Error('catalog offline'));
   ui(<MovieDetails />, '/movie/101');
   await screen.findByText('The first response');
   expect(screen.getByRole('heading', { name: 'A film' })).toBeInTheDocument();
-  expect(screen.getAllByText('80 responses')).toHaveLength(2);
-  expect(screen.getByText('75%')).toBeInTheDocument();
+  expect(screen.getByText('80 responses')).toBeInTheDocument();
+  expect(screen.queryByText(/%/)).not.toBeInTheDocument();
+  expect(screen.queryByText('What people felt')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Feelings: Joy')).toBeInTheDocument();
   expect(mocks.related).not.toHaveBeenCalled();
   mocks.filmEntriesPage.mockResolvedValueOnce({ entries: [{ ...entry, id: 12, note: 'Older followed response' }], nextOffset: null, summary: { total: 1, happy: 1 }, film });
   await userEvent.click(screen.getByRole('button', { name: 'Following', exact: true }));

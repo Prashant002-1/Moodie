@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import Log from '../../src/pages/Log';
@@ -27,17 +27,19 @@ it('recovers attribution, photo, feelings and the identical failed request after
   await responseDraftStore.replace(1, null, original);
   mocks.create.mockRejectedValueOnce(new Error('connection lost')).mockResolvedValueOnce({ id: 91, title: film.title, visibility: 'private' });
   const first = render(ui());
-  expect(await screen.findByLabelText('What did it mean to you?')).toHaveValue(original.note);
-  expect(screen.getByRole('img', { name: 'Optional expression photo preview' })).toHaveAttribute('src', original.expressionImage);
-  await userEvent.click(screen.getByText('Adjust intensity'));
-  expect(screen.getByRole('slider', { name: 'Joy intensity' })).toHaveValue('0.8');
+  expect(await screen.findByLabelText('Note')).toHaveValue(original.note);
+  expect(screen.getByRole('img', { name: 'Photo preview' })).toHaveAttribute('src', original.expressionImage);
+  expect(screen.getByRole('button', { name: /^Joy ?, strongest$/ })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.queryByRole('slider')).not.toBeInTheDocument();
+  expect(within(screen.getByRole('group', { name: 'How was it?' })).getByRole('button', { name: 'Loved it' })).toHaveAttribute('aria-pressed', 'true');
+  expect(within(screen.getByRole('group', { name: 'What stood out?' })).getByRole('button', { name: 'Performances' })).toHaveAttribute('aria-pressed', 'true');
   await userEvent.click(screen.getByRole('button', { name: 'Save response' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('could not be saved');
   const firstRequest = mocks.create.mock.calls[0][0];
   first.unmount();
   render(ui());
   await userEvent.click(await screen.findByRole('button', { name: 'Save response' }));
-  expect(await screen.findByRole('link', { name: 'Tell ananya how it landed' })).toHaveAttribute('href', '/suggestions/7');
+  expect(await screen.findByRole('link', { name: 'Reply to ananya' })).toHaveAttribute('href', '/suggestions/7');
   expect(mocks.create.mock.calls[1][0]).toEqual(firstRequest);
   expect(firstRequest).toMatchObject({ clientRequestId: original.clientRequestId, suggestionId: 7, expressionImage: original.expressionImage, enjoyment: 'loved', highlights: ['performances'], visibility: 'private' });
   await waitFor(async () => expect(await responseDraftStore.read(1)).toBeNull());
@@ -47,11 +49,11 @@ it('keeps a saved response recoverable when the incoming film cannot be loaded',
   await responseDraftStore.replace(1, null, draft());
   mocks.movie.mockRejectedValue(new Error('Film unavailable'));
   render(ui('/log?movieId=20'));
-  await screen.findByRole('heading', { name: 'Continue your saved response?' });
+  await screen.findByRole('heading', { name: 'Continue your draft?' });
   await screen.findByRole('alert');
   expect(screen.getByRole('button', { name: 'Discard draft and start new' })).toBeDisabled();
   await userEvent.click(screen.getByRole('button', { name: 'Continue draft' }));
-  expect(screen.getByLabelText('What did it mean to you?')).toHaveValue('Only for me');
+  expect(screen.getByLabelText('Note')).toHaveValue('Only for me');
   expect(screen.getByRole('heading', { name: 'Scream' })).toBeInTheDocument();
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
@@ -66,7 +68,7 @@ it('requires an explicit choice before replacing an unfinished response', async 
   expect((await responseDraftStore.read(1))?.draft).toEqual(original);
   await userEvent.click(replace);
   expect(await screen.findByRole('heading', { name: 'Another Film' })).toBeInTheDocument();
-  expect(screen.getByLabelText('What did it mean to you?')).toHaveValue('');
+  expect(screen.getByLabelText('Note')).toHaveValue('');
   expect((await responseDraftStore.read(1))?.draft.clientRequestId).not.toBe(original.clientRequestId);
 });
 
@@ -102,7 +104,7 @@ it('keeps successful saves separate from discovery failure and can start another
   render(ui('/log?movieId=10'));
   await userEvent.click(await screen.findByRole('button', { name: 'Joy' }));
   await userEvent.click(screen.getByRole('button', { name: 'Save response' }));
-  expect(await screen.findByText(/is in your diary/)).toBeInTheDocument();
+  expect(await screen.findByText(/In your diary\. Only you can see it\./)).toBeInTheDocument();
   expect(await screen.findByRole('alert')).toHaveTextContent('Your response is saved');
   await userEvent.click(screen.getByRole('button', { name: 'Add another film' }));
   expect(await screen.findByRole('searchbox')).toBeInTheDocument();
@@ -112,7 +114,7 @@ it('keeps successful saves separate from discovery failure and can start another
 it('keeps or discards a draft through the explicit close choices', async () => {
   await responseDraftStore.replace(1, null, draft());
   const view = render(ui());
-  fireEvent.change(await screen.findByLabelText('What did it mean to you?'), { target: { value: 'Later words' } });
+  fireEvent.change(await screen.findByLabelText('Note'), { target: { value: 'Later words' } });
   await userEvent.click(screen.getByRole('button', { name: 'Close' }));
   await userEvent.click(screen.getByRole('button', { name: 'Keep draft' }));
   expect(await screen.findByText('Diary destination')).toBeInTheDocument();

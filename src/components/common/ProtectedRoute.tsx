@@ -33,7 +33,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <LoadingSpinner message="Checking your session" />;
   }
 
-  if (sessionError) return <div className="product-empty" role="alert"><p>{sessionError}</p><button className="button button--secondary" onClick={() => void refreshSession()}>Retry</button></div>;
+  if (sessionError) return <div className="page page--narrow"><div className="empty" role="alert"><p>{sessionError}</p><button className="btn btn--secondary" onClick={() => void refreshSession()}>Retry</button></div></div>;
 
   // If not authenticated, don't render children
   if (!user) {

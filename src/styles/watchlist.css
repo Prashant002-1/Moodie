@@ -1,0 +1,10 @@
+/* Screen-specific rules for this area. Prefer the shared classes in app.css. */
+
+/* A whole row that is one button: choose a film, a person or a viewing. */
+.pick { width: 100%; text-align: left; }
+
+/* A title that is a link while its row or masthead is not. */
+.row__title a:hover, .masthead h1 a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+/* Shared-film evidence: a plain label, then the feelings both people gave. */
+.evidence__felt { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--m-space-2); font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); color: var(--m-color-ink-secondary); }

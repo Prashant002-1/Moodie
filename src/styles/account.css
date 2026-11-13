@@ -1,0 +1,18 @@
+/* Screen-specific rules for this area. Prefer the shared classes in app.css. */
+
+/* The recovery code is shown once: set so every character can be told apart and selected whole. */
+.recovery-code {
+  display: block; padding: var(--m-space-4); border: 1px solid var(--m-color-rule-strong); border-radius: var(--m-radius-control);
+  background: var(--m-color-surface); font-family: var(--m-font-mono); font-size: var(--m-type-body-size); line-height: var(--m-type-body-line);
+  overflow-wrap: anywhere; user-select: all;
+}
+
+/* A film title inside a line of sans text (a person's latest film, an activity line). */
+.film-inline { font-family: var(--m-font-display); font-size: var(--m-type-body-size); color: var(--m-color-ink); letter-spacing: 0; }
+a.film-inline:hover, .row__title a:hover, a.poster-grid__item:hover .serif { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+/* app.css is read after this file, so the two-line clamp needs both classes to win. */
+.clamp.clamp--2 { -webkit-line-clamp: 2; }
+
+/* An activity line: "@name did something". The name is the byline; the rest reads as a sentence. */
+.byline a.byline__rest { color: inherit; font-weight: 400; }

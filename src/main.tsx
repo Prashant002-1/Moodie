@@ -6,8 +6,11 @@
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
+import './styles/app.css'
+import { applyTheme, readTheme } from './utils/theme'
 import App from './App.tsx'
+
+applyTheme(readTheme())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

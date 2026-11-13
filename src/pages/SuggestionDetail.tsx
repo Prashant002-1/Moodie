@@ -10,12 +10,11 @@ import { apiError } from '../services/apiClient';
 import { FilmSuggestion, SuggestionAction, suggestionByline, suggestionContext, suggestionPerson, suggestionStatus } from '../types/suggestion';
 import { imageUrl, releaseYear } from '../utils/display';
 import { ResponseDetails } from '../components/diary/ResponseDetails';
-import { ResponseFeelingTrace } from '../components/discovery/ResponseFeelingTrace';
+import { Feelings } from '../components/response/Feelings';
 import { SuggestionReplyForm } from '../components/suggestions/SuggestionReplyForm';
 import { SuggestionViewingPicker } from '../components/suggestions/SuggestionViewingPicker';
 import { SuggestionMessages } from '../components/suggestions/SuggestionMessages';
 import { Spoiler } from '../components/suggestions/Spoiler';
-import '../components/suggestions/Suggestions.css';
 
 export default function SuggestionDetail() {
   const { id } = useParams();
@@ -69,33 +68,56 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
     finally { setBusy(false); }
   };
   const received = item?.recipient_id === viewerId;
-  return <div className="page-shell suggestions-page suggestion-detail">
-    <div className="suggestions-heading"><Link className="text-link" to="/suggestions">Recommendations</Link><button className="text-link" onClick={refresh} disabled={loading || busy}>Refresh</button></div>
-    {error && <p className="notice notice--error" role="alert">{error} <button className="text-link" onClick={refresh}>Retry</button></p>}
-    {loading && !item && <p role="status">Loading recommendation</p>}
+  const poster = imageUrl(item?.poster_path, 'w342');
+  const saved = item ? library.get(item.movie_id) : undefined;
+  // "Recommended to you" and "Sent" only repeat the byline.
+  const status = !item ? null : item.archived ? 'Archived' : item.status === 'suggested' || item.status === 'sent' ? null : suggestionStatus[item.status];
+  return <div className="page page--narrow stack stack--loose">
+    <div className="actions actions--spread t-caption"><Link className="link" to="/suggestions">Watchlist</Link><button className="link" onClick={refresh} disabled={loading || busy}>Refresh</button></div>
+    {error && <p className="notice notice--error" role="alert">{error} <button className="link" onClick={refresh}>Retry</button></p>}
+    {loading && !item && <p className="status" role="status">Loading recommendation</p>}
     {item && <>
-      <header className="suggestion-detail__heading"><Link className="suggestion-byline" to={`/member/${encodeURIComponent(suggestionPerson(item, viewerId))}`}>{suggestionByline(item, viewerId)}</Link>
-        <div className="suggestion-film"><div><Link to={`/movie/${item.movie_id}`}><h1>{item.title}</h1></Link><p className="metadata">{releaseYear(item.release_date ?? '')}</p></div>{imageUrl(item.poster_path, 'w154') && <img alt="" src={imageUrl(item.poster_path, 'w154')!} />}</div>
-        <blockquote>{suggestionContext(item)}</blockquote>
-        {item.origin === 'discovered' && !item.conversation_open && <p className="metadata">Kept from their response. Only you can see this.</p>}
-        <div className="suggestion-actions"><span className="metadata">{item.archived ? 'Archived' : suggestionStatus[item.status]}</span>{item.source_entry_id && <Link className="text-link" to={`/response/${item.source_entry_id}`}>Their response</Link>}</div>
+      <header className="stack">
+        <div className="masthead">
+          <Link className="poster" tabIndex={-1} to={`/movie/${item.movie_id}`}>{poster && <img alt={`Poster for ${item.title}`} src={poster} />}</Link>
+          <div className="masthead__main">
+            <p className="byline"><Link to={`/member/${encodeURIComponent(suggestionPerson(item, viewerId))}`}>{suggestionByline(item, viewerId)}</Link></p>
+            <h1><Link to={`/movie/${item.movie_id}`}>{item.title}</Link></h1>
+            <p className="meta">{item.release_date && <span>{releaseYear(item.release_date)}</span>}{status && <span>{status}</span>}{item.source_entry_id && <Link to={`/response/${item.source_entry_id}`}>Their response</Link>}</p>
+          </div>
+        </div>
+        <p className="note note--lead">{suggestionContext(item)}</p>
+        {item.origin === 'discovered' && !item.conversation_open && <p className="hint">Kept from their response. Only you can see this.</p>}
       </header>
-      {received && library.error && <p role="alert">{library.error} <button className="text-link" onClick={library.refresh}>Retry library status</button></p>}
-      {received && <section className="suggestion-next" aria-label="Your viewing">
+      {received && library.error && <p className="notice notice--error" role="alert">{library.error} <button className="link" onClick={library.refresh}>Retry library status</button></p>}
+      {received && <section aria-label="Your viewing" className="stack">
         {replyViewing ? <SuggestionReplyForm item={item} viewing={replyViewing} onCancel={() => setReplyViewing(null)} onSaved={next => { setItem(next); setReplyViewing(null); }} /> : choosing ? <SuggestionViewingPicker item={item} busy={busy} onChoose={entryId => void update({ action: 'link', entryId })} onCancel={() => setChoosing(false)} /> : <>
-          {item.linked_entry_id ? <><Link className="text-link" to={`/response/${item.linked_entry_id}`}>Read your viewing</Link><div className="suggestion-actions"><button className="button button--primary" disabled={busy} onClick={() => void openReply()}>{item.reply ? 'Edit your reply' : `Tell ${item.sender_username} how it landed`}</button>{!item.reply && <button className="button button--quiet" disabled={busy} onClick={() => setChoosing(true)}>Change linked viewing</button>}</div>{!item.reply && <p className="metadata">Your viewing stays private here until you choose what to send.</p>}</>
-            : <><div className="suggestion-actions"><Link className="button button--primary" to={`/log?movieId=${item.movie_id}&suggestionId=${item.id}`}>I watched it</Link><button className="button button--secondary" disabled={busy || !library.get(item.movie_id) || library.get(item.movie_id)?.saved} onClick={() => void update({ action: 'save' })}>{library.get(item.movie_id)?.saved ? 'Saved for later' : 'Save for later'}</button></div><button className="text-link" disabled={busy} onClick={() => setChoosing(true)}>Link an existing viewing</button></>}
-          <details className="suggestion-options"><summary>Recommendation options</summary><div className="suggestion-actions"><button className="button button--quiet" disabled={busy} onClick={() => void update({ action: item.archived ? 'restore' : 'archive' })}>{item.archived ? 'Restore recommendation' : 'Archive recommendation'}</button>{item.reply && <button className="button button--quiet" disabled={busy} onClick={() => void retract()}>Remove my reply</button>}</div></details>
+          {item.linked_entry_id ? <>
+            <div className="actions">
+              <button className="btn btn--primary" disabled={busy} onClick={() => void openReply()}>{item.reply ? 'Edit your reply' : `Tell ${item.sender_username} how it landed`}</button>
+              <Link className="btn btn--quiet" to={`/response/${item.linked_entry_id}`}>Read your viewing</Link>
+              {!item.reply && <button className="btn btn--quiet" disabled={busy} onClick={() => setChoosing(true)}>Change linked viewing</button>}
+            </div>
+            {!item.reply && <p className="hint">Your viewing stays private here until you choose what to send.</p>}
+          </> : <div className="actions">
+            <Link className="btn btn--primary" to={`/log?movieId=${item.movie_id}&suggestionId=${item.id}`}>I watched it</Link>
+            <button className="btn btn--secondary" disabled={busy || !saved || saved.saved} onClick={() => void update({ action: 'save' })}>{saved?.saved ? 'Saved for later' : 'Save for later'}</button>
+            <button className="btn btn--quiet" disabled={busy} onClick={() => setChoosing(true)}>Link an existing viewing</button>
+          </div>}
+          <details className="disclosure"><summary>Options</summary><div className="actions"><button className="btn btn--secondary btn--small" disabled={busy} onClick={() => void update({ action: item.archived ? 'restore' : 'archive' })}>{item.archived ? 'Restore recommendation' : 'Archive recommendation'}</button>{item.reply && <button className="btn btn--secondary btn--small" disabled={busy} onClick={() => void retract()}>Remove my reply</button>}</div></details>
         </>}
       </section>}
-      {item.reply && <section className="suggestion-shared-reply"><h2>{received ? 'Your reply' : `${item.recipient_username}’s reply`}</h2>
+      {item.reply && <section className="stack"><header className="section__head"><h2>{received ? 'Your reply' : `${item.recipient_username}’s reply`}</h2></header>
         <Spoiler key={`${item.id}:${item.reply.updated_at}`} hidden={item.reply.contains_spoilers && !received}>
-          <ResponseDetails enjoyment={item.reply.enjoyment} highlights={item.reply.highlights} /><p>{item.reply.note}</p>{item.reply.feelings && <ResponseFeelingTrace entry={item.reply.feelings} />}
-          {item.source_feelings && item.reply.feelings && <details><summary>Two ways this film felt</summary><p>{item.sender_username}</p><ResponseFeelingTrace entry={item.source_feelings} /><p>{item.recipient_username}</p><ResponseFeelingTrace entry={item.reply.feelings} /></details>}
+          <ResponseDetails enjoyment={item.reply.enjoyment} highlights={item.reply.highlights} />{item.reply.note && <p className="note">{item.reply.note}</p>}{item.reply.feelings && <Feelings entry={item.reply.feelings} />}
+          {item.source_feelings && item.reply.feelings && <details className="disclosure"><summary>Two ways this film felt</summary><div className="two-up">
+            <div className="stack stack--tight"><p className="byline"><strong>{item.sender_username}</strong></p><Feelings entry={item.source_feelings} /></div>
+            <div className="stack stack--tight"><p className="byline"><strong>{item.recipient_username}</strong></p><Feelings entry={item.reply.feelings} /></div>
+          </div></details>}
         </Spoiler>
       </section>}
       {item.conversation_open && <SuggestionMessages id={item.id} viewerId={viewerId} onRevoked={refresh} />}
-      <Link className="text-link" to={`/suggestions/new?movieId=${item.movie_id}`}>Recommend this to someone</Link>
+      <p><Link className="link" to={`/suggestions/new?movieId=${item.movie_id}`}>Recommend this to someone</Link></p>
     </>}
   </div>;
 }

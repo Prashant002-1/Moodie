@@ -7,8 +7,8 @@ interface LoadingSpinnerProps {
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ className = '', message = 'Loading' }) => (
-  <div className={`loading-state ${className}`}>
-    <div className="loading-spinner" />
+  <div className={`loading ${className}`} role="status">
+    <div aria-hidden="true" className="spinner" />
     {message && <span>{message}</span>}
   </div>
 );

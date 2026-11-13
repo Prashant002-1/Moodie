@@ -19,7 +19,7 @@ import { prepareExpressionPhoto } from '../utils/expressionPhoto';
 import { FilmPicker } from '../components/diary/FilmPicker';
 import { FeelingChoices } from '../components/diary/FeelingChoices';
 import { AttributionPicker } from '../components/diary/AttributionPicker';
-import { ResponseDetailInputs, ResponseDetails } from '../components/diary/ResponseDetails';
+import { ResponseDetailInputs } from '../components/diary/ResponseDetails';
 import { RecommendationSpotlight } from '../components/recommendations/RecommendationSpotlight';
 
 interface ComposerRequest { movieId?: number; entryId?: number; suggestionId?: number }
@@ -197,79 +197,81 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
     } finally { if (mounted.current) setSaving(false); }
   };
 
-  if (opening) return <div className="page-shell loading-state" role="status">Opening your response</div>;
-  if (choice) return <section className="page-shell draft-choice" aria-labelledby="draft-choice-title">
-    <h1 id="draft-choice-title">Continue your saved response?</h1>
-    <p>You have an unfinished response{choice.stored.draft.film ? ` for ${choice.stored.draft.film.title}` : ''}.</p>
+  if (opening) return <div className="loading" role="status">Opening your response</div>;
+  if (choice) return <section className="page page--narrow stack" aria-labelledby="draft-choice-title">
+    <h1 id="draft-choice-title">Continue your draft?</h1>
+    <p className="secondary">You have an unfinished response{choice.stored.draft.film ? ` for ${choice.stored.draft.film.title}` : ''}.</p>
     {error && <p className="notice notice--error" role="alert">{error}</p>}
-    <div className="suggestion-actions">
-      <button className="button button--primary" disabled={saving} onClick={resume}>Continue draft</button>
-      <button className="button button--secondary" disabled={saving || !choice.incoming} onClick={() => void replaceDraft()}>Discard draft and start new</button>
-      <Link className="text-link" to="/diary">Cancel</Link>
+    <div className="actions">
+      <button className="btn btn--primary" disabled={saving} onClick={resume}>Continue draft</button>
+      <button className="btn btn--secondary" disabled={saving || !choice.incoming} onClick={() => void replaceDraft()}>Discard draft and start new</button>
+      <Link className="link" to="/diary">Cancel</Link>
     </div>
   </section>;
-  if (!draft) return <div className="page-shell product-empty"><p role="alert">{error || 'Your response could not be opened.'}</p><button className="button button--secondary" disabled={saving} onClick={() => setRevision(value => value + 1)}>Try again</button>{unreadable && <button className="button button--quiet" disabled={saving} onClick={() => void discardUnreadable()}>Discard unreadable draft</button>}<Link className="text-link" to="/diary">Open Diary</Link></div>;
+  if (!draft) return <div className="page page--narrow"><div className="empty"><p role="alert">{error || 'Your response could not be opened.'}</p><div className="actions"><button className="btn btn--secondary" disabled={saving} onClick={() => setRevision(value => value + 1)}>Try again</button>{unreadable && <button className="btn btn--quiet" disabled={saving} onClick={() => void discardUnreadable()}>Discard unreadable draft</button>}<Link className="link" to="/diary">Open Diary</Link></div></div></div>;
 
-  if (savedEntry) return <div className="page-shell completion-journey">
-    <section className="completion-journey__saved">
-      <p><strong>{savedEntry.title ?? draft.film?.title}</strong> is in your diary.</p>
-      <p className="metadata">{savedEntry.visibility === 'public' ? 'Shared with everyone' : 'Only you can see this response'}</p>
-      <ResponseDetails enjoyment={savedEntry.enjoyment} highlights={savedEntry.highlights} />
-      <div className="suggestion-actions">
-        {draft.suggestionId && <Link className="button button--primary" to={`/suggestions/${draft.suggestionId}`}>Tell {draft.suggestionName || 'them'} how it landed</Link>}
-        <Link className="button button--secondary" to={`/response/${savedEntry.id}`}>Read your response</Link>
-        <Link className="text-link" to="/diary">Open Diary</Link>
+  if (savedEntry) return <div className="page page--narrow stack stack--loose">
+    <section className="stack">
+      <h1>{savedEntry.title ?? draft.film?.title}</h1>
+      <p className="secondary">In your diary. {savedEntry.visibility === 'public' ? 'Everyone can see it.' : 'Only you can see it.'}</p>
+      <div className="actions">
+        {draft.suggestionId && <Link className="btn btn--primary" to={`/suggestions/${draft.suggestionId}`}>Reply to {draft.suggestionName || 'them'}</Link>}
+        <Link className={`btn ${draft.suggestionId ? 'btn--secondary' : 'btn--primary'}`} to={`/response/${savedEntry.id}`}>Read your response</Link>
+        <Link className="btn btn--quiet" to="/diary">Open Diary</Link>
       </div>
-      {draft.suggestionId && <p className="metadata">Your diary note has not been sent. Choose what to share in a separate reply.</p>}
+      {draft.suggestionId && <p className="hint">Your diary note has not been sent. Your reply is written separately.</p>}
     </section>
-    {storageError && <p className="notice notice--error" role="alert">{storageError} <button className="text-link" onClick={() => void clearSavedDraft()}>Clear saved draft</button></p>}
-    {discoveryLoading && <p role="status">Finding a film through your response</p>}
-    {discoveryError && <p role="alert">{discoveryError} <button className="text-link" onClick={() => void findNextFilm()}>Retry recommendations</button></p>}
-    {nextFilm && <RecommendationSpotlight movie={nextFilm} />}
-    <div className="completion-state__actions"><Link className="button button--secondary" to="/feed">Return home</Link><button className="button button--quiet" onClick={() => navigate('/log', { replace: true, state: { newDraft: crypto.randomUUID() } })}>Add another film</button></div>
+    {storageError && <p className="notice notice--error" role="alert">{storageError} <button className="link" onClick={() => void clearSavedDraft()}>Clear saved draft</button></p>}
+    {discoveryLoading && <p className="status" role="status">Loading</p>}
+    {discoveryError && <p className="status" role="alert">{discoveryError} <button className="link" onClick={() => void findNextFilm()}>Retry recommendations</button></p>}
+    {nextFilm && <section><header className="section__head"><h2>Through this film</h2></header><div className="list"><RecommendationSpotlight movie={nextFilm} /></div></section>}
+    <div className="actions"><Link className="btn btn--quiet" to="/feed">Return home</Link><button className="btn btn--quiet" onClick={() => navigate('/log', { replace: true, state: { newDraft: crypto.randomUUID() } })}>Add another film</button></div>
   </div>;
 
-  return <div className="page-shell log-page">
-    <header className="composer-toolbar">
-      <div><h1>{draft.editingId ? 'Edit response' : 'Add a response'}</h1><p className="metadata" role="status">{auto.error ? 'Draft not saved on this browser' : auto.saved ? 'Draft saved on this browser' : 'Saving draft'}</p></div>
-      <button className="button button--quiet" disabled={saving || photoPreparing} onClick={() => setCloseChoice(true)}>Close</button>
+  return <div className="page page--narrow">
+    <header className="page__head">
+      <h1>{draft.editingId ? 'Edit response' : 'Add a response'}</h1>
+      <div className="actions"><span className="t-caption muted" role="status">{!draft.film ? '' : auto.error ? 'Draft not saved' : auto.saved ? 'Draft saved' : 'Saving draft'}</span>
+        <button className="btn btn--quiet btn--small" disabled={saving || photoPreparing} onClick={() => setCloseChoice(true)}>Close</button></div>
     </header>
-    {(error || auto.error) && <p className="notice notice--error" role="alert">{error || auto.error}{auto.error && <button className="text-link" onClick={() => void auto.persist().catch(() => undefined)}>Retry draft save</button>}</p>}
-    {closeChoice && <section className="draft-choice" aria-label="Close your response">
-      <h2>Keep writing later?</h2><div className="suggestion-actions">
-        <button className="button button--primary" disabled={saving} onClick={() => void close(true)}>Keep draft</button>
-        <button className="button button--quiet" disabled={saving} onClick={() => void close(false)}>Discard changes</button>
-        <button className="button button--quiet" disabled={saving} onClick={() => setCloseChoice(false)}>Keep writing</button>
+    {(error || auto.error) && <p className="notice notice--error" role="alert">{error || auto.error}{auto.error && <> <button className="link" onClick={() => void auto.persist().catch(() => undefined)}>Retry draft save</button></>}</p>}
+    {closeChoice && <section className="well stack" aria-label="Close your response" style={{ marginBottom: 'var(--m-space-5)' }}>
+      <p className="strong">Keep this draft?</p><div className="actions">
+        <button className="btn btn--primary btn--small" disabled={saving} onClick={() => void close(true)}>Keep draft</button>
+        <button className="btn btn--secondary btn--small" disabled={saving} onClick={() => void close(false)}>Discard changes</button>
+        <button className="btn btn--quiet btn--small" disabled={saving} onClick={() => setCloseChoice(false)}>Keep writing</button>
       </div>
     </section>}
     {!draft.film || choosingFilm ? <>
-      {draft.film && <button className="text-link" onClick={() => setChoosingFilm(false)}>Keep {draft.film.title}</button>}
+      {draft.film && <p style={{ marginBottom: 'var(--m-space-4)' }}><button className="link" onClick={() => setChoosingFilm(false)}>Keep {draft.film.title}</button></p>}
       <FilmPicker onChoose={chooseFilm} />
-    </> : <form className="entry-composer" onSubmit={event => { event.preventDefault(); void save(); }}>
-      <aside className="entry-composer__film">
-        {imageUrl(draft.film.poster_path, 'w342') && <img alt={`Poster for ${draft.film.title}`} src={imageUrl(draft.film.poster_path, 'w342')!} />}
-        <div><h2>{draft.film.title}</h2><p>{releaseYear(draft.film.release_date)}</p></div>
-        {!draft.editingId && <button className="button button--quiet" disabled={saving || photoPreparing} onClick={() => setChoosingFilm(true)} type="button">Choose another film</button>}
-      </aside>
-      <fieldset className="entry-composer__record composer-record" disabled={saving || photoPreparing}>
+    </> : <form className="composer" onSubmit={event => { event.preventDefault(); void save(); }}>
+      <div className="composer__film">
+        <span className="poster poster--sm">{imageUrl(draft.film.poster_path, 'w342') && <img alt={`Poster for ${draft.film.title}`} src={imageUrl(draft.film.poster_path, 'w342')!} />}</span>
+        <div className="row__main"><h2>{draft.film.title}</h2><p className="t-caption muted">{releaseYear(draft.film.release_date)}</p></div>
+        {!draft.editingId && <button className="btn btn--quiet btn--small" disabled={saving || photoPreparing} onClick={() => setChoosingFilm(true)} type="button">Choose another film</button>}
+      </div>
+      <fieldset className="composer" disabled={saving || photoPreparing}>
         <legend className="sr-only">Your response to {draft.film.title}</legend>
         {!draft.editingId && <AttributionPicker ownerId={ownerId} movieId={draft.film.id} value={draft.suggestionId} name={draft.suggestionName} onChange={chooseAttribution} />}
-        <div className="field"><label htmlFor="entry-note">What did it mean to you?</label><textarea id="entry-note" maxLength={2000} rows={6} value={draft.note} placeholder="What will you remember?" onChange={event => update({ note: event.target.value })} /><span className="field__hint">{draft.note.length} / 2000</span></div>
         <FeelingChoices value={draft.emotions} onChange={emotions => update({ emotions })} />
         <ResponseDetailInputs enjoyment={draft.enjoyment} highlights={draft.highlights} onEnjoyment={enjoyment => update({ enjoyment })} onHighlights={highlights => update({ highlights })} />
-        <div className="entry-fields">
-          <div className="field"><label htmlFor="watched-on">Watched on</label><input id="watched-on" required max={localDay()} type="date" value={draft.watchedOn} onChange={event => update({ watchedOn: event.target.value })} /></div>
-          <fieldset className="visibility-control field--full"><legend>Who can see this?</legend>
-            <label><input type="radio" name="visibility" checked={draft.visibility === 'private'} onChange={() => update({ visibility: 'private' })} />Only me</label>
-            <label><input type="radio" name="visibility" checked={draft.visibility === 'public'} onChange={() => update({ visibility: 'public' })} />Everyone</label>
-          </fieldset>
-          <details className="field--full"><summary>Add a photo <small>Optional</small></summary>
-            {draft.expressionImage ? <figure className="expression-photo-preview"><img alt="Optional expression photo preview" src={draft.expressionImage} /><button aria-label="Remove attached photo" className="icon-button" type="button" onClick={() => update({ expressionImage: null })}><X size={18} /></button></figure>
-              : <label className="expression-photo-picker"><ImagePlus aria-hidden="true" size={22} /><span>Choose a photo</span><input accept="image/jpeg,image/png,image/webp" className="sr-only" type="file" onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void choosePhoto(file); }} /></label>}
-          </details>
+        <div className="field"><label htmlFor="entry-note">Note</label><textarea className="textarea" id="entry-note" maxLength={2000} rows={6} value={draft.note} onChange={event => update({ note: event.target.value })} />{draft.note.length > 1800 && <span className="field__hint">{draft.note.length} / 2000</span>}</div>
+        <div className="composer__row">
+          <div className="field"><label htmlFor="watched-on">Watched on</label><input className="input" id="watched-on" required max={localDay()} type="date" value={draft.watchedOn} onChange={event => update({ watchedOn: event.target.value })} /></div>
+          <fieldset><legend className="legend">Who can see this?</legend><div className="options options--inline">
+            <label className="option option--compact"><input type="radio" name="visibility" checked={draft.visibility === 'private'} onChange={() => update({ visibility: 'private' })} /><span className="option__title">Only me</span></label>
+            <label className="option option--compact"><input type="radio" name="visibility" checked={draft.visibility === 'public'} onChange={() => update({ visibility: 'public' })} /><span className="option__title">Everyone</span></label>
+          </div></fieldset>
         </div>
-        {draft.suggestionId && <p className="metadata">After saving, you can choose a separate reply for {draft.suggestionName || 'the person who recommended it'}.</p>}
-        <button className="button button--primary" disabled={!responseDraftInput(draft) || saving || photoPreparing}>{saving ? 'Saving response' : draft.editingId ? 'Save changes' : 'Save response'}</button>
+        <details className="disclosure"><summary>Add a photo</summary>
+          {draft.expressionImage ? <figure className="photo-preview"><img alt="Photo preview" src={draft.expressionImage} /><button aria-label="Remove attached photo" className="btn btn--icon" type="button" onClick={() => update({ expressionImage: null })}><X size={18} /></button></figure>
+            : <label className="btn btn--secondary btn--small"><ImagePlus aria-hidden="true" size={16} /><span>Choose a photo</span><input accept="image/jpeg,image/png,image/webp" className="sr-only" type="file" onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void choosePhoto(file); }} /></label>}
+        </details>
+        <div className="composer__save">
+          <span className="hint">{draft.suggestionId ? `Your reply to ${draft.suggestionName || 'them'} is written separately, after saving.` : ''}</span>
+          <button className="btn btn--primary" disabled={!responseDraftInput(draft) || saving || photoPreparing}>{saving ? 'Saving response' : draft.editingId ? 'Save changes' : 'Save response'}</button>
+        </div>
       </fieldset>
     </form>}
   </div>;

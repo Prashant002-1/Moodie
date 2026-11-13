@@ -4,15 +4,21 @@ import { useUser } from '../contexts/UserContext';
 import { useDiary } from '../contexts/DiaryContext';
 import { authService } from '../services/authService';
 import { apiError } from '../services/apiClient';
+import { ThemeChoice, readTheme, saveTheme } from '../utils/theme';
 import AiModeChoice from '../components/account/AiModeChoice';
-import './Auth.css';
+
+type AccountView = 'profile' | 'appearance' | 'ai' | 'account' | 'password';
+const views: [AccountView, string][] = [['profile', 'Profile'], ['appearance', 'Appearance'], ['ai', 'AI'], ['account', 'Account'], ['password', 'Password']];
+const themes: [ThemeChoice, string][] = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']];
+const count = (value: number, one: string, many: string) => `${value} ${value === 1 ? one : many}`;
 
 export default function Account() {
   const { user, updateProfile, setAiMode, signOut, deleteAccount } = useUser();
   const { summary } = useDiary();
   const navigate = useNavigate();
-  const [view, setView] = useState<'profile' | 'ai' | 'account' | 'password'>('profile');
+  const [view, setView] = useState<AccountView>('profile');
   const [bio, setBio] = useState(user?.bio || '');
+  const [theme, setTheme] = useState<ThemeChoice>(readTheme);
   const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -32,38 +38,55 @@ export default function Account() {
     if (password !== confirmation) { setError('Passwords do not match.'); return; }
     void run(async () => { await authService.password(currentPassword, password); setPassword(''); setConfirmation(''); setCurrentPassword(''); }, 'Password changed. Other sessions have been signed out.');
   };
-  return <section className="page-shell account-page">
+  const chooseTheme = (choice: ThemeChoice) => { saveTheme(choice); setTheme(choice); };
+  return <section className="page page--narrow stack">
     <h1>Account</h1>
-    <div className="product-section-tabs" role="group" aria-label="Account views">{(['profile', 'ai', 'account', 'password'] as const).map(tab => <button key={tab} aria-pressed={view === tab} onClick={() => { setView(tab); setError(''); setNotice(''); }} type="button">{tab === 'ai' ? 'AI' : tab.charAt(0).toUpperCase() + tab.slice(1)}</button>)}</div>
-    {error && <p className="error-text" role="alert">{error}</p>}
-    {notice && <p role="status">{notice}</p>}
-    {view === 'profile' && <form className="account-form" onSubmit={event => { event.preventDefault(); void run(() => updateProfile(bio), 'Profile saved.'); }}>
-      <p>@{user?.username} · <Link className="text-link" to={`/member/${user?.username}`}>View public profile</Link></p>
-      <dl className="account-facts"><div><dt>Responses</dt><dd>{summary?.entries ?? 0}</dd></div><div><dt>Public</dt><dd>{summary?.public_entries ?? 0}</dd></div><div><dt>Saved films</dt><dd>{summary?.saved ?? 0}</dd></div></dl>
-      <label className="field">Public bio<textarea maxLength={240} value={bio} onChange={event => setBio(event.target.value)} /><span className="field__hint">{bio.length} / 240</span></label>
-      <button className="button button--primary" disabled={busy} type="submit">{busy ? 'Saving' : 'Save profile'}</button>
-      <button className="button button--quiet" disabled={busy} type="button" onClick={() => void run(async () => { await signOut(); navigate('/signin', { replace: true }); }, '')}>Sign out</button>
+    <div className="tabs" role="group" aria-label="Account views">{views.map(([tab, label]) => <button key={tab} aria-pressed={view === tab} onClick={() => { setView(tab); setError(''); setNotice(''); }} type="button">{label}</button>)}</div>
+    {error && <p className="notice notice--error" role="alert">{error}</p>}
+    {notice && <p className="notice" role="status">{notice}</p>}
+    {view === 'profile' && <form className="stack" onSubmit={event => { event.preventDefault(); void run(() => updateProfile(bio), 'Profile saved.'); }}>
+      <div className="row row--center">
+        <span aria-hidden="true" className="avatar avatar--lg">{user?.username.charAt(0)}</span>
+        <div className="row__main">
+          <p className="strong">@{user?.username}</p>
+          <p className="meta"><span>{count(summary?.entries ?? 0, 'response', 'responses')}</span><span>{summary?.public_entries ?? 0} public</span><span>{count(summary?.saved ?? 0, 'saved film', 'saved films')}</span></p>
+          <p className="t-caption"><Link className="link" to={`/member/${user?.username}`}>Public profile</Link></p>
+        </div>
+      </div>
+      <div className="field"><label htmlFor="account-bio">Public bio</label><textarea className="textarea" id="account-bio" maxLength={240} value={bio} onChange={event => setBio(event.target.value)} />{bio.length > 200 && <span className="field__hint">{bio.length} / 240</span>}</div>
+      <div className="actions actions--spread">
+        <button className="btn btn--primary" disabled={busy} type="submit">{busy ? 'Saving' : 'Save profile'}</button>
+        <button className="btn btn--quiet" disabled={busy} type="button" onClick={() => void run(async () => { await signOut(); navigate('/signin', { replace: true }); }, '')}>Sign out</button>
+      </div>
     </form>}
-    {view === 'ai' && <div className="account-form account-form--wide">
-      <p>Moodie runs on people either way. This decides whether AI is part of your account. The change applies immediately.</p>
-      <AiModeChoice disabled={busy} legend="Choose how Moodie works" value={user?.ai_mode ?? null}
-        onChange={mode => { if (mode !== user?.ai_mode) void run(() => setAiMode(mode), mode === 'on' ? 'AI is on for your account.' : 'AI is off for your account.'); }} />
-    </div>}
-    {view === 'password' && <form className="account-form" onSubmit={savePassword}>
-      <label className="field">Current password<input required type="password" autoComplete="current-password" maxLength={128} value={currentPassword} onChange={event => setCurrentPassword(event.target.value)} /></label>
-      <label className="field">New password<input required type="password" autoComplete="new-password" minLength={10} maxLength={128} value={password} onChange={event => setPassword(event.target.value)} /></label>
-      <label className="field">Confirm password<input required type="password" autoComplete="new-password" maxLength={128} value={confirmation} onChange={event => setConfirmation(event.target.value)} /></label>
-      <button className="button button--primary" disabled={busy} type="submit">Change password</button>
+    {view === 'appearance' && <fieldset>
+      <legend className="sr-only">Appearance</legend>
+      <div className="options options--inline">{themes.map(([choice, label]) => <label className="option option--compact" key={choice}>
+        <input checked={theme === choice} name="theme" onChange={() => chooseTheme(choice)} type="radio" value={choice} /><span className="option__title">{label}</span>
+      </label>)}</div>
+    </fieldset>}
+    {view === 'ai' && <AiModeChoice disabled={busy} legend="Choose how Moodie works" value={user?.ai_mode ?? null}
+      onChange={mode => { if (mode !== user?.ai_mode) void run(() => setAiMode(mode), mode === 'on' ? 'AI is on for your account.' : 'AI is off for your account.'); }} />}
+    {view === 'password' && <form className="stack" onSubmit={savePassword}>
+      <div className="field"><label htmlFor="account-current-password">Current password</label><input className="input" id="account-current-password" required type="password" autoComplete="current-password" maxLength={128} value={currentPassword} onChange={event => setCurrentPassword(event.target.value)} /></div>
+      <div className="field"><label htmlFor="account-new-password">New password</label><input aria-describedby="account-new-password-hint" className="input" id="account-new-password" required type="password" autoComplete="new-password" minLength={10} maxLength={128} value={password} onChange={event => setPassword(event.target.value)} /><span className="field__hint" id="account-new-password-hint">At least 10 characters.</span></div>
+      <div className="field"><label htmlFor="account-confirm-password">Confirm password</label><input className="input" id="account-confirm-password" required type="password" autoComplete="new-password" maxLength={128} value={confirmation} onChange={event => setConfirmation(event.target.value)} /></div>
+      <div className="actions"><button className="btn btn--primary" disabled={busy} type="submit">Change password</button></div>
     </form>}
-    {view === 'account' && <div className="account-form">
-      <Link className="text-link" to="/account/blocked">Blocked people</Link>
-      <nav aria-label="About Moodie" className="suggestion-actions"><Link className="text-link" to="/about/privacy">Privacy</Link><Link className="text-link" to="/about/community">Community guidelines</Link><Link className="text-link" to="/about/credits">Credits</Link></nav>
-      <p>Email: {user?.email}</p><p>Username: @{user?.username}</p>
-      <form className="account-form" onSubmit={event => { event.preventDefault(); if (window.confirm('Permanently delete your account, diary, photos, saved films, follows, likes, and comments? This cannot be undone.')) void run(async () => { await deleteAccount(deletePassword); navigate('/account-deleted', { replace: true }); }, ''); }}>
-        <h2>Delete account</h2><p>This permanently removes your diary, photos, saved films, and social activity.</p>
-        <label className="field">Confirm with your password<input type="password" autoComplete="current-password" required maxLength={128} value={deletePassword} onChange={event => setDeletePassword(event.target.value)} /></label>
-        <button className="button button--secondary" disabled={busy} type="submit">Delete my account</button>
+    {view === 'account' && <>
+      <ul className="list list--flush">
+        <li className="row__main"><span className="t-caption muted">Email</span><span className="truncate">{user?.email}</span></li>
+        <li className="row__main"><span className="t-caption muted">Username</span><span className="truncate">@{user?.username}</span></li>
+        <li><Link className="link" to="/account/blocked">Blocked people</Link></li>
+        <li><nav aria-label="About Moodie" className="actions"><Link className="link" to="/about/privacy">Privacy</Link><Link className="link" to="/about/community">Community guidelines</Link><Link className="link" to="/about/credits">Credits</Link></nav></li>
+      </ul>
+      <form className="section stack" onSubmit={event => { event.preventDefault(); if (window.confirm('Permanently delete your account, diary, photos, saved films, follows, likes, and comments? This cannot be undone.')) void run(async () => { await deleteAccount(deletePassword); navigate('/account-deleted', { replace: true }); }, ''); }}>
+        <header className="section__head"><h2>Delete account</h2></header>
+        <p className="secondary t-callout">This permanently removes your diary, photos, saved films, and social activity.</p>
+        <div className="field"><label htmlFor="account-delete-password">Confirm with your password</label><input className="input" id="account-delete-password" type="password" autoComplete="current-password" required maxLength={128} value={deletePassword} onChange={event => setDeletePassword(event.target.value)} /></div>
+        <div className="actions"><button className="btn btn--secondary" disabled={busy} type="submit">Delete my account</button></div>
       </form>
-    </div>}
+    </>}
+    <p className="t-caption muted" style={{ marginTop: 'var(--m-space-6)' }}>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </section>;
 }

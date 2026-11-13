@@ -6,7 +6,6 @@ import { DiaryProvider } from './contexts/DiaryContext';
 import Layout from './components/layout/Layout';
 import Auth from './pages/Auth';
 import Account from './pages/Account';
-import SmoothScroll from './components/motion/SmoothScroll';
 
 const Home = lazy(() => import('./pages/Home'));
 const Log = lazy(() => import('./pages/Log'));
@@ -30,7 +29,6 @@ const Welcome = lazy(() => import('./pages/Welcome'));
 
 function App() {
   return <ErrorBoundary><UserProvider><BrowserRouter>
-    <SmoothScroll />
     <Suspense fallback={<LoadingSpinner message="Loading page" />}>
       <Routes><Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
@@ -62,7 +60,7 @@ function App() {
         </Route>
         <Route path="community" element={<Navigate replace to="/feed" />} />
         <Route path="movie-match" element={<Navigate replace to="/feed" />} />
-        <Route path="*" element={<div className="page-shell product-empty"><h1>Page not found</h1><Link className="text-link" to="/">Return home</Link></div>} />
+        <Route path="*" element={<div className="page page--narrow"><div className="empty"><h1>Page not found</h1><Link className="link" to="/">Return home</Link></div></div>} />
       </Route></Routes>
     </Suspense>
   </BrowserRouter></UserProvider></ErrorBoundary>;

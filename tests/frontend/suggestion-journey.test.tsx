@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, expect, it, vi } from 'vitest';
@@ -15,12 +15,13 @@ import type { ResponseEntry } from '../../src/services/discoveryService';
 const mocks = vi.hoisted(() => ({
   list: vi.fn(), get: vi.fn(), recipients: vi.fn(), create: vi.fn(), update: vi.fn(), reply: vi.fn(), removeReply: vi.fn(),
   messages: vi.fn(), sendMessage: vi.fn(), deleteMessage: vi.fn(), response: vi.fn(), diaryPage: vi.fn(), createEntry: vi.fn(),
+  savedPage: vi.fn(), unsaveFilm: vi.fn(),
 }));
 vi.mock('../../src/services/suggestionService', () => ({ suggestionService: mocks }));
 vi.mock('../../src/contexts/UserContext', () => ({ useUser: () => ({ user: { id: 1, username: 'viewer' } }) }));
-vi.mock('../../src/contexts/DiaryContext', () => ({ useDiary: () => ({ refresh: vi.fn(), isSaved: () => false, savedFilms: [], createEntry: mocks.createEntry }) }));
+vi.mock('../../src/contexts/DiaryContext', () => ({ useDiary: () => ({ refresh: vi.fn(), isSaved: () => false, savedFilms: [], revision: 0, createEntry: mocks.createEntry, unsaveFilm: mocks.unsaveFilm }) }));
 vi.mock('../../src/services/discoveryService', () => ({ discoveryService: { response: mocks.response, pulse: async () => [] } }));
-vi.mock('../../src/services/diaryService', () => ({ diaryService: { page: mocks.diaryPage, status: async () => [{ id: 10, saved: false, viewing_count: 0 }] } }));
+vi.mock('../../src/services/diaryService', () => ({ diaryService: { page: mocks.diaryPage, savedPage: mocks.savedPage, status: async () => [{ id: 10, saved: false, viewing_count: 0 }] } }));
 vi.mock('../../src/services/catalogService', () => ({ catalogService: { movie: async () => ({ id: 10, title: 'Scream', poster_path: null, release_date: '1996-12-20' }) } }));
 vi.mock('../../src/services/recommendationService', () => ({ recommendationService: { get: async () => ({ forYou: [] }) } }));
 
@@ -43,6 +44,7 @@ beforeEach(() => {
   mocks.messages.mockResolvedValue({ messages: [], nextOffset: null });
   mocks.response.mockResolvedValue(viewing);
   mocks.diaryPage.mockResolvedValue({ entries: [viewing], nextOffset: null });
+  mocks.savedPage.mockResolvedValue({ films: [], nextOffset: null });
   mocks.create.mockResolvedValue(suggestion);
   mocks.reply.mockResolvedValue({ ...suggestion, status: 'replied' });
 });
@@ -138,9 +140,47 @@ it('pages the inbox explicitly and sends filters to the server', async () => {
   expect(mocks.list.mock.calls[1][0].offset).toBe(30);
 });
 
+it('opens the watchlist on recommendations from people and names its four views', async () => {
+  render(<MemoryRouter initialEntries={['/suggestions']}><Suggestions /></MemoryRouter>);
+  expect(screen.getByRole('heading', { level: 1, name: 'Watchlist' })).toBeInTheDocument();
+  const tabs = within(screen.getByRole('group', { name: 'Choose watchlist view' })).getAllByRole('button');
+  expect(tabs.map(tab => tab.textContent)).toEqual(['From people', 'Saved', 'Sent', 'Archived']);
+  expect(screen.getByRole('button', { name: 'From people' })).toHaveAttribute('aria-pressed', 'true');
+  const row = await screen.findByRole('link', { name: /Scream/ });
+  expect(row).toHaveAttribute('href', '/suggestions/7');
+  expect(within(row).getByText('ananya thought of you')).toBeInTheDocument();
+  expect(within(row).getByText('We laughed through the scary parts together.')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Sent' }));
+  await waitFor(() => expect(mocks.list).toHaveBeenLastCalledWith(expect.objectContaining({ box: 'sent' }), expect.any(AbortSignal)));
+});
+
+it('shows saved films in their own view without asking the recommendations service for them', async () => {
+  mocks.savedPage.mockResolvedValueOnce({ films: [{ id: 41, movie_id: 102, title: 'Saved old film', poster_path: null, release_date: '1999-01-01' }], nextOffset: 30 })
+    .mockResolvedValueOnce({ films: [{ id: 40, movie_id: 103, title: 'Another saved film', poster_path: null, release_date: null }], nextOffset: null })
+    .mockResolvedValue({ films: [], nextOffset: null });
+  render(<MemoryRouter initialEntries={['/suggestions?box=saved']}><Suggestions /></MemoryRouter>);
+  expect(screen.getByRole('button', { name: 'Saved' })).toHaveAttribute('aria-pressed', 'true');
+  const saved = await screen.findByRole('region', { name: 'Saved films' });
+  expect(await within(saved).findByRole('heading', { name: 'Saved old film' })).toBeInTheDocument();
+  expect(within(saved).getByRole('link', { name: 'Saved old film' })).toHaveAttribute('href', '/movie/102');
+  expect(within(saved).getByRole('link', { name: 'Add response' })).toHaveAttribute('href', '/log?movieId=102');
+  expect(within(saved).getByRole('link', { name: 'Who recommended it' })).toHaveAttribute('href', '/suggestions?movieId=102');
+  expect(mocks.list).not.toHaveBeenCalled();
+  await userEvent.click(within(saved).getByRole('button', { name: 'More saved films' }));
+  expect(await within(saved).findByRole('heading', { name: 'Another saved film' })).toBeInTheDocument();
+  expect(mocks.savedPage).toHaveBeenLastCalledWith({ q: undefined, limit: 30, offset: 30 }, expect.any(AbortSignal));
+  await userEvent.click(within(saved).getAllByRole('button', { name: 'Remove from saved' })[0]);
+  expect(mocks.unsaveFilm).toHaveBeenCalledWith(102);
+  await userEvent.type(within(saved).getByLabelText('Search saved films'), 'nothing here');
+  await userEvent.click(within(saved).getByRole('button', { name: 'Search saved' }));
+  expect(await within(saved).findByText('No saved films match.')).toBeInTheDocument();
+  expect(mocks.savedPage).toHaveBeenLastCalledWith({ q: 'nothing here', limit: 30, offset: undefined }, expect.any(AbortSignal));
+  expect(mocks.list).not.toHaveBeenCalled();
+});
+
 it('keeps the exact source response without inventing an authored recommendation', async () => {
   render(<MemoryRouter><KeepRecommendation entryId={15} authorId={2} movieId={10} /></MemoryRouter>);
-  await userEvent.click(screen.getByRole('button', { name: 'Keep recommendation' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Add to watchlist' }));
   expect(mocks.create).toHaveBeenCalledWith({ origin: 'discovered', sourceEntryId: 15 });
 });
 
@@ -161,14 +201,13 @@ it('records attribution and enjoyment in the diary write and offers a reply with
   mocks.createEntry.mockResolvedValue({ ...viewing, enjoyment: 'loved' });
   render(<MemoryRouter initialEntries={['/log?movieId=10&suggestionId=7']}><Log /></MemoryRouter>);
   await screen.findByRole('heading', { name: 'Scream' });
-  await waitFor(() => expect(screen.getByLabelText('Who put this on your radar?')).toHaveValue('7'));
-  await userEvent.type(screen.getByLabelText('What did it mean to you?'), 'PRIVATE DIARY WORDS');
+  await waitFor(() => expect(screen.getByLabelText('Recommended by')).toHaveValue('7'));
+  await userEvent.type(screen.getByLabelText('Note'), 'PRIVATE DIARY WORDS');
   await userEvent.click(screen.getByRole('button', { name: 'Loved it' }));
   await userEvent.click(screen.getByRole('button', { name: 'Joy' }));
-  await userEvent.click(screen.getByText('Adjust intensity'));
-  fireEvent.change(screen.getByRole('slider', { name: 'Joy intensity' }), { target: { value: '0.8' } });
+  expect(screen.queryByRole('slider')).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Save response' }));
-  expect(await screen.findByRole('link', { name: 'Tell ananya how it landed' })).toHaveAttribute('href', '/suggestions/7');
+  expect(await screen.findByRole('link', { name: 'Reply to ananya' })).toHaveAttribute('href', '/suggestions/7');
   expect(mocks.createEntry).toHaveBeenCalledWith(expect.objectContaining({ movieId: 10, suggestionId: 7, enjoyment: 'loved', note: 'PRIVATE DIARY WORDS', visibility: 'private', clientRequestId: expect.any(String) }));
   expect(mocks.reply).not.toHaveBeenCalled();
   expect(screen.getByRole('link', { name: 'Read your response' })).toHaveAttribute('href', '/response/91');

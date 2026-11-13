@@ -1,11 +1,9 @@
 import { FormEvent, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import AiModeChoice from '../components/account/AiModeChoice';
-import BrandMark from '../components/brand/BrandMark';
 import { useUser } from '../contexts/UserContext';
 import { apiError } from '../services/apiClient';
 import type { AiMode } from '../services/authService';
-import './Welcome.css';
 
 /** First page after joining: one decision, made before anything else is shown. */
 export default function Welcome() {
@@ -26,18 +24,14 @@ export default function Welcome() {
     try { await setAiMode(choice); navigate(destination, { replace: true }); }
     catch (caught) { setError(apiError(caught, 'Your choice could not be saved. Try again.')); setBusy(false); }
   };
-  return <form className="welcome" onSubmit={submit}>
-    <header className="welcome__mark"><BrandMark /><span>Moodie</span></header>
-    <div className="welcome__intro">
-      <p className="welcome__label">Before the first film</p>
-      <h1>How should Moodie work for you?</h1>
-      <p>Moodie runs on people: what someone recommends to you and why, and what others felt about the films you have both seen. That is the same either way. The one thing to decide is whether AI is part of it.</p>
-    </div>
+  return <form className="page page--narrow stack stack--loose" onSubmit={submit} style={{ paddingTop: 'var(--m-space-8)' }}>
+    <p className="wordmark">Moodie</p>
+    <h1>With or without AI?</h1>
     <AiModeChoice disabled={busy} legend="Choose how Moodie works" onChange={setChoice} value={choice} />
-    {error && <p className="error-text" role="alert">{error}</p>}
-    <footer className="welcome__actions">
-      <button className="welcome__continue" disabled={!choice || busy} type="submit">{busy ? 'Saving' : 'Continue'}</button>
-      <p>You can change this at any time in Account.</p>
-    </footer>
+    {error && <p className="notice notice--error" role="alert">{error}</p>}
+    <div className="actions">
+      <button className="btn btn--primary" disabled={!choice || busy} type="submit">{busy ? 'Saving' : 'Continue'}</button>
+      <span className="hint">You can change this in Account.</span>
+    </div>
   </form>;
 }

@@ -4,7 +4,6 @@ import App from '../../src/App';
 const mocks = vi.hoisted(() => ({ me: vi.fn(), preferences: vi.fn(), summary: vi.fn(), savedPage: vi.fn() }));
 vi.mock('../../src/services/authService', () => ({ authService: { me: mocks.me, preferences: mocks.preferences, clear: vi.fn() } }));
 vi.mock('../../src/services/diaryService', () => ({ diaryService: { summary: mocks.summary, savedPage: mocks.savedPage } }));
-vi.mock('../../src/components/motion/SmoothScroll', () => ({ default: () => null }));
 const member = { id: 3, username: 'member', email: 'member@example.test', bio: '' };
 beforeEach(() => {
   vi.resetAllMocks();
@@ -18,7 +17,7 @@ it('asks a new account how Moodie should work before showing anything else, keep
   mocks.me.mockResolvedValue({ ...member, ai_mode: null });
   mocks.preferences.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({ ...member, ai_mode: 'off' });
   render(<App />);
-  expect(await screen.findByRole('heading', { name: 'How should Moodie work for you?' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'With or without AI?' })).toBeInTheDocument();
   expect(window.location.pathname).toBe('/welcome');
   // Onboarding is one decision: no product navigation competes with it.
   expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument();
@@ -56,3 +55,21 @@ it('lets a person change the choice from Account', async () => {
   expect(mocks.preferences).toHaveBeenCalledWith('on');
   expect(screen.getByRole('radio', { name: /^People, with AI/ })).toBeChecked();
 });
+
+it('offers System, Light and Dark in Account, applies the choice at once and keeps it on this browser', async () => {
+  mocks.me.mockResolvedValue({ ...member, ai_mode: 'off' });
+  render(<App />);
+  await userEvent.click(await screen.findByRole('button', { name: 'Appearance' }));
+  expect(screen.getAllByRole('radio').map(radio => radio.closest('label')?.textContent)).toEqual(['System', 'Light', 'Dark']);
+  expect(screen.getByRole('radio', { name: 'System' })).toBeChecked();
+  await userEvent.click(screen.getByRole('radio', { name: 'Dark' }));
+  expect(screen.getByRole('radio', { name: 'Dark' })).toBeChecked();
+  expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+  expect(localStorage.setItem).toHaveBeenCalledWith('moodie:theme', 'dark');
+  await userEvent.click(screen.getByRole('radio', { name: 'System' }));
+  expect(document.documentElement).not.toHaveAttribute('data-theme');
+  expect(localStorage.removeItem).toHaveBeenCalledWith('moodie:theme');
+  // Signed-in pages have no footer, so the film data credit lives here.
+  expect(screen.getByText('This product uses the TMDB API but is not endorsed or certified by TMDB.')).toBeInTheDocument();
+});
+

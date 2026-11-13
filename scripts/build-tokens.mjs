@@ -19,6 +19,7 @@ const colorBlock = scheme => [
 const typeLines = Object.entries(tokens.type).filter(([name]) => name !== 'note').flatMap(([name, role]) => [
   `  --m-type-${name}-size: ${role.size / 16}rem;`,
   `  --m-type-${name}-line: ${(role.line / role.size).toFixed(3)};`,
+  `  --m-type-${name}-tracking: ${role.tracking ?? 0}em;`,
 ]);
 const css = `/* ${banner} */
 :root {
@@ -31,11 +32,19 @@ ${Object.entries(tokens.radius).map(([name, value]) => `  --m-radius-${name}: ${
   --m-motion-base: ${tokens.motion.base}ms;
   --m-motion-slow: ${tokens.motion.slow}ms;
   --m-ease-out: ${tokens.motion.easeOut};
+  color-scheme: light;
 }
 
-/* The screening-room theme is opt-in until every web surface has been checked in it. */
+/* The screening room. Follows the system unless the person chose a theme. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+${colorBlock('dark').replace(/^/gm, '  ')}
+    color-scheme: dark;
+  }
+}
 [data-theme='dark'] {
 ${colorBlock('dark')}
+  color-scheme: dark;
 }
 `;
 

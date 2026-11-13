@@ -44,24 +44,3 @@ export const emotionLabels: Record<keyof EmotionScores, string> = {
   disgusted: 'Unease',
   surprised: 'Wonder',
 };
-
-export const emotionColors: Record<keyof EmotionScores, string> = {
-  // Mirrors design/tokens.json → feeling.light. Hue is a secondary cue; the word is always shown.
-  neutral: '#7C8589',
-  happy: '#C0862F',
-  sad: '#3C6585',
-  angry: '#963F37',
-  fearful: '#82506B',
-  disgusted: '#306E64',
-  surprised: '#726928',
-};
-
-const emotionKeys = Object.keys(emotionLabels) as (keyof EmotionScores)[];
-
-export const dominantEmotion = (scores?: EmotionScores | null) => {
-  if (!scores) return null;
-  const [emotion, score] = emotionKeys
-    .map(key => [key, Number(scores[key]) || 0] as const)
-    .sort(([, first], [, second]) => second - first)[0] || [];
-  return emotion ? { emotion, label: emotionLabels[emotion], score } : null;
-};

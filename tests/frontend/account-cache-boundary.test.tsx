@@ -5,7 +5,6 @@ import App from '../../src/App';
 const mocks = vi.hoisted(() => ({ me: vi.fn(), register: vi.fn(), recover: vi.fn(), summary: vi.fn(), savedPage: vi.fn() }));
 vi.mock('../../src/services/authService', () => ({ authService: { me: mocks.me, register: mocks.register, recover: mocks.recover, clear: vi.fn() } }));
 vi.mock('../../src/services/diaryService', () => ({ diaryService: { summary: mocks.summary, savedPage: mocks.savedPage } }));
-vi.mock('../../src/components/motion/SmoothScroll', () => ({ default: () => null }));
 const user = { id: 3, username: 'new_member', email: 'member@example.test', bio: '' };
 beforeEach(() => {
   vi.resetAllMocks();

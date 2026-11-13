@@ -23,15 +23,18 @@ export function SafetyActions({ kind, targetId, personId, username }: { kind: Re
     } catch (caught) { setError(apiError(caught, 'This person could not be blocked. Try again.')); }
     finally { setBusy(false); }
   };
-  return <details className="safety-actions">
+  return <details className="disclosure">
     <summary>{kind === 'person' ? 'Person options' : kind === 'comment' ? 'Comment options' : 'Response options'}</summary>
-    <div className="safety-actions__body">
-      <Link className="text-link" to={`/report/${kind}/${targetId}?personId=${personId}&username=${encodeURIComponent(username)}`}>Report {kind}</Link>
-      {!confirm ? <button className="text-link" type="button" onClick={() => setConfirm(true)}>Block @{username}</button> : <div>
+    <div className="stack stack--tight t-callout">
+      <div className="actions">
+        <Link className="link" to={`/report/${kind}/${targetId}?personId=${personId}&username=${encodeURIComponent(username)}`}>Report {kind}</Link>
+        {!confirm && <button className="link" type="button" onClick={() => setConfirm(true)}>Block @{username}</button>}
+      </div>
+      {confirm && <>
         <p>Block @{username}? You will no longer see each other’s content or interact. This also removes follows between you.</p>
-        <div className="suggestion-actions"><button className="button button--secondary" disabled={busy} onClick={() => void block()}>Confirm block</button><button className="text-link" disabled={busy} onClick={() => setConfirm(false)}>Cancel</button></div>
-      </div>}
-      {error && <p role="alert">{error}</p>}
+        <div className="actions"><button className="btn btn--secondary btn--small" disabled={busy} onClick={() => void block()} type="button">Confirm block</button><button className="btn btn--quiet btn--small" disabled={busy} onClick={() => setConfirm(false)} type="button">Cancel</button></div>
+      </>}
+      {error && <p className="notice notice--error" role="alert">{error}</p>}
     </div>
   </details>;
 }

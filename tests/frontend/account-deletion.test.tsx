@@ -6,7 +6,6 @@ import { newResponseDraft } from '../../src/types/responseDraft';
 const mocks = vi.hoisted(() => ({ me: vi.fn(), deleteAccount: vi.fn(), summary: vi.fn(), savedPage: vi.fn() }));
 vi.mock('../../src/services/authService', () => ({ authService: { me: mocks.me, deleteAccount: mocks.deleteAccount, clear: vi.fn() } }));
 vi.mock('../../src/services/diaryService', () => ({ diaryService: { summary: mocks.summary, savedPage: mocks.savedPage } }));
-vi.mock('../../src/components/motion/SmoothScroll', () => ({ default: () => null }));
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.me.mockResolvedValue({ id: 3, username: 'member', email: 'member@example.test', bio: '' });

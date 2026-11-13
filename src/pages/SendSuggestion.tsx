@@ -5,8 +5,7 @@ import { suggestionService } from '../services/suggestionService';
 import { apiError } from '../services/apiClient';
 import type { SuggestionRecipient } from '../types/suggestion';
 import type { Movie } from '../types/movie';
-import { imageUrl } from '../utils/display';
-import '../components/suggestions/Suggestions.css';
+import { imageUrl, releaseYear } from '../utils/display';
 
 export default function SendSuggestion() {
   const [params] = useSearchParams();
@@ -73,26 +72,42 @@ export default function SendSuggestion() {
     finally { setBusy(false); }
   };
 
-  return <div className="page-shell suggestions-page suggestion-writing">
-    <Link className="text-link" to={movieId ? `/movie/${movieId}` : '/suggestions'}>Back</Link>
-    <h1>Recommend a film</h1>
-    {error && <p className="notice notice--error" role="alert">{error} <button className="text-link" onClick={() => setRevision(value => value + 1)}>Retry loading</button></p>}
-    {!film ? <section>
-      <form className="search-bar" role="search" onSubmit={event => { event.preventDefault(); void findFilm(); }}><input aria-label="Find a film to recommend" type="search" value={filmQuery} onChange={event => setFilmQuery(event.target.value)} /><button className="button button--secondary" disabled={finding || !filmQuery.trim()}>Find film</button></form>
-      <div className="film-picker">{films.map(item => <button className="film-picker__row" key={item.id} onClick={() => setFilm(item)}><span><strong>{item.title}</strong></span><span>Choose</span></button>)}</div>
-      {searchedQuery && !films.length && !finding && <p>No films found.</p>}
-      {filmPage < filmPages && <button className="button button--quiet" disabled={finding} onClick={() => void findFilm(filmPage + 1)}>More films</button>}
-    </section> : <div className="suggestion-film"><div><Link to={`/movie/${film.id}`}><h2>{film.title}</h2></Link><button className="text-link" disabled={busy} onClick={() => setFilm(null)}>Choose another film</button></div>{imageUrl(film.poster_path, 'w154') && <img alt="" src={imageUrl(film.poster_path, 'w154')!} />}</div>}
-    <form onSubmit={event => { event.preventDefault(); void send(); }}>
-      <fieldset disabled={busy} className="suggestion-form-fields">
-        <legend className="sr-only">Personal recommendation</legend>
-        <div className="field"><label htmlFor="recipient-search">Who is this for?</label><input id="recipient-search" type="search" maxLength={100} value={personQuery} onChange={event => setPersonQuery(event.target.value)} placeholder="Find someone who follows you" /></div>
-        {recipient && <p className="suggestion-selected-person">For <strong>{recipient.username}</strong> <button type="button" className="text-link" onClick={() => setRecipient(null)}>Change</button></p>}
-        {recipientError && <p role="alert">{recipientError} <button type="button" className="text-link" onClick={() => setRevision(value => value + 1)}>Retry</button></p>}
-        {loadingPeople ? <p role="status">Finding people</p> : !recipient && <div className="recipient-list">{people.map(person => <button key={person.id} type="button" onClick={() => setRecipient(person)}><strong>{person.username}</strong>{person.bio && <span>{person.bio}</span>}</button>)}{!people.length && !recipientError && <p>No eligible people found. Recommendations can go to people who follow you.</p>}</div>}
-        <div className="field"><label htmlFor="suggestion-reason">Why this film for them?</label><textarea id="suggestion-reason" required maxLength={1000} rows={5} value={reason} onChange={event => setReason(event.target.value)} placeholder="Something I think you’ll connect with…" /></div>
-        <button className="button button--primary" disabled={!film || !recipient || !reason.trim() || busy}>{busy ? 'Sending' : 'Send recommendation'}</button>
-      </fieldset>
-    </form>
+  const poster = imageUrl(film?.poster_path, 'w154');
+  return <div className="page page--narrow">
+    <header className="page__head"><h1>Recommend a film</h1></header>
+    <div className="stack stack--loose">
+      {error && <p className="notice notice--error" role="alert">{error} <button className="link" onClick={() => setRevision(value => value + 1)}>Retry loading</button></p>}
+      {!film ? <section aria-label="Choose a film" className="stack">
+        <form className="search" role="search" onSubmit={event => { event.preventDefault(); void findFilm(); }}><input aria-label="Find a film to recommend" className="input" placeholder="Film title" type="search" value={filmQuery} onChange={event => setFilmQuery(event.target.value)} /><button className="btn btn--secondary" disabled={finding || !filmQuery.trim()}>Find film</button></form>
+        {finding && <p className="status" role="status">Searching films</p>}
+        {films.length > 0 && <ul className="list list--flush">{films.map(item => <li key={item.id}><button className="row row--center pick" onClick={() => setFilm(item)} type="button">
+          <span className="poster poster--xs">{imageUrl(item.poster_path, 'w154') && <img alt="" src={imageUrl(item.poster_path, 'w154')!} />}</span>
+          <span className="row__main"><span className="row__title">{item.title}</span>{item.release_date && <span className="t-caption muted">{releaseYear(item.release_date)}</span>}</span>
+          <span className="sr-only">Choose</span>
+        </button></li>)}</ul>}
+        {searchedQuery && !films.length && !finding && <p className="status">No films found.</p>}
+        {filmPage < filmPages && <div className="actions"><button className="btn btn--secondary" disabled={finding} onClick={() => void findFilm(filmPage + 1)}>More films</button></div>}
+      </section> : <div className="row row--center">
+        <Link className="poster poster--sm" tabIndex={-1} to={`/movie/${film.id}`}>{poster && <img alt={`Poster for ${film.title}`} src={poster} />}</Link>
+        <div className="row__main"><h2 className="row__title"><Link to={`/movie/${film.id}`}>{film.title}</Link></h2>{film.release_date && <p className="t-caption muted">{releaseYear(film.release_date)}</p>}<p className="t-caption"><button className="link" disabled={busy} onClick={() => setFilm(null)}>Choose another film</button></p></div>
+      </div>}
+      <form onSubmit={event => { event.preventDefault(); void send(); }}>
+        <fieldset className="stack" disabled={busy}>
+          <legend className="sr-only">Personal recommendation</legend>
+          <div className="field"><label htmlFor="recipient-search">Who is this for?</label><input className="input" id="recipient-search" type="search" maxLength={100} value={personQuery} onChange={event => setPersonQuery(event.target.value)} placeholder="Someone who follows you" /></div>
+          {recipient && <p className="byline">For <strong>{recipient.username}</strong> <button type="button" className="link" onClick={() => setRecipient(null)}>Change</button></p>}
+          {recipientError && <p className="notice notice--error" role="alert">{recipientError} <button type="button" className="link" onClick={() => setRevision(value => value + 1)}>Retry</button></p>}
+          {loadingPeople ? <p className="status" role="status">Finding people</p> : !recipient && <>
+            {people.length > 0 && <ul className="list list--flush">{people.map(person => <li key={person.id}><button className="row row--center pick" type="button" onClick={() => setRecipient(person)}>
+              <span aria-hidden="true" className="avatar">{person.username.charAt(0)}</span>
+              <span className="row__main"><strong>{person.username}</strong>{person.bio && <span className="t-caption muted">{person.bio}</span>}</span>
+            </button></li>)}</ul>}
+            {!people.length && !recipientError && <p className="status">No one found. Recommendations go to people who follow you.</p>}
+          </>}
+          <div className="field"><label htmlFor="suggestion-reason">Why this film for them?</label><textarea className="textarea" id="suggestion-reason" required maxLength={1000} rows={5} value={reason} onChange={event => setReason(event.target.value)} /></div>
+          <div className="actions"><button className="btn btn--primary" disabled={!film || !recipient || !reason.trim() || busy}>{busy ? 'Sending' : 'Send recommendation'}</button><Link className="btn btn--quiet" to={movieId ? `/movie/${movieId}` : '/suggestions'}>Cancel</Link></div>
+        </fieldset>
+      </form>
+    </div>
   </div>;
 }

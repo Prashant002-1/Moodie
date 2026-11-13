@@ -1,5 +1,5 @@
 import { SafetyActions } from './SafetyActions';
-import { MessageCircle, Send, Trash2 } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { Dispatch, FormEvent, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
@@ -18,9 +18,9 @@ function ScopedComments({ entryId, initialCount }: { entryId: number; initialCou
   const [count, setCount] = useState(initialCount);
   const [body, setBody] = useState('');
   useEffect(() => setCount(initialCount), [initialCount]);
-  return <div className={`response-comments${open ? ' response-comments--open' : ''}`}>
-    <button aria-expanded={open} className="response-comments__toggle" onClick={() => setOpen(current => !current)} type="button">
-      <MessageCircle aria-hidden="true" size={16} /><span>{count ? `${count} ${count === 1 ? 'comment' : 'comments'}` : 'Comment'}</span>
+  return <div className="comments">
+    <button aria-expanded={open} onClick={() => setOpen(current => !current)} type="button">
+      <MessageCircle aria-hidden="true" size={16} />{count > 0 ? <span>{count}<span className="sr-only"> {count === 1 ? 'comment' : 'comments'}</span></span> : <span className="sr-only">Comment</span>}
     </button>
     {open && <CommentPanel entryId={entryId} setCount={setCount} body={body} setBody={setBody} />}
   </div>;
@@ -61,22 +61,27 @@ function CommentPanel({ entryId, setCount, body, setBody }: { entryId: number; s
     } catch (error) { setError(apiError(error, 'Comment could not be removed.')); }
     finally { setSaving(false); }
   };
-  return <div className="response-comments__panel">
-    <div className="response-comments__list">{page.items.map(comment => <article className="response-comment" key={comment.id}>
-      <Link className="response-comment__avatar" to={`/member/${comment.username}`}>{comment.username.charAt(0).toUpperCase()}</Link>
-      <div><p><Link to={`/member/${comment.username}`}><strong>@{comment.username}</strong></Link><time dateTime={comment.created_at}>{new Date(comment.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time></p><blockquote>{comment.body}</blockquote></div>
-      {!comment.own && <SafetyActions kind="comment" targetId={comment.id} personId={comment.user_id} username={comment.username} />}
-      {comment.own && <button aria-label="Delete comment" className="response-comment__delete" disabled={saving} onClick={() => void remove(comment.id)} type="button"><Trash2 aria-hidden="true" size={14} /></button>}
-    </article>)}</div>
-    {page.loading && <p role="status">Loading comments</p>}
-    {page.loaded && !page.items.length && <p className="response-comments__status">No comments yet.</p>}
-    {page.next !== null && <button disabled={page.loading} onClick={page.loadMore}>Load more comments</button>}
-    {user ? <form className="response-comments__form" onSubmit={submit}>
-      <textarea aria-label="Write a comment" maxLength={1000} onChange={event => setBody(event.target.value)} placeholder="Write a comment" rows={2} value={body} />
-      <button aria-label="Post comment" disabled={!body.trim() || saving || page.loading || !page.loaded} type="submit"><Send aria-hidden="true" size={15} /></button>
-    </form> : <p>Sign in to comment.</p>}
-    {receipt && <p role="status">{receipt}</p>}
-    {error && <p role="alert">{error}</p>}
-    {page.error && <p role="alert">{page.error} <button onClick={page.refresh}>Retry comments</button></p>}
+  return <div className="comments__panel">
+    {page.items.length > 0 && <ul className="list">{page.items.map(comment => <li className="row" key={comment.id}>
+      <span aria-hidden="true" className="avatar avatar--sm">{comment.username.charAt(0)}</span>
+      <div className="row__main">
+        <p className="byline"><Link to={`/member/${comment.username}`}>@{comment.username}</Link> <time className="t-caption muted" dateTime={comment.created_at}>{new Date(comment.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time></p>
+        <p className="note">{comment.body}</p>
+      </div>
+      <div className="row__aside">
+        {!comment.own && <SafetyActions kind="comment" targetId={comment.id} personId={comment.user_id} username={comment.username} />}
+        {comment.own && <button aria-label="Delete comment" className="t-caption muted" disabled={saving} onClick={() => void remove(comment.id)} type="button">Delete</button>}
+      </div>
+    </li>)}</ul>}
+    {page.loading && <p className="muted" role="status">Loading comments</p>}
+    {page.loaded && !page.items.length && <p className="muted">No comments.</p>}
+    {page.next !== null && <div className="actions"><button className="btn btn--secondary btn--small" disabled={page.loading} onClick={page.loadMore} type="button">Load more comments</button></div>}
+    {user ? <form className="comments__form" onSubmit={submit}>
+      <textarea aria-label="Write a comment" className="textarea" maxLength={1000} onChange={event => setBody(event.target.value)} placeholder="Comment" rows={2} value={body} />
+      <button aria-label="Post comment" className="btn btn--secondary" disabled={!body.trim() || saving || page.loading || !page.loaded} type="submit">Post</button>
+    </form> : <p className="muted">Sign in to comment.</p>}
+    {receipt && <p className="muted" role="status">{receipt}</p>}
+    {error && <p className="error" role="alert">{error}</p>}
+    {page.error && <p className="error" role="alert">{page.error} <button className="link" onClick={page.refresh} type="button">Retry comments</button></p>}
   </div>;
 }

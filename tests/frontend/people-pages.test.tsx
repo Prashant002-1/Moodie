@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import People from '../../src/pages/People';
@@ -21,12 +21,26 @@ it('sends search and Discover scope to the server and clears the old scope while
   render(<MemoryRouter><People /></MemoryRouter>);
   await screen.findByRole('link', { name: '@friend' });
   await userEvent.type(screen.getByRole('searchbox', { name: 'Search people' }), 'shared film');
-  await userEvent.click(screen.getByRole('button', { name: 'Search people' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Search' }));
   await waitFor(() => expect(mocks.people).toHaveBeenLastCalledWith({ scope: 'following', q: 'shared film', limit: 30, offset: undefined }, expect.any(AbortSignal)));
   mocks.people.mockReturnValueOnce(new Promise(() => undefined));
   await userEvent.click(screen.getByRole('button', { name: 'Discover' }));
   expect(screen.queryByRole('link', { name: '@friend' })).not.toBeInTheDocument();
   await waitFor(() => expect(mocks.people).toHaveBeenLastCalledWith({ scope: 'discover', q: 'shared film', limit: 30, offset: undefined }, expect.any(AbortSignal)));
+});
+it('lists each person once: one profile link, what you share, their latest film and note, and Follow', async () => {
+  mocks.people.mockResolvedValue({ people: [{ ...person, bio: 'Watches slowly', following: false, follows_you: true, shared_film_title: 'Shared Film',
+    latest_title: 'Latest Film', latest_movie_id: 101, latest_poster_path: '/poster.jpg', latest_note: 'It stayed with me.' }], nextOffset: null });
+  render(<MemoryRouter><People /></MemoryRouter>);
+  const row = within((await screen.findByRole('link', { name: '@friend' })).closest('li')!);
+  expect(row.getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/member/friend', '/movie/101']);
+  expect(row.getByRole('link', { name: 'Latest Film' })).toHaveAttribute('href', '/movie/101');
+  expect(row.getByText('Watches slowly')).toBeInTheDocument();
+  expect(row.getByText(/You both responded to/)).toHaveTextContent('You both responded to Shared Film');
+  expect(row.getByText(/It stayed with me\./)).toBeInTheDocument();
+  expect(row.getByText(/Follows you/)).toBeInTheDocument();
+  expect(row.getByRole('button', { name: 'Follow @friend' })).toHaveAttribute('aria-pressed', 'false');
+  expect(row.queryByRole('img')).not.toBeInTheDocument();
 });
 it('retains a failed follow action and invalidates related reads only after success', async () => {
   mocks.unfollow.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(undefined);

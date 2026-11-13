@@ -14,9 +14,9 @@ enum MoodieTokens {
         static let s9: CGFloat = 96
     }
     enum Radius {
-        static let poster: CGFloat = 2
-        static let control: CGFloat = 6
-        static let surface: CGFloat = 10
+        static let poster: CGFloat = 4
+        static let control: CGFloat = 8
+        static let surface: CGFloat = 12
         static let pill: CGFloat = 999
     }
     enum Motion {

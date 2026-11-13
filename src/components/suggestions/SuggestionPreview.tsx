@@ -13,8 +13,9 @@ export function SuggestionPreview({ movieId }: { movieId?: number }) {
   }, [movieId]);
   const page = usePagedResource(`${user?.id}:suggestion-preview:${movieId ?? 'home'}`, load);
   if (!page.items.length && !page.error) return null;
-  return <section className="suggestion-preview-list" aria-label="Personal recommendations"><header className="suggestion-section-heading"><h2>{movieId ? 'Recommended to you' : 'From people you know'}</h2><Link className="text-link" to={movieId ? `/suggestions?movieId=${movieId}` : '/suggestions'}>See all</Link></header>
-    {page.error && <p role="alert">Recommendations could not be loaded. <button className="text-link" onClick={page.refresh}>Retry</button></p>}
-    {page.items.map(item => <SuggestionRow key={item.id} item={item} viewerId={user!.id} />)}
+  return <section aria-label="Personal recommendations">
+    <header className="section__head"><h2>Recommended to you</h2><Link to={movieId ? `/suggestions?movieId=${movieId}` : '/suggestions'}>See all</Link></header>
+    {page.error && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={page.refresh}>Retry</button></p>}
+    {page.items.length > 0 && <div className="list">{page.items.map(item => <SuggestionRow headingLevel={3} item={item} key={item.id} viewerId={user!.id} />)}</div>}
   </section>;
 }

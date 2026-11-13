@@ -28,13 +28,18 @@ export default function BlockedPeople() {
     } catch (caught) { setError(apiError(caught, 'This person could not be unblocked. Try again.')); }
     finally { setBusy(null); }
   };
-  return <section className="page-shell account-page"><Link className="text-link" to="/account">Account</Link><h1>Blocked people</h1>
-    <p>Unblocking allows interaction again. It does not restore follows.</p>
-    {notice && <p role="status">{notice}</p>}
-    {(error || page.error) && <p role="alert">{error || page.error} <button className="text-link" onClick={page.refresh}>Refresh list</button></p>}
-    <div className="blocked-people">{page.items.map(person => <article key={person.id}><span>@{person.username}</span><button className="button button--quiet" disabled={busy !== null} onClick={() => void unblock(person.id, person.username)}>Unblock @{person.username}</button></article>)}</div>
-    {page.loading && <p role="status">Loading blocked people</p>}
-    {page.loaded && !page.items.length && !page.error && <p>No blocked people.</p>}
-    {page.next !== null && page.next !== undefined && <button className="button button--quiet" disabled={page.loading} onClick={page.loadMore}>More people</button>}
+  return <section className="page page--narrow">
+    <header className="page__head"><h1>Blocked people</h1><Link className="link t-callout" to="/account">Account</Link></header>
+    {page.items.length > 0 && <p className="hint">Unblocking allows interaction again. It does not restore follows.</p>}
+    {notice && <p className="notice" role="status" style={{ marginTop: 'var(--m-space-4)' }}>{notice}</p>}
+    {(error || page.error) && <p className="notice notice--error" role="alert" style={{ marginTop: 'var(--m-space-4)' }}>{error || page.error} <button className="link" onClick={page.refresh}>Refresh list</button></p>}
+    <ul className="list">{page.items.map(person => <li className="row row--center" key={person.id}>
+      <span aria-hidden="true" className="avatar">{person.username.charAt(0)}</span>
+      <span className="row__main"><span className="strong truncate">@{person.username}</span></span>
+      <button aria-label={`Unblock @${person.username}`} className="btn btn--secondary btn--small" disabled={busy !== null} onClick={() => void unblock(person.id, person.username)}>Unblock</button>
+    </li>)}</ul>
+    {page.loading && <p className="status" role="status">Loading blocked people</p>}
+    {page.loaded && !page.items.length && !page.error && <p className="status">No blocked people.</p>}
+    {page.next !== null && page.next !== undefined && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore}>More people</button></div>}
   </section>;
 }
