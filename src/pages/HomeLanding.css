@@ -325,13 +325,12 @@
   padding: 12px 17px;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 9px;
-  background: var(--mf-coral);
-  color: var(--mf-page-text);
-  box-shadow: 0 12px 35px rgba(22, 29, 33, 0.14);
+  background: var(--m-color-ink);
+  color: var(--m-color-canvas);
 }
 
 .mf-primary-action:hover:not(:disabled) {
-  background: var(--m-color-accent-pressed);
+  background: var(--m-color-ink-secondary);
   transform: translateY(-2px);
 }
 

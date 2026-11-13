@@ -262,12 +262,12 @@
 
 .app-shell--product .button--primary {
   border: 0;
-  background: var(--m-color-accent);
-  color: #1d2b33;
+  background: var(--m-color-ink);
+  color: var(--m-color-canvas);
 }
 
 .app-shell--product .button--primary:hover:not(:disabled) {
-  background: #c9554c;
+  background: var(--m-color-ink-secondary);
 }
 
 .app-shell--product .button--secondary {

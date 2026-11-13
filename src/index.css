@@ -324,12 +324,12 @@ fieldset {
 }
 
 .button--primary {
-  background: var(--color-oxide);
-  color: var(--color-action-ink);
+  background: var(--m-color-ink);
+  color: var(--m-color-canvas);
 }
 
 .button--primary:hover:not(:disabled) {
-  background: var(--color-oxide-deep);
+  background: var(--m-color-ink-secondary);
 }
 
 .button--secondary {
