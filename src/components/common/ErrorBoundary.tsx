@@ -1,12 +1,4 @@
-/**
- * ErrorBoundary Component
- * 
- * React error boundary component that catches JavaScript errors anywhere in the child
- * component tree and displays a fallback UI instead of crashing the whole application.
- */
-
 import { Component, ReactNode } from 'react';
-import { TriangleAlert } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -18,10 +10,7 @@ interface State {
   error?: Error;
 }
 
-/**
- * ErrorBoundary class component that implements React error boundary pattern.
- * Catches errors during rendering, in lifecycle methods, and in constructors.
- */
+/** Catches a rendering error anywhere below it and offers a reload instead of a blank page. */
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false
@@ -41,17 +30,10 @@ class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="error-state error-state--full">
-          <TriangleAlert color="var(--color-error)" size={30} />
-          <div>
-            <h1 className="section-title">Something went wrong</h1>
-            <p className="section-copy error-state__copy">Refresh the page. If the problem remains, return in a moment and try again.</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="button button--primary error-state__action"
-            >
-              Refresh page
-            </button>
+        <div className="page page--narrow">
+          <div className="empty" role="alert">
+            <h1>Something went wrong</h1>
+            <button className="btn btn--primary" onClick={() => window.location.reload()} type="button">Refresh page</button>
           </div>
         </div>
       );

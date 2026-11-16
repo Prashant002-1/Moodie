@@ -1,0 +1,9 @@
+.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+Config/Local.xcconfig
+*.xcarchive
+*.ipa
+TestResults/
+Config/DebugLocal.xcconfig

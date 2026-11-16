@@ -1,5 +1,7 @@
 # Emotional signal model
 
+> Superseded in part on 2026-11-13 by [FEELINGS.md](FEELINGS.md): intensity is no longer entered or shown as an amount. Where the two disagree, FEELINGS.md is current.
+
 ## Decision
 
 Moodie saves how a person says a film felt. The person is the source of that record.
@@ -53,7 +55,7 @@ The vocabulary must be versioned. Historical entries retain the version they use
 3. Compare the feeling mixes for each shared film.
 4. Strengthen a connection when meaningful overlap repeats across films.
 5. Gather unseen films from those people's public responses.
-6. Rank candidates by the human connection and the saved feelings on the recommended film.
+6. Learn cross-film response transfer from earlier public responses and rank complete source paths by expected feeling error. Until the learner has sufficient validation evidence, use the cited response with explicit uncertainty.
 7. Return the person, shared film, and public response that explain each recommendation.
 
 The interface uses plain language. It names the person and shared film, and can show what the person wrote about the recommended film. It does not expose a compatibility percentage.
@@ -87,3 +89,8 @@ Use plain terms: feelings, response, person, shared film, recommendation, feed, 
 The current schema stores one seven-key vector on each diary entry. New responses enter those values directly. Older provenance columns remain only for data compatibility and are not accepted or returned by the active diary API.
 
 Before expanding the feeling vocabulary, add a vocabulary version and a migration path. Preserve `diary_entries` as the atomic viewing response and keep optional media in `entry_media`.
+
+
+## Learned implementation
+
+The current implementation is `response-transfer-v1`. It preserves raw intensity, trains only on public responses, uses later validation targets to decide whether a learned correction improves on simple baselines, and keeps private viewer context separate. The feed and people directory share its connection evidence. See [Learned recommendations and feed](LEARNED_RECOMMENDATIONS.md) for the objective, training lineage, ranking, model lifecycle, evaluation and remaining data limitations.

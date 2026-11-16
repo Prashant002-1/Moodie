@@ -17,8 +17,8 @@ export interface RecommendationResponse {
 }
 
 export const recommendationService = {
-  async get(signal?: EmotionScores): Promise<RecommendationResponse> {
-    const response = await apiClient.post('/recommendations', signal ? { signal } : {});
+  async get(signal?: EmotionScores, abortSignal?: AbortSignal): Promise<RecommendationResponse> {
+    const response = await apiClient.post('/recommendations', signal ? { signal } : {}, { signal: abortSignal });
     return response.data;
   },
 };

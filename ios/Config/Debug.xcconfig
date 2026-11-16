@@ -1,0 +1,10 @@
+// Only loopback HTTP is permitted in Debug. Physical devices need an HTTPS API.
+MOODIE_API_URL = http:/$()/127.0.0.1:3001/api
+MOODIE_BUNDLE_ID = com.prashant.moodie.dev
+MOODIE_TEAM_ID =
+MOODIE_PRIVACY_URL =
+MOODIE_SUPPORT_URL =
+#include? "Local.xcconfig"
+
+// Optional local access to the private AWS backend. Debug only.
+#include? "DebugLocal.xcconfig"

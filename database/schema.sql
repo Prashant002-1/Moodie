@@ -34,6 +34,26 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS bio VARCHAR(240) DEFAULT '';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS recovery_hash VARCHAR(255);
+-- NULL means the person has not chosen yet. 'off' keeps every language-model
+-- feature and external assistant connection away from the account.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_mode VARCHAR(8) CHECK (ai_mode IN ('on', 'off'));
+-- The person's choice about email. On by default; nothing is queued for them when off.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN NOT NULL DEFAULT TRUE;
+
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash CHAR(64) PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
+CREATE TABLE IF NOT EXISTS auth_attempts (
+    key CHAR(64) PRIMARY KEY,
+    attempts INTEGER NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
+);
 
 -- Legacy emotion-session table retained only as a migration source.
 CREATE TABLE IF NOT EXISTS emotions (
@@ -130,6 +150,38 @@ CREATE TABLE IF NOT EXISTS diary_entries (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Track emotional evidence separately from wording and attached-media edits.
+-- Backfill conservatively: old schemas did not record when feelings last changed.
+ALTER TABLE diary_entries ADD COLUMN IF NOT EXISTS signal_updated_at TIMESTAMP;
+ALTER TABLE diary_entries ADD COLUMN IF NOT EXISTS published_at TIMESTAMP;
+UPDATE diary_entries SET signal_updated_at = GREATEST(created_at, updated_at) WHERE signal_updated_at IS NULL;
+UPDATE diary_entries SET published_at = GREATEST(created_at, updated_at) WHERE visibility = 'public' AND published_at IS NULL;
+
+CREATE OR REPLACE FUNCTION moodie_track_signal_version() RETURNS trigger AS $signal_version$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    NEW.signal_updated_at := GREATEST(NEW.created_at, NEW.updated_at);
+    NEW.published_at := CASE WHEN NEW.visibility = 'public' THEN NEW.signal_updated_at ELSE NULL END;
+  ELSE
+    IF ROW(NEW.neutral, NEW.happy, NEW.sad, NEW.angry, NEW.fearful, NEW.disgusted, NEW.surprised, NEW.watched_on, NEW.movie_id, NEW.user_id)
+       IS DISTINCT FROM ROW(OLD.neutral, OLD.happy, OLD.sad, OLD.angry, OLD.fearful, OLD.disgusted, OLD.surprised, OLD.watched_on, OLD.movie_id, OLD.user_id) THEN
+      NEW.signal_updated_at := CURRENT_TIMESTAMP;
+    ELSE
+      NEW.signal_updated_at := OLD.signal_updated_at;
+    END IF;
+    IF NEW.visibility = 'public' AND (OLD.visibility <> 'public' OR (trim(OLD.note) = '' AND trim(NEW.note) <> '')) THEN
+      NEW.published_at := CURRENT_TIMESTAMP;
+    ELSE
+      NEW.published_at := OLD.published_at;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$signal_version$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS diary_signal_version ON diary_entries;
+CREATE TRIGGER diary_signal_version BEFORE INSERT OR UPDATE ON diary_entries
+  FOR EACH ROW EXECUTE FUNCTION moodie_track_signal_version();
 
 -- Stable seed ownership is additive and nullable so ordinary user entries are
 -- never mistaken for data that the explicit seed command may reconcile.
@@ -239,6 +291,13 @@ ON CONFLICT (id) DO NOTHING;
 -- Preserve records from the previous list-and-emotion model when this schema is
 -- applied to an existing database. The old tables remain readable as a migration
 -- source, but no current API writes to them.
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    id TEXT PRIMARY KEY,
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+DO $migration$
+BEGIN
+IF NOT EXISTS (SELECT 1 FROM schema_migrations WHERE id = 'legacy-diary-import') THEN
 INSERT INTO saved_films (user_id, movie_id, created_at)
 SELECT user_id, movie_id, created_at
 FROM user_movies
@@ -268,3 +327,121 @@ LEFT JOIN LATERAL (
 ) e ON TRUE
 WHERE um.status = 'watched'
 ON CONFLICT (legacy_user_movie_id) DO NOTHING;
+
+INSERT INTO schema_migrations (id) VALUES ('legacy-diary-import');
+END IF;
+END $migration$;
+
+-- Native community safety. These tables also protect authenticated web reads.
+CREATE TABLE IF NOT EXISTS user_blocks (
+    blocker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    blocked_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (blocker_id, blocked_id),
+    CHECK (blocker_id <> blocked_id)
+);
+CREATE INDEX IF NOT EXISTS user_blocks_reverse ON user_blocks(blocked_id, blocker_id);
+CREATE TABLE IF NOT EXISTS moderation_reports (
+    id BIGSERIAL PRIMARY KEY,
+    reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    target_kind TEXT NOT NULL CHECK (target_kind IN ('response', 'comment', 'person')),
+    target_id BIGINT NOT NULL,
+    reason TEXT NOT NULL,
+    details TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'dismissed', 'removed')),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP,
+    UNIQUE (reporter_id, target_kind, target_id)
+);
+CREATE INDEX IF NOT EXISTS moderation_reports_queue ON moderation_reports(status, created_at);
+CREATE TABLE IF NOT EXISTS moderation_actions (
+    target_kind TEXT NOT NULL CHECK (target_kind IN ('response', 'comment', 'person')),
+    target_id BIGINT NOT NULL,
+    reason TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (target_kind, target_id)
+);
+
+-- Human recommendation lifecycle. Additive: existing clients keep their contracts.
+ALTER TABLE diary_entries ADD COLUMN IF NOT EXISTS enjoyment TEXT
+    CHECK (enjoyment IN ('loved', 'liked', 'mixed', 'not_for_me'));
+ALTER TABLE diary_entries ADD COLUMN IF NOT EXISTS highlights TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE diary_entries ADD COLUMN IF NOT EXISTS client_request_id UUID;
+ALTER TABLE diary_entries ADD COLUMN IF NOT EXISTS request_hash TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS diary_request_identity ON diary_entries(user_id, client_request_id);
+
+CREATE TABLE IF NOT EXISTS film_suggestions (
+    id BIGSERIAL PRIMARY KEY,
+    sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    movie_id INTEGER NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+    origin TEXT NOT NULL CHECK (origin IN ('sent', 'discovered')),
+    reason VARCHAR(1000) NOT NULL DEFAULT '',
+    source_entry_id BIGINT REFERENCES diary_entries(id) ON DELETE SET NULL,
+    linked_entry_id BIGINT REFERENCES diary_entries(id) ON DELETE SET NULL,
+    archived BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (sender_id <> recipient_id),
+    UNIQUE(sender_id, recipient_id, movie_id, origin)
+);
+CREATE INDEX IF NOT EXISTS suggestions_recipient ON film_suggestions(recipient_id, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS suggestions_sender ON film_suggestions(sender_id, created_at DESC, id DESC);
+-- Opening a conversation is explicit and survives retracting a particular reply.
+ALTER TABLE film_suggestions ADD COLUMN IF NOT EXISTS shared_at TIMESTAMP;
+-- The recipient's own reminder to watch a recommended film. Only they can see
+-- it. It is cleared when they archive the recommendation or link a viewing.
+ALTER TABLE film_suggestions ADD COLUMN IF NOT EXISTS remind_at TIMESTAMP;
+CREATE INDEX IF NOT EXISTS suggestions_reminders ON film_suggestions(recipient_id, remind_at) WHERE remind_at IS NOT NULL;
+
+-- A reply is an explicitly shared message, never an automatic copy of a diary.
+-- Deleting its viewing also retracts the reply. Visibility edits do not publish
+-- a diary; only the independently composed reply and opted-in feeling snapshot
+-- are visible to the other participant.
+CREATE TABLE IF NOT EXISTS suggestion_replies (
+    suggestion_id BIGINT PRIMARY KEY REFERENCES film_suggestions(id) ON DELETE CASCADE,
+    entry_id BIGINT NOT NULL REFERENCES diary_entries(id) ON DELETE CASCADE,
+    enjoyment TEXT NOT NULL CHECK (enjoyment IN ('loved', 'liked', 'mixed', 'not_for_me')),
+    highlights TEXT[] NOT NULL DEFAULT '{}',
+    note VARCHAR(1000) NOT NULL DEFAULT '',
+    feelings JSONB,
+    contains_spoilers BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS suggestion_messages (
+    id BIGSERIAL PRIMARY KEY,
+    suggestion_id BIGINT NOT NULL REFERENCES film_suggestions(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    client_request_id UUID NOT NULL,
+    body VARCHAR(1000) NOT NULL CHECK (char_length(trim(body)) > 0),
+    contains_spoilers BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, client_request_id)
+);
+CREATE INDEX IF NOT EXISTS suggestion_messages_order ON suggestion_messages(suggestion_id, id);
+UPDATE film_suggestions s SET shared_at = COALESCE(
+    (SELECT r.created_at FROM suggestion_replies r WHERE r.suggestion_id=s.id),
+    (SELECT MIN(m.created_at) FROM suggestion_messages m WHERE m.suggestion_id=s.id))
+WHERE s.shared_at IS NULL AND (EXISTS(SELECT 1 FROM suggestion_replies r WHERE r.suggestion_id=s.id)
+    OR EXISTS(SELECT 1 FROM suggestion_messages m WHERE m.suggestion_id=s.id));
+
+-- Email waiting to go out. One row per person, kind and recommendation, so
+-- nothing is queued twice. `payload` is what the email said when it was queued;
+-- delivery reads the recommendation again and skips a row that no longer applies.
+-- `error` holds why a row was skipped or failed. `claimed_at` is a short lease
+-- so two delivery runs never hand the same row to a provider.
+CREATE TABLE IF NOT EXISTS notification_outbox (
+    id BIGSERIAL PRIMARY KEY,
+    recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL CHECK (kind IN ('recommendation', 'reminder', 'reply')),
+    suggestion_id BIGINT NOT NULL REFERENCES film_suggestions(id) ON DELETE CASCADE,
+    payload JSONB NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'skipped', 'failed')),
+    error TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    claimed_at TIMESTAMP,
+    sent_at TIMESTAMP,
+    UNIQUE (recipient_id, kind, suggestion_id)
+);
+CREATE INDEX IF NOT EXISTS notification_outbox_pending ON notification_outbox(id) WHERE status = 'pending';

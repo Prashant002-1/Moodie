@@ -1,40 +1,40 @@
 import { Link } from 'react-router-dom';
 import { EmotionScores } from '../../types/emotion';
 import { Movie } from '../../types/movie';
-import { emotionLabels } from '../../utils/display';
+import { feelingsFromOrder } from '../../utils/feelings';
+import { personHue } from '../../utils/person';
+import { Feelings } from '../response/Feelings';
 
 type RecommendationConnection = NonNullable<Movie['recommended_by']>[number];
 
 interface RecommendationEvidenceProps {
   connection: RecommendationConnection;
-  movieTitle: string;
+  /** Accepted for existing callers. The evidence is about the shared film only. */
+  movieTitle?: string;
+  /** Accepted for existing callers. Not shown: Moodie does not ask what a person wants to feel. */
   requestedFeelings?: (keyof EmotionScores)[];
   showComparison?: boolean;
 }
 
-const feelingList = (feelings: (keyof EmotionScores)[]) => feelings.map(key => emotionLabels[key]).join(' · ');
-
-export function RecommendationEvidence({ connection, movieTitle, requestedFeelings = [], showComparison = false }: RecommendationEvidenceProps) {
+/** Why this person: the film both people responded to and, when they matched, the feelings they share. */
+export function RecommendationEvidence({ connection, showComparison = false }: RecommendationEvidenceProps) {
   const shared = connection.shared_feelings || [];
-  const response = connection.response_feelings || [];
+  const film = connection.shared_film_title;
+  const to = connection.shared_response_id ? `/response/${connection.shared_response_id}`
+    : connection.shared_movie_id ? `/movie/${connection.shared_movie_id}` : null;
   return (
-    <div className="recommendation-evidence">
-      <p className="recommendation-evidence__title">Why this film</p>
-      <dl>
-        <div><dt>You both responded to</dt><dd>{connection.shared_film_title}</dd></div>
-        {shared.length > 0 && <div><dt>Feelings you shared</dt><dd>{feelingList(shared)}</dd></div>}
-        {requestedFeelings.length > 0 && <div><dt>You wanted</dt><dd>{feelingList(requestedFeelings)}</dd></div>}
-        {response.length > 0 && <div><dt><Link to={`/member/${connection.username}`}>@{connection.username}</Link> felt after {movieTitle}</dt><dd>{feelingList(response)}</dd></div>}
-      </dl>
+    <>
+      <p className="t-callout secondary">You both responded to {to ? <Link className="link" to={to}>{film}</Link> : film}</p>
+      {shared.length > 0 && <div className="evidence__felt"><span>You both felt</span><Feelings entry={feelingsFromOrder(shared)} /></div>}
       {showComparison && connection.viewer_shared_note && connection.person_shared_note && (
-        <section className="recommendation-evidence__comparison" aria-label={`Your responses to ${connection.shared_film_title}`}>
-          <h3>Your responses to {connection.shared_film_title}</h3>
-          <div className="recommendation-evidence__responses">
-            <blockquote><span>You</span>{connection.viewer_shared_note}</blockquote>
-            <blockquote><span>@{connection.username}</span>{connection.person_shared_note}</blockquote>
+        <details className="disclosure">
+          <summary>Your responses to {film}</summary>
+          <div className="two-up">
+            <div className="stack stack--tight"><p className="byline"><strong>You</strong></p><p className="note">{connection.viewer_shared_note}</p></div>
+            <div className="stack stack--tight" data-hue={personHue(connection.username)}><p className="byline"><strong>@{connection.username}</strong></p><p className="note">{connection.person_shared_note}</p></div>
           </div>
-        </section>
+        </details>
       )}
-    </div>
+    </>
   );
 }

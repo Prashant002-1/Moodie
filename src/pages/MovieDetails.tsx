@@ -1,95 +1,56 @@
-import React, { useEffect, useState } from 'react';
-import { Bookmark, Clock, Heart } from 'lucide-react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
-import BrandMark from '../components/brand/BrandMark';
-import { ResponseComments } from '../components/discovery/ResponseComments';
-import { ResponseFeelingTrace } from '../components/discovery/ResponseFeelingTrace';
-import FilmRail from '../components/features/movie/FilmRail';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { ResponseCard } from '../components/response/ResponseCard';
+import { SuggestionPreview } from '../components/suggestions/SuggestionPreview';
+import FilmPoster from '../components/features/movie/FilmPoster';
 import { useDiary } from '../contexts/DiaryContext';
+import { useLibraryState } from '../hooks/useLibraryState';
 import { useUser } from '../contexts/UserContext';
 import { catalogService } from '../services/catalogService';
-import { CommunityEntry, discoveryService } from '../services/discoveryService';
-import { EmotionScores } from '../types/emotion';
+import { ResponseEntry, discoveryService } from '../services/discoveryService';
+import { usePagedResource } from '../hooks/usePagedResource';
+import { useResource } from '../hooks/useResource';
 import { Movie } from '../types/movie';
-import { emotionColors, emotionLabels, formatCalendarDate, formatRuntime, imageUrl, releaseYear } from '../utils/display';
-
-const feelingKeys = Object.keys(emotionLabels) as (keyof EmotionScores)[];
-
-const FilmFeelingDistribution = ({ entries }: { entries: CommunityEntry[] }) => {
-  if (!entries.length) return null;
-  const totals = feelingKeys.map(key => ({
-    key,
-    label: emotionLabels[key],
-    value: entries.reduce((sum, entry) => sum + (Number(entry[key]) || 0), 0),
-  }));
-  const total = totals.reduce((sum, feeling) => sum + feeling.value, 0) || 1;
-  const distribution = totals
-    .map(feeling => ({ ...feeling, percent: Math.round((feeling.value / total) * 100) }))
-    .filter(feeling => feeling.percent > 0)
-    .sort((first, second) => second.percent - first.percent);
-
-  return (
-    <section className="film-feeling-distribution" aria-label={`Feelings recorded for ${entries[0].title}`}>
-      <header><h2>What people felt</h2><p>{entries.length} {entries.length === 1 ? 'response' : 'responses'}</p></header>
-      <div aria-hidden="true" className="film-feeling-distribution__trace">
-        {distribution.map(feeling => <i key={feeling.key} style={{ backgroundColor: emotionColors[feeling.key], flexGrow: feeling.percent }} />)}
-      </div>
-      <dl>
-        {distribution.map(feeling => <div key={feeling.key}><dt><i style={{ backgroundColor: emotionColors[feeling.key] }} />{feeling.label}</dt><dd>{feeling.percent}%</dd></div>)}
-      </dl>
-    </section>
-  );
-};
+import { formatRuntime, imageUrl, releaseYear } from '../utils/display';
+import { personHue } from '../utils/person';
 
 const MovieDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const actionLocks = useRef(new Set<string>());
   const [searchParams] = useSearchParams();
+  const { hash } = useLocation();
   const { user } = useUser();
-  const { isLogged, isSaved, saveFilm, unsaveFilm } = useDiary();
-  const [movie, setMovie] = useState<Movie | null>(null);
-  const [similar, setSimilar] = useState<Movie[]>([]);
-  const [publicEntries, setPublicEntries] = useState<CommunityEntry[]>([]);
+  const { saveFilm, unsaveFilm, revision } = useDiary();
+  const library = useLibraryState([Number(id)]);
+  const libraryState = library.get(Number(id));
   const [view, setView] = useState<'responses' | 'related'>('responses');
-  const [responseScope, setResponseScope] = useState<'circle' | 'everyone'>('everyone');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [responseScope, setResponseScope] = useState<'following' | 'everyone'>('everyone');
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState('');
+  const loadMovie = useCallback((signal: AbortSignal) => catalogService.movie(Number(id), signal), [id]);
+  const catalog = useResource(`${user?.id}:${id}`, loadMovie);
+  const loadResponses = useCallback(async (offset: number | undefined, signal: AbortSignal) => {
+    const result = await discoveryService.filmEntriesPage(Number(id), { offset, scope: responseScope }, signal);
+    return { items: result.entries, next: result.nextOffset, metadata: { summary: result.summary, film: result.film } };
+  }, [id, responseScope]);
+  const responses = usePagedResource(`${user?.id}:${revision}:${id}:${responseScope}`, loadResponses);
+  const publicEntries = responses.items;
+  const summary = responses.metadata?.summary;
+  const cached = responses.metadata?.film;
+  const movie: Movie | null = catalog.data ?? (cached ? { ...cached, overview: cached.overview ?? '', release_date: cached.release_date ?? '', genre_ids: [], popularity: 0, vote_average: 0, vote_count: 0 } : null);
+  const setPublicEntries = responses.updateItems;
 
   useEffect(() => {
-    const movieId = Number(id);
-    if (!movieId) {
-      setError('This film link is not valid.');
-      setLoading(false);
-      return;
-    }
-    let active = true;
-    setLoading(true);
-    Promise.all([catalogService.movie(movieId), catalogService.related(movieId), discoveryService.filmEntries(movieId).catch(() => [])])
-      .then(([details, related, entries]) => {
-        if (!active) return;
-        const availableRelated = related.filter(item => item.poster_path);
-        setMovie(details);
-        setSimilar(availableRelated);
-        setPublicEntries(entries);
-        setView(entries.length > 0 || availableRelated.length === 0 ? 'responses' : 'related');
-      })
-      .catch(() => active && setError('Film details could not be loaded.'))
-      .finally(() => active && setLoading(false));
-    return () => { active = false; };
-  }, [id]);
-
-  useEffect(() => {
-    if (!publicEntries.length || !window.location.hash) return;
-    const target = document.getElementById(window.location.hash.slice(1));
+    if (!publicEntries.length || !hash) return;
+    const target = document.getElementById(hash.slice(1));
     if (!target) return;
     const frame = window.requestAnimationFrame(() => target.scrollIntoView({ block: 'center' }));
     return () => window.cancelAnimationFrame(frame);
-  }, [publicEntries]);
+  }, [publicEntries, hash]);
 
   const toggleSaved = async () => {
-    if (!movie || !user) return;
-    const wasSaved = isSaved(movie.id);
+    if (!movie || !user || !libraryState || saving) return;
+    const wasSaved = libraryState.saved;
     setSaving(true);
     setNotice('');
     try {
@@ -103,8 +64,11 @@ const MovieDetails: React.FC = () => {
     }
   };
 
-  const toggleLike = async (entry: CommunityEntry) => {
+  const toggleLike = async (entry: ResponseEntry) => {
     if (!user) return;
+    const actionKey = 'toggleLike-' + entry.id;
+    if (actionLocks.current.has(actionKey)) return;
+    actionLocks.current.add(actionKey);
     const next = !entry.liked;
     setPublicEntries(current => current.map(item => item.id === entry.id
       ? { ...item, liked: next, like_count: Math.max(0, item.like_count + (next ? 1 : -1)) }
@@ -113,88 +77,96 @@ const MovieDetails: React.FC = () => {
       if (next) await discoveryService.like(entry.id);
       else await discoveryService.unlike(entry.id);
     } catch {
+      setNotice('Your like could not be updated. Try again.');
       setPublicEntries(current => current.map(item => item.id === entry.id
         ? { ...item, liked: !next, like_count: Math.max(0, item.like_count + (next ? -1 : 1)) }
         : item));
-    }
+    } finally { actionLocks.current.delete(actionKey); }
   };
 
-  if (loading) return <div className="loading-state page-loading"><div className="loading-spinner" /><span>Loading film</span></div>;
-  if (error || !movie) return <div className="error-state page-loading"><BrandMark /><h1>{error || 'Film not found'}</h1></div>;
+  if (!movie && (catalog.loading || responses.loading)) return <div className="loading" role="status">Loading film</div>;
+  if (!movie) return <div className="page page--narrow"><div className="empty"><h1>Film could not be loaded</h1><button className="btn btn--secondary" onClick={() => { catalog.refresh(); responses.refresh(); }} type="button">Retry film</button></div></div>;
 
-  const backdrop = imageUrl(movie.backdrop_path, 'w1280');
   const poster = imageUrl(movie.poster_path, 'w500');
+  const backdrop = imageUrl(movie.backdrop_path, 'w1280');
   const runtime = formatRuntime(movie.runtime);
   const fromPerson = searchParams.get('from');
   const throughFilm = searchParams.get('through');
+  const viewings = libraryState?.viewing_count ?? 0;
+  // People you follow come first; within each group the order is the server's.
+  const ordered = [...publicEntries.filter(entry => entry.following), ...publicEntries.filter(entry => !entry.following)];
 
-  return (
-    <>
-      <section className={`details-hero${publicEntries.length === 0 ? ' details-hero--without-responses' : ''}`}>
-        {backdrop && <img alt="" aria-hidden="true" className="details-hero__backdrop" src={backdrop} />}
-        <div className="details-hero__scrim" />
-        <div className="details-hero__content">
-          {poster ? <img alt={`Poster for ${movie.title}`} className="details-hero__poster" src={poster} /> : <div className="film-poster__fallback"><BrandMark /></div>}
-          <div className="details-hero__copy">
-            {fromPerson && throughFilm && <p className="details-connection"><Link to={`/member/${fromPerson}`}>@{fromPerson}</Link> reached you through <strong>{throughFilm}</strong>.</p>}
-            <h1 className="details-hero__title">{movie.title}</h1>
-            {movie.tagline && <p className="details-hero__tagline">{movie.tagline}</p>}
-            <div className="details-meta">
-              <span>{releaseYear(movie.release_date)}</span>
-              {runtime && <span className="runtime-badge"><Clock size={15} />{runtime}</span>}
-              {publicEntries.length > 0 && <span>{publicEntries.length} {publicEntries.length === 1 ? 'response' : 'responses'}</span>}
-            </div>
-            <p className="details-overview">{movie.overview || 'No synopsis is available for this film.'}</p>
-            {user ? (
-              <div className="details-actions">
-                <button className="button button--secondary" disabled={saving} onClick={() => void toggleSaved()} type="button">
-                  <Bookmark fill={isSaved(movie.id) ? 'currentColor' : 'none'} size={17} />{saving ? 'Saving' : isSaved(movie.id) ? 'Saved' : 'Save for later'}
-                </button>
-                <Link className="button button--primary" to={`/log?movieId=${movie.id}`}>{isLogged(movie.id) ? 'Add another response' : 'Add response'}</Link>
-              </div>
-            ) : (
-              <p className="metadata details-auth-note">Enter the demo to save this film or add it to the diary.</p>
-            )}
-            {notice && <p className="metadata details-status" role="status">{notice}</p>}
+  return <>
+    <section className={`band${backdrop ? ' band--art' : ''}`}>
+      {backdrop && <img alt="" className="band__art" src={backdrop} />}
+      <div className="box hero">
+        <span className="poster poster--xl">{poster && <img alt={`Poster for ${movie.title}`} src={poster} />}</span>
+        <div className="hero__main">
+          <div className="hero__head">
+            {fromPerson && throughFilm && <p className="byline" data-hue={personHue(fromPerson)}>From <Link to={`/member/${fromPerson}`}>@{fromPerson}</Link>, through {throughFilm}</p>}
+            <h1 className="t-display">{movie.title}{movie.release_date && <> <span className="year">{releaseYear(movie.release_date)}</span></>}</h1>
+            {(runtime || !!summary?.total) && <p className="meta">
+              {runtime && <span>{runtime}</span>}
+              {!!summary?.total && <span>{summary.total} {summary.total === 1 ? 'response' : 'responses'}</span>}
+            </p>}
           </div>
-          <FilmFeelingDistribution entries={publicEntries} />
+          {user ? <div className="actions hero__actions">
+            <Link aria-label={viewings ? 'Add another response' : 'Add response'} className="btn btn--primary" to={`/log?movieId=${movie.id}`}>Log</Link>
+            <Link className="btn btn--secondary" to={`/suggestions/new?movieId=${movie.id}`}>Recommend</Link>
+            <button aria-pressed={Boolean(libraryState?.saved)} className="btn btn--secondary" disabled={saving || !libraryState} onClick={() => void toggleSaved()} type="button">{libraryState?.saved ? 'Saved' : 'Save'}</button>
+            {viewings > 0 && <Link className="link t-callout" to={`/diary?movieId=${movie.id}`}>Your {viewings === 1 ? 'viewing' : `${viewings} viewings`}</Link>}
+          </div> : <p className="hint hero__actions">Sign in to save this film or add a response.</p>}
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section className="page-shell details-content">
-        <div aria-label="Choose film view" className="product-section-tabs details-content__tabs" role="group">
+    <div className="page stack stack--loose">
+      {(notice || library.error || catalog.error || movie.overview) && <div className="stack">
+        {notice && <p className="t-callout secondary" role="status">{notice}</p>}
+        {library.error && <p className="notice notice--error" role="alert">{library.error} <button className="link" onClick={library.refresh} type="button">Retry library status</button></p>}
+        {catalog.error && <p className="notice" role="alert">Film catalog details are unavailable. <button className="link" onClick={catalog.refresh} type="button">Retry catalog</button></p>}
+        {movie.overview && <p className="note measure">{movie.overview}</p>}
+      </div>}
+      <SuggestionPreview movieId={movie.id} />
+
+      <div>
+        <div aria-label="Choose film view" className="tabs" role="group">
           <button aria-pressed={view === 'responses'} onClick={() => setView('responses')} type="button">Responses</button>
           <button aria-pressed={view === 'related'} onClick={() => setView('related')} type="button">More films</button>
         </div>
 
-        {view === 'responses' && (publicEntries.length > 0 ? (
-          <section className="film-responses" aria-label={`Public responses to ${movie.title}`}>
-          <div className="film-response-scope product-section-tabs" aria-label="Filter film responses" role="group"><button aria-pressed={responseScope === 'everyone'} onClick={() => setResponseScope('everyone')} type="button">Everyone</button><button aria-pressed={responseScope === 'circle'} onClick={() => setResponseScope('circle')} type="button">Following</button></div>
-          <div className="film-response-list">
-            {(responseScope === 'circle' ? publicEntries.filter(entry => entry.following) : publicEntries).slice(0, 12).map(entry => {
-              return (
-                <article className="film-response" id={`response-${entry.id}`} key={entry.id}>
-                  <div className="public-entry__byline"><Link className="person-avatar person-avatar--small" to={`/member/${entry.username}`}>{entry.username.charAt(0).toUpperCase()}</Link><p><Link to={`/member/${entry.username}`}><strong>@{entry.username}</strong></Link><span>{formatCalendarDate(entry.watched_on, { month: 'short', day: 'numeric', year: 'numeric' })}</span></p></div>
-                  <div className="film-response__body">
-                    <blockquote>{entry.note || 'No note on this viewing.'}</blockquote>
-                    <ResponseFeelingTrace entry={entry} />
-                    <div className="film-response__actions"><button aria-label={`${entry.liked ? 'Unlike' : 'Like'} @${entry.username}'s response`} aria-pressed={entry.liked} className={`like-button${entry.liked ? ' like-button--active' : ''}`} disabled={!user} onClick={() => void toggleLike(entry)} type="button"><Heart fill={entry.liked ? 'currentColor' : 'none'} size={16} />{entry.like_count || 0} {(entry.like_count || 0) === 1 ? 'like' : 'likes'}</button><ResponseComments entryId={entry.id} initialCount={entry.comment_count} /></div>
-                  </div>
-                  {entry.expression_image_path && <img alt={entry.expression_image_alt || `Expression photo shared by ${entry.username}`} className="film-response__expression" loading="lazy" src={entry.expression_image_path} />}
-                </article>
-              );
-            })}
+        {view === 'responses' && <>
+          <div aria-label="Filter film responses" className="chips" role="group" style={{ marginTop: 'var(--m-space-4)' }}>
+            <button aria-pressed={responseScope === 'everyone'} className="chip" onClick={() => setResponseScope('everyone')} type="button">Everyone</button>
+            <button aria-pressed={responseScope === 'following'} className="chip" onClick={() => setResponseScope('following')} type="button">Following</button>
           </div>
-          {responseScope === 'circle' && !publicEntries.some(entry => entry.following) && <div className="product-empty"><p>No one you follow has responded to this film yet.</p><Link className="text-link" to="/people">Find people</Link></div>}
-          </section>
-        ) : <div className="product-empty"><p>No public responses yet.</p>{user && <Link className="text-link" to={`/log?movieId=${movie.id}`}>Add a response</Link>}</div>)}
+          {responses.error && <p className="status" role="alert">{responses.error} <button className="link" onClick={responses.refresh} type="button">Retry responses</button></p>}
+          {ordered.length > 0 && <section aria-label={`Public responses to ${movie.title}`} className="columns responses--film">
+            {ordered.map(entry => <div id={`response-${entry.id}`} key={entry.id}><ResponseCard entry={entry} onLike={entry => void toggleLike(entry)} ownUserId={user?.id} /></div>)}
+          </section>}
+          {responses.loading && <p className="status" role="status">Loading responses</p>}
+          {!publicEntries.length && responses.loaded && !responses.loading && <p className="status">{responseScope === 'following' ? 'No responses from people you follow.' : 'No public responses.'}</p>}
+          {responses.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={responses.loading} onClick={responses.loadMore} type="button">Load more responses</button></div>}
+        </>}
 
-        {view === 'related' && (similar.length > 0
-          ? <FilmRail movies={similar} title="" />
-          : <div className="product-empty"><p>No related films found.</p></div>)}
-      </section>
-    </>
-  );
+        {view === 'related' && <RelatedFilms movieId={movie.id} />}
+      </div>
+    </div>
+  </>;
 };
 
-export default MovieDetails;
+function RelatedFilms({ movieId }: { movieId: number }) {
+  const load = useCallback((signal: AbortSignal) => catalogService.related(movieId, signal), [movieId]);
+  const related = useResource(String(movieId), load);
+  return <>{related.loading && <p className="status" role="status">Loading related films</p>}
+    {related.error && <p className="status" role="alert">{related.error} <button className="link" onClick={related.refresh} type="button">Retry related films</button></p>}
+    {!!related.data?.length && <div className="wall" style={{ marginTop: 'var(--m-space-5)' }}>{related.data.map(movie => <FilmPoster key={movie.id} movie={movie} />)}</div>}
+    {related.loaded && !related.data?.length && <p className="status">No related films found.</p>}
+  </>;
+}
+
+export default function ScopedMovieDetails() {
+  const { id } = useParams();
+  const { user } = useUser();
+  return <MovieDetails key={`${user?.id}:${id}`} />;
+}

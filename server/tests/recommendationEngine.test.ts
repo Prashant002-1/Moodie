@@ -108,7 +108,8 @@ describe('people-led recommendations', () => {
       person_shared_note: 'The quiet sadness stayed with me for days.',
     }));
     expect(first.forYou.every(movie => movie.recommended_by?.[0].response_note.length)).toBe(true);
-    expect(first.community.every(movie => movie.recommended_by?.length)).toBe(true);
+    expect(first.community.map(movie => movie.title)).toEqual(['Unconnected Public Film']);
+    expect(first.community.every(movie => !movie.recommended_by)).toBe(true);
     expect(JSON.stringify(first)).not.toMatch(/evidenceScore|connectionScore|similarity/);
   });
 
@@ -280,4 +281,32 @@ describe('people-led recommendations', () => {
 
     expect(result.forYou).toEqual([]);
   });
+  it('preserves intensity when choosing the stronger connection', async () => {
+    const viewer = await addUser('v@example.com', 'viewer');
+    const aligned = await addUser('a@example.com', 'aligned');
+    const proportional = await addUser('p@example.com', 'proportional');
+    await addMovie(1101, 'Shared'); await addMovie(1102, 'Aligned'); await addMovie(1103, 'Quieter');
+    await addResponse(viewer, 1101, 'Very intense', feelings({ happy: .9, sad: .1 }));
+    await addResponse(aligned, 1101, 'Very intense too', feelings({ happy: .88, sad: .12 }));
+    await addResponse(proportional, 1101, 'Half as intense', feelings({ happy: .45, sad: .05 }));
+    await addResponse(aligned, 1102, 'Next', feelings({ happy: .8 }));
+    await addResponse(proportional, 1103, 'Next', feelings({ happy: .8 }));
+    expect((await recommend(viewer)).forYou.map(f => f.id)).toEqual([1102,1103]);
+  });
+
+  it('ranks all candidate responses before returning the complete remaining list', async () => {
+    const viewer = await addUser('v@example.com', 'viewer');
+    const peer = await addUser('p@example.com', 'person');
+    await addMovie(2000, 'Shared');
+    await addResponse(viewer, 2000, 'Joy', feelings({ happy: 1 }));
+    await addResponse(peer, 2000, 'Same joy', feelings({ happy: 1 }));
+    await pool.query("INSERT INTO movies (id, title) SELECT n, 'Film ' || n FROM generate_series(2001, 2901) n");
+    await pool.query(`INSERT INTO diary_entries (user_id, movie_id, note, visibility, happy)
+      SELECT $1, n, 'Public response', 'public', 1 FROM generate_series(2001, 2901) n`, [peer]);
+    const result = await recommend(viewer);
+    expect(result.forYou).toHaveLength(18);
+    expect(result.adjacent).toHaveLength(883);
+    expect(new Set([...result.forYou, ...result.adjacent].map(f => f.id)).size).toBe(901);
+  });
+
 });

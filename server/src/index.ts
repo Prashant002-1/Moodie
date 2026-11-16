@@ -9,7 +9,8 @@ const startServer = async () => {
     await initializeDatabase();
 
     const server = app.listen(env.port, () => {
-      console.log(`Moodie is ready at http://localhost:${env.port}`);
+      const address = server.address();
+      console.log(`Moodie is ready at http://localhost:${typeof address === 'object' && address ? address.port : env.port}`);
     });
 
     const shutdown = () => {

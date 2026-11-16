@@ -216,7 +216,7 @@ Account contains profile, account, and password views. Profile includes diary co
 
 ### First response
 
-1. Enter the demo or create an account.
+1. Create an account and save the recovery code, or sign in.
 2. Choose Add response from the rail.
 3. Search for the last film watched.
 4. Write what stayed.
@@ -281,6 +281,6 @@ Account contains profile, account, and password views. Profile includes diary co
 
 ## Current delivery boundary
 
-This application includes the complete prototype loop: account access, film search, response capture, diary management, public responses, follows, likes, comments, people discovery, people-led film paths, saved films, film pages, member pages, and return activity.
+This application includes the core product loop: account access, film search, response capture, diary management, public responses, follows, likes, comments, people discovery, people-led film paths, saved films, film pages, member pages, and return activity.
 
-Future work can add comments, private sharing, invitations, blocks, moderation, notification read state, custom lists, collaborative lists, import, and richer feeling language. Those features should extend the same response-to-person-to-film loop rather than sit beside it as unrelated social furniture.
+Future work can add private sharing, invitations, blocks, moderation, notification read state, custom lists, collaborative lists, import, and richer feeling language. Those features should extend the same response-to-person-to-film loop rather than sit beside it as unrelated social furniture.

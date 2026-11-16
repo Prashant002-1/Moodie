@@ -1,0 +1,7 @@
+// Set real service URLs and signing identity in the gitignored Local.xcconfig.
+MOODIE_API_URL =
+MOODIE_BUNDLE_ID = com.prashant.moodie
+MOODIE_TEAM_ID =
+MOODIE_PRIVACY_URL =
+MOODIE_SUPPORT_URL =
+#include? "Local.xcconfig"

@@ -1,0 +1,1492 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Moodie social reads and safety",
+    "version": "1.1.0",
+    "description": "Shared React and Swift wire contract. One authenticated API; server owns visibility and consent. Offset pages can shift on writes; refresh and deduplicate on the client."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "session": []
+    }
+  ],
+  "paths": {
+    "/api/discovery/activity": {
+      "get": {
+        "operationId": "getActivity",
+        "summary": "Page visible social events",
+        "description": "Filters apply before pagination. Responses and recommendations are opt-in for legacy compatibility. event_id identifies distinct same-time events. Spoiler reply/message previews are null. Recipient-private saved/viewed state never produces sender events. Default limit 40, maximum 80.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 80,
+              "default": 40
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "recommendations",
+                "like",
+                "comment",
+                "follow",
+                "response",
+                "suggestion",
+                "suggestion_reply",
+                "suggestion_message"
+              ],
+              "default": "all"
+            }
+          },
+          {
+            "name": "includeResponses",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "includeSuggestions",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Content unavailable"
+          },
+          "500": {
+            "description": "Request failed"
+          }
+        }
+      }
+    },
+    "/api/discovery/people": {
+      "get": {
+        "operationId": "getPeople",
+        "summary": "Page people in a relationship scope",
+        "description": "Query searches literal username, bio, latest film, and shared film. Discover excludes followed people. Filtering and blocking apply before pagination. Omitted limit preserves legacy all-results behavior; clients should send limit. Feeling averages are null without public viewings.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "following",
+                "discover"
+              ],
+              "default": "all"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeoplePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Content unavailable"
+          },
+          "500": {
+            "description": "Request failed"
+          }
+        }
+      }
+    },
+    "/api/safety/blocks": {
+      "get": {
+        "operationId": "getBlocks",
+        "summary": "Page the current account block list",
+        "description": "Omitted limit preserves legacy all-results behavior. Unblocking does not restore follows.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockedPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Content unavailable"
+          },
+          "500": {
+            "description": "Request failed"
+          }
+        }
+      }
+    },
+    "/api/safety/reports": {
+      "post": {
+        "operationId": "reportContent",
+        "summary": "Privately report visible content",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "received"
+                  ],
+                  "properties": {
+                    "received": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or own content"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Content unavailable"
+          },
+          "429": {
+            "description": "Daily report limit"
+          }
+        }
+      }
+    },
+    "/api/safety/blocks/{personId}": {
+      "parameters": [
+        {
+          "name": "personId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      ],
+      "post": {
+        "operationId": "blockPerson",
+        "summary": "Block both-way interaction and remove both follows",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "blocked"
+                  ],
+                  "properties": {
+                    "blocked": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid target or own account"
+          },
+          "404": {
+            "description": "Person missing"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unblockPerson",
+        "summary": "Remove this account block",
+        "responses": {
+          "204": {
+            "description": "Unblocked; follows are not restored"
+          }
+        }
+      }
+    },
+    "/api/discovery/films/{movieId}": {
+      "get": {
+        "operationId": "getFilmEntries",
+        "summary": "Page public film responses",
+        "description": "Scope, blocking and moderation apply before pagination and aggregation. Summary covers all visible responses in the chosen scope, not the current page. Cached film metadata is independent of live catalog availability. Legacy requests without limit return all visible responses.",
+        "parameters": [
+          {
+            "name": "movieId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "everyone",
+                "following"
+              ],
+              "default": "everyone"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visible page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilmResponsesPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query"
+          },
+          "404": {
+            "description": "No longer visible or not found"
+          }
+        }
+      }
+    },
+    "/api/discovery/people/{username}": {
+      "get": {
+        "operationId": "getPersonProfile",
+        "summary": "Read profile and one response or film page",
+        "description": "Use includeConnections=false and fetch connection pages separately. Counts are authoritative. films chooses the latest visible viewing per film before pagination. follows_you is authoritative recommendation eligibility and never derived from a loaded connection page. Legacy requests without limit retain all responses and connections.",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "responses",
+                "films"
+              ],
+              "default": "responses"
+            }
+          },
+          {
+            "name": "includeConnections",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visible page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberProfilePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query"
+          },
+          "404": {
+            "description": "No longer visible or not found"
+          }
+        }
+      }
+    },
+    "/api/discovery/people/{username}/connections": {
+      "get": {
+        "operationId": "getPersonConnections",
+        "summary": "Page a visible member connection list",
+        "description": "Default limit 30. Visibility applies before pagination. Stable order by lowercased username and ID. Following is relative to the authenticated viewer.",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "followers",
+                "following"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visible page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionsPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query"
+          },
+          "404": {
+            "description": "No longer visible or not found"
+          }
+        }
+      }
+    },
+    "/api/discovery/entries/{entryId}/comments": {
+      "get": {
+        "operationId": "getEntryComments",
+        "summary": "Page comments on a visible public response",
+        "description": "Oldest first with ID as the tie breaker. total and comment_count on response surfaces use the same block and moderation filters. Legacy requests without limit return all visible comments. Private, removed or blocked responses return 404. Refresh after writes because offset pages are not snapshots.",
+        "parameters": [
+          {
+            "name": "entryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visible page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentsPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query"
+          },
+          "404": {
+            "description": "No longer visible or not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "moodie_session"
+      }
+    },
+    "schemas": {
+      "ActivityEvent": {
+        "type": "object",
+        "required": [
+          "event_id",
+          "kind",
+          "created_at",
+          "actor_id",
+          "username",
+          "entry_id",
+          "movie_id",
+          "title",
+          "poster_path",
+          "note",
+          "comment_body",
+          "suggestion_id"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "like",
+              "comment",
+              "follow",
+              "response",
+              "suggestion",
+              "suggestion_reply",
+              "suggestion_message"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actor_id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "entry_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "movie_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "poster_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "comment_body": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "suggestion_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "Member": {
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "bio"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          }
+        }
+      },
+      "CommunityPerson": {
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "bio",
+          "entries",
+          "followers",
+          "following_count",
+          "following",
+          "follows_you",
+          "pattern_overlap",
+          "shared_films",
+          "shared_film_title",
+          "latest_movie_id",
+          "latest_title",
+          "latest_poster_path",
+          "latest_note",
+          "neutral",
+          "happy",
+          "sad",
+          "angry",
+          "fearful",
+          "disgusted",
+          "surprised"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "entries": {
+            "type": "integer"
+          },
+          "followers": {
+            "type": "integer"
+          },
+          "following_count": {
+            "type": "integer"
+          },
+          "following": {
+            "type": "boolean"
+          },
+          "follows_you": {
+            "type": "boolean"
+          },
+          "pattern_overlap": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "shared_films": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "shared_film_title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latest_movie_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "latest_title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latest_poster_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latest_note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "neutral": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "happy": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sad": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "angry": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fearful": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "disgusted": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "surprised": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "ReportInput": {
+        "type": "object",
+        "required": [
+          "targetKind",
+          "targetId",
+          "reason"
+        ],
+        "properties": {
+          "targetKind": {
+            "type": "string",
+            "enum": [
+              "response",
+              "comment",
+              "person"
+            ]
+          },
+          "targetId": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "Harassment",
+              "Hate or threats",
+              "Sexual content",
+              "Violence",
+              "Spam",
+              "Privacy",
+              "Other"
+            ]
+          },
+          "details": {
+            "type": "string",
+            "maxLength": 1000,
+            "default": ""
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "ActivityPage": {
+        "type": "object",
+        "required": [
+          "activity",
+          "nextOffset"
+        ],
+        "properties": {
+          "activity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivityEvent"
+            }
+          },
+          "nextOffset": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "PeoplePage": {
+        "type": "object",
+        "required": [
+          "people",
+          "nextOffset"
+        ],
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommunityPerson"
+            }
+          },
+          "nextOffset": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "BlockedPage": {
+        "type": "object",
+        "required": [
+          "people",
+          "nextOffset"
+        ],
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Member"
+            }
+          },
+          "nextOffset": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "CommunityEntry": {
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "movie_id",
+          "username",
+          "bio",
+          "title",
+          "poster_path",
+          "backdrop_path",
+          "release_date",
+          "watched_on",
+          "note",
+          "expression_image_path",
+          "expression_image_alt",
+          "created_at",
+          "like_count",
+          "liked",
+          "comment_count",
+          "following",
+          "visibility",
+          "neutral",
+          "happy",
+          "sad",
+          "angry",
+          "fearful",
+          "disgusted",
+          "surprised",
+          "enjoyment",
+          "highlights"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "movie_id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "poster_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "backdrop_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "release_date": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "watched_on": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "expression_image_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expression_image_alt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "like_count": {
+            "type": "integer"
+          },
+          "liked": {
+            "type": "boolean"
+          },
+          "comment_count": {
+            "type": "integer"
+          },
+          "following": {
+            "type": "boolean"
+          },
+          "visibility": {
+            "enum": [
+              "public",
+              "private"
+            ]
+          },
+          "neutral": {
+            "type": "number"
+          },
+          "happy": {
+            "type": "number"
+          },
+          "sad": {
+            "type": "number"
+          },
+          "angry": {
+            "type": "number"
+          },
+          "fearful": {
+            "type": "number"
+          },
+          "disgusted": {
+            "type": "number"
+          },
+          "surprised": {
+            "type": "number"
+          },
+          "enjoyment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "loved",
+              "liked",
+              "mixed",
+              "not_for_me",
+              null
+            ]
+          },
+          "highlights": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "story",
+                "characters",
+                "performances",
+                "dialogue",
+                "images",
+                "music",
+                "ending"
+              ]
+            },
+            "maxItems": 7
+          }
+        }
+      },
+      "FilmResponseSummary": {
+        "type": "object",
+        "required": [
+          "total",
+          "neutral",
+          "happy",
+          "sad",
+          "angry",
+          "fearful",
+          "disgusted",
+          "surprised"
+        ],
+        "properties": {
+          "total": {
+            "type": "integer"
+          },
+          "neutral": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "happy": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sad": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "angry": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fearful": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "disgusted": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "surprised": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "CachedFilm": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "overview",
+          "release_date",
+          "poster_path",
+          "backdrop_path"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "overview": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "release_date": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "poster_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "backdrop_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "MemberProfile": {
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "bio",
+          "entries",
+          "followers",
+          "following_count",
+          "following",
+          "follows_you",
+          "shared_film_title",
+          "neutral",
+          "happy",
+          "sad",
+          "angry",
+          "fearful",
+          "disgusted",
+          "surprised",
+          "films"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "entries": {
+            "type": "integer"
+          },
+          "followers": {
+            "type": "integer"
+          },
+          "following_count": {
+            "type": "integer"
+          },
+          "following": {
+            "type": "boolean"
+          },
+          "follows_you": {
+            "type": "boolean"
+          },
+          "shared_film_title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "neutral": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "happy": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sad": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "angry": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fearful": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "disgusted": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "surprised": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "films": {
+            "type": "integer"
+          }
+        }
+      },
+      "MemberConnection": {
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "bio",
+          "following"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "following": {
+            "type": "boolean"
+          }
+        }
+      },
+      "EntryComment": {
+        "type": "object",
+        "required": [
+          "id",
+          "entry_id",
+          "user_id",
+          "username",
+          "body",
+          "created_at",
+          "own"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "entry_id": {
+            "type": "integer"
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "own": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FilmResponsesPage": {
+        "type": "object",
+        "required": [
+          "entries",
+          "nextOffset",
+          "summary",
+          "film"
+        ],
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommunityEntry"
+            }
+          },
+          "nextOffset": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/FilmResponseSummary"
+          },
+          "film": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CachedFilm"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "MemberProfilePage": {
+        "type": "object",
+        "required": [
+          "person",
+          "entries",
+          "nextOffset",
+          "followers",
+          "following"
+        ],
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/MemberProfile"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommunityEntry"
+            }
+          },
+          "nextOffset": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "followers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberConnection"
+            }
+          },
+          "following": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberConnection"
+            }
+          }
+        }
+      },
+      "ConnectionsPage": {
+        "type": "object",
+        "required": [
+          "people",
+          "nextOffset"
+        ],
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberConnection"
+            }
+          },
+          "nextOffset": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "CommentsPage": {
+        "type": "object",
+        "required": [
+          "comments",
+          "nextOffset",
+          "total"
+        ],
+        "properties": {
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntryComment"
+            }
+          },
+          "nextOffset": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

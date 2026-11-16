@@ -24,7 +24,7 @@ describe('Current HTTP contract', () => {
   });
 
   it('validates recommendation signals at the route boundary', async () => {
-    const response = await request(app).post('/api/recommendations').send({ signal: { happy: 2 } });
+    const response = await request(app).post('/api/recommendations').set('X-Moodie-Request', '1').send({ signal: { happy: 2 } });
     expect(response.status).toBe(400);
     expect(response.body.error).toBe('Invalid feeling signal');
   });
@@ -35,14 +35,14 @@ describe('Current HTTP contract', () => {
   });
 
   it('uses likes instead of the retired reaction route', async () => {
-    const oldRoute = await request(app).post('/api/discovery/entries/1/reaction');
-    const likeRoute = await request(app).post('/api/discovery/entries/1/like');
+    const oldRoute = await request(app).post('/api/discovery/entries/1/reaction').set('X-Moodie-Request', '1');
+    const likeRoute = await request(app).post('/api/discovery/entries/1/like').set('X-Moodie-Request', '1');
     expect(oldRoute.status).toBe(404);
     expect(likeRoute.status).toBe(401);
   });
 
   it('protects response comments', async () => {
-    const response = await request(app).post('/api/discovery/entries/1/comments').send({ body: 'This stayed with me too.' });
+    const response = await request(app).post('/api/discovery/entries/1/comments').set('X-Moodie-Request', '1').send({ body: 'This stayed with me too.' });
     expect(response.status).toBe(401);
   });
 });

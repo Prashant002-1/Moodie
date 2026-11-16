@@ -25,30 +25,3 @@ export interface EmotionScores {
   /** Surprised emotional state (0-1) */
   surprised: number;
 }
-
-/**
- * Represents a movie that a user has watched, with emotion data and metadata.
- * Combines user interaction data with movie details for display purposes.
- */
-export interface WatchedMovie {
-  /** TMDB movie ID */
-  movieId: number;
-  /** ID of the user who watched the movie */
-  userId: string;
-  /** When the user watched the movie */
-  watchedAt: Date;
-  /** Optional emotion scores associated with watching this movie */
-  emotions?: EmotionScores;
-  /** Whether the user has logged emotions for this movie */
-  hasLoggedEmotion: boolean;
-  /** Movie title for display */
-  title: string;
-  /** TMDB poster image path */
-  poster_path: string | null;
-  /** Movie release date in YYYY-MM-DD format */
-  release_date: string;
-  /** TMDB average rating (0-10) */
-  vote_average: number;
-  /** Array of TMDB genre IDs */
-  genre_ids: number[];
-}

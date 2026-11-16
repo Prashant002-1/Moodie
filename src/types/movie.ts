@@ -67,6 +67,8 @@ export interface Movie {
     response_feelings: (keyof EmotionScores)[];
     viewer_shared_note: string;
     person_shared_note: string;
+    shared_response_id?: number;
+    shared_movie_id?: number;
     response_id: number;
     response_note: string;
   }[];

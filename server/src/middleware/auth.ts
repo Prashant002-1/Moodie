@@ -1,75 +1,34 @@
-/**
- * Authentication Middleware
- * 
- * JWT-based authentication middleware for protecting API routes.
- * Validates Bearer tokens and attaches user information to requests.
- * Provides type-safe authentication interface for controllers.
- */
-
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import pool from '../config/database';
+import { clearSessionCookie, hashToken, readSessionToken } from '../services/sessionService';
 
-/**
- * Extended Request interface that includes authenticated user information.
- * Used by protected routes to access user data after token validation.
- */
 export interface AuthRequest extends Request {
-  /** Authenticated user information extracted from JWT token */
-  user?: {
-    /** User's unique identifier */
-    id: number;
-    /** User's email address */
-    email: string;
-    /** User's username */
-    username: string;
-  };
+  user?: { id: number; email: string; username: string; bio: string; ai_mode: 'on' | 'off' | null; email_notifications: boolean };
 }
 
-/**
- * Middleware function that validates JWT tokens and authenticates requests.
- * Extracts Bearer token from Authorization header, verifies it, and attaches
- * user information to the request object for use by protected routes.
- * 
- * @param req - Express request object
- * @param res - Express response object
- * @param next - Next middleware function in the chain
- */
-export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
+const authenticate = (required: boolean) => async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const token = readSessionToken(req);
   if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
+    if (required || req.headers.authorization || req.headers.cookie?.includes('moodie_session=')) return res.status(401).json({ error: 'Sign in to continue.' });
+    return next();
   }
-
-  jwt.verify(token, process.env.JWT_SECRET!, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid or expired token' });
-    }
-    
-    req.user = decoded as AuthRequest['user'];
-    next();
-  });
-};
-
-/**
- * Adds user context when a valid token is present without making authentication
- * a requirement. Public discovery and recommendation routes use this to become
- * personal inside the demo while remaining useful before it is opened.
- */
-export const optionalAuthentication = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return next();
-
-  const [scheme, token] = authHeader.split(' ');
-  if (scheme !== 'Bearer' || !token) {
-    return res.status(401).json({ error: 'Invalid authorization header' });
-  }
-
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET!) as AuthRequest['user'];
+    const result = await pool.query(
+      `SELECT u.id, u.email, u.username, u.bio, u.ai_mode, u.email_notifications FROM sessions s JOIN users u ON u.id = s.user_id
+       WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`, [hashToken(token)],
+    );
+    if (!result.rowCount) {
+      clearSessionCookie(res);
+      return res.status(401).json({ error: 'Your session has expired. Sign in again.' });
+    }
+    req.user = result.rows[0];
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && !req.originalUrl.startsWith('/api/auth/')) {
+      const restricted = await pool.query("SELECT 1 FROM moderation_actions WHERE target_kind = 'person' AND target_id = $1", [req.user!.id]);
+      if (restricted.rowCount) return res.status(403).json({ error: 'This account is restricted. You can still manage or delete your account.' });
+    }
     next();
-  } catch {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
+  } catch (error) { next(error); }
 };
+
+export const authenticateToken = authenticate(true);
+export const optionalAuthentication = authenticate(false);

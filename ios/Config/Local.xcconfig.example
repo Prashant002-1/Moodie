@@ -1,0 +1,7 @@
+// Copy to Local.xcconfig. No TMDB key belongs in the app.
+// Slash escaping is required because xcconfig treats // as a comment.
+MOODIE_API_URL = https:/$()/your-service.example/api
+MOODIE_PRIVACY_URL = https:/$()/your-service.example/privacy
+MOODIE_SUPPORT_URL = https:/$()/your-service.example/support
+MOODIE_TEAM_ID = YOUR_APPLE_TEAM_ID
+MOODIE_BUNDLE_ID = com.yourcompany.moodie

@@ -12,8 +12,8 @@ export const catalogService = {
     return response.data;
   },
 
-  async search(query: string, page = 1): Promise<MovieSearchResponse> {
-    const response = await apiClient.get('/catalog/search', { params: { q: query, page } });
+  async search(query: string, page = 1, signal?: AbortSignal): Promise<MovieSearchResponse> {
+    const response = await apiClient.get('/catalog/search', { params: { q: query, page }, signal });
     return response.data;
   },
 
@@ -22,13 +22,13 @@ export const catalogService = {
     return response.data;
   },
 
-  async movie(movieId: number): Promise<Movie> {
-    const response = await apiClient.get(`/catalog/movies/${movieId}`);
+  async movie(movieId: number, signal?: AbortSignal): Promise<Movie> {
+    const response = await apiClient.get(`/catalog/movies/${movieId}`, { signal });
     return response.data;
   },
 
-  async related(movieId: number): Promise<Movie[]> {
-    const response = await apiClient.get(`/catalog/movies/${movieId}/related`);
+  async related(movieId: number, signal?: AbortSignal): Promise<Movie[]> {
+    const response = await apiClient.get(`/catalog/movies/${movieId}/related`, { signal });
     return response.data.results;
   },
 };
