@@ -33,11 +33,43 @@ stateDiagram-v2
 
 Archive is a separate recipient-only flag, available at every state and reversible. Unsave affects the existing saved library, not the recommendation's reason or conversation. Deleting a viewing removes its linked reply and clears the viewing association; the recommendation survives. A different viewing can be linked after removing the old reply. Editing a reply can replace its explicitly shared payload.
 
-The server projects state per viewer. The sender sees **Sent** until a reply exists, never the recipient's private save, archive, viewing ID, or watched status. A discovered save is invisible to its source until the viewer sends a reply. There are no read receipts, invented unread badges, deadlines, streaks, ranks, or match percentages.
+The server projects state per viewer. The sender sees **Sent** until a reply exists, never the recipient's private save, archive, reminder, viewing ID, or watched status. A discovered save is invisible to its source until the viewer sends a reply. There are no read receipts, invented unread badges, deadlines, streaks, ranks, or match percentages.
 
 The first explicit reply opens a conversation permanently. Retracting a reply removes its contents, but preserves the participants' access to messages they exchanged and their ability to delete their own messages. A discovered conversation then shows **Conversation** to the source person, without revealing the viewer's diary state. The API exposes `conversation_open` for clients instead of asking them to infer permission from the current reply. Entry-ID filters are restricted to the viewer's own linked entries, including when another inbox filter is supplied.
 
 Direct recommendations can go to people who follow the sender. This prevents unsolicited recommendation inboxes. Discovery and private capture require no invitations, follows, or minimum diary size. Each sender/recipient/title/origin has one conversation, so a repeated send reopens the existing record instead of creating duplicates. Sent and discovered origins can coexist without rewriting history.
+
+## Reminders
+
+A recipient can ask to be reminded to watch a recommended film. The model is one nullable column, `film_suggestions.remind_at` (migration `202611160001-recommendation-reminders.sql`).
+
+- Only the recipient can set, change or clear it: `PATCH /api/suggestions/{id}` with `{ "action": "remind", "remindAt": "<ISO 8601 date-time>" }` or `{ "action": "clear_reminder" }`. The time must be later than now and no more than one year ahead. Setting it again replaces it.
+- It is private. The sender's projection always carries `remind_at: null`, like the recipient's save and archive.
+- It is cleared when the recommendation is archived or a viewing is linked to it (by linking, by recording a viewing with `suggestionId`, or by replying). It cannot be set in either of those states (409).
+- A reminder is **due** when `remind_at` is not later than now. `GET /api/suggestions?box=reminders` lists the viewer's received, unarchived recommendations that have one, soonest first, so due ones lead. `GET /api/suggestions/summary` counts them as `reminders` and `reminders_due`.
+- **Delivery is not connected.** No email or push provider exists in this implementation, so nothing is sent when a reminder comes due. A due reminder is shown the next time the person opens Moodie: at the top of Home and under Reminders in the recommendations hub on the web. Its email is built and can be queued (see Notifications); sending it needs a provider and a scheduled job.
+
+## Notifications
+
+Three moments in this lifecycle have an email. None is sent: no provider is connected. What is and is not in place is in [Services to connect](SERVICES_TO_CONNECT.md).
+
+| Moment | Email | Goes to | Queued |
+| --- | --- | --- | --- |
+| A film is sent to someone | "{sender} thought of you: {film}" | The recipient | In the same transaction as the send, once. Sending the same film again queues nothing. Keeping a film through a public response emails no one. |
+| A reminder comes due | "You asked to be reminded: {film}" | The recipient | By `queueDueReminders()`, once per reminder time. A reminder moved to a later time is queued again when that time comes. |
+| The recipient replies | "{recipient} told you how {film} landed" | The sender | In the same transaction as the reply, once. Editing the reply queues nothing. |
+
+- Each email is the recommendation note, in the other person's colour. The functions are in `server/src/notifications/emails.ts`; outside production they can be seen at `/api/dev/emails/{recommendation|reminder|reply}`.
+- Rows wait in `notification_outbox` (migration `202611160002-notification-outbox.sql`), unique per person, kind and recommendation. A row never holds anyone's words. The email is rendered from the recommendation at delivery.
+- The same privacy rules apply as everywhere else in this lifecycle, checked when a row is queued and again when it is delivered: no email across a block in either direction, none involving a restricted account, none for a person who turned email off (`users.email_notifications`, Account, Notifications on the web; `PATCH /api/auth/preferences` with `emailNotifications`). A deleted account takes its rows with it. A reply that was removed, or a reminder that was cleared, moved, archived or answered by a viewing, is skipped. A reply marked as having spoilers is announced without its text.
+- The sender is still never told about a save, an archive, a reminder or a private viewing. The reply email carries only what the recipient chose to send.
+- `npm --workspace server run notifications:deliver` queues due reminders and hands pending rows to the `Mailer` once. The default mailer sends nothing and marks each row `skipped` with "no email provider connected". Nothing runs the command on a schedule.
+
+## Tracking what was sent
+
+`GET /api/suggestions/summary` returns counts for the signed-in person over the same viewer-specific projection the lists use, so blocks, moderation and deleted accounts remove a recommendation from the counts exactly as they remove it from a list: `received_total`, `received_new` (status suggested), `received_saved` (status saved), `received_to_reply` (status watched), `reminders`, `reminders_due`, `sent_total`, `sent_watched`, `sent_replied`.
+
+Every recommendation also carries `progress`: `sent`, `saved`, `watched` or `replied`, as far as that viewer may know. The recipient sees their own state. The sender still never learns of a save, an archive or a private viewing. For them `progress` moves to `watched` only when the recipient publishes a response to the film after the recommendation (something the sender can already see) and to `replied` when a reply exists. `status` is unchanged for existing clients.
 
 ## Native entry points and journey
 
@@ -71,17 +103,18 @@ All requests use existing cookie sessions; mutations also require `X-Moodie-Requ
 | Method and path | Purpose |
 | --- | --- |
 | GET `/api/suggestions/recipients?q=` | Search eligible recipients. |
-| GET `/api/suggestions` | Page by box, person, title, linked entry, and literal search. |
+| GET `/api/suggestions` | Page by box (received, sent, archived, reminders), person, title, linked entry, and literal search. |
 | POST `/api/suggestions` | Send deliberately or keep a public response. |
 | GET `/api/suggestions/{id}` | Participant-specific projection of a recommendation. |
-| PATCH `/api/suggestions/{id}` | Save, archive, restore, or link a viewing. |
+| GET `/api/suggestions/summary` | Counts of what is waiting, due, sent, watched and replied. |
+| PATCH `/api/suggestions/{id}` | Save, archive, restore, link a viewing, or set and clear a reminder. |
 | PUT / DELETE `/api/suggestions/{id}/reply` | Share/edit or retract the explicit reply. |
 | GET / POST `/api/suggestions/{id}/messages` | Read a paginated conversation or send a message. |
 | DELETE `/api/suggestions/{id}/messages/{messageId}` | Delete an author's own message. |
 
 Diary create accepts optional `suggestionId` and UUID `clientRequestId`. Viewing creation and attribution commit in one transaction. Retrying the same UUID/payload returns the same viewing. Reusing it with changed content returns 409. Older clients may omit it and retain their current behavior. Native drafts retain that UUID across relaunches; legacy drafts decode without it and receive a key when resumed. Message sends also use a stable UUID per payload; identical retries do not duplicate. Reply PUT is idempotent for an unchanged payload and does not generate a new activity timestamp.
 
-Activity remains compatible with web: `includeSuggestions=true` opts into the three new event kinds and their `suggestion_id` links. There is no push delivery or email sending in this implementation.
+Activity remains compatible with web: `includeSuggestions=true` opts into the three new event kinds and their `suggestion_id` links. There is no push delivery, and email stops at the outbox (see Notifications).
 
 ## Architecture decision: a portable contract, native presentation
 

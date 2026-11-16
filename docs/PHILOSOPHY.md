@@ -88,15 +88,15 @@ Every person chooses, on the first page of onboarding, between Moodie with AI an
 
 The people-led matching (comparing feelings two people entered on the same title) is ordinary arithmetic on what they wrote down. It is not what this switch controls and it works in both modes.
 
-### 6. It should feel like a gallery, and a screening room
+### 6. It should feel like the lobby after the film
 
-Moodie should be beautiful, smooth and quiet. The references are Letterboxd and Beli, which are clean and intuitive and feel right for their purpose, and MUBI, film archives, a festival such as Cannes and an art museum, where the work is the decoration.
+Moodie should be beautiful and full of life: the room outside the cinema where people talk about what they just saw. The references are Letterboxd (everything in a box, posters leading, reviews that read like a magazine, an identity you recognise at once), Beli, MUBI, film archives, a festival, an art museum.
 
-- Films carry the colour. The interface is neutral: white, near-black and grey.
-- No ambient colour: no pink, orange or red gradient fields, no glows, no fog. (Direct feedback, 2026-11-13.) No beige paper either, and no red accent that fights it. (Direct feedback, later the same day.)
-- Type is tight and plain. Nothing is spaced out to look expensive.
-- One identity on iOS, Android and the web. The navigation is Moodie's own, not each platform's default.
-- It should feel like a celebration of film, not a utility, and it gets there by restraint.
+- It has to feel good to use and good to be seen using. People show their taste here; the product should flatter it.
+- Films carry colour through artwork. People carry colour too: every person has their own.
+- Getting a recommendation from a friend should feel like getting something. It is the moment the product exists for, in the app, in a notification and in email.
+- No ambient colour: no pink, orange or red gradient fields, no glows, no fog. (Direct feedback, 2026-11-13.) No beige paper and red accent. (Same day.) And not an empty white page either: clean is not the same as having no identity. (Direct feedback, 2026-11-16.)
+- One identity on iOS, Android and the web.
 
 ### 7. A celebration of film and of television
 
@@ -140,10 +140,10 @@ Recorded honestly so the gap is visible. Each item is tracked in [ROADMAP.md](RO
 | 3. Response, not rating | Built. No stars. "Who would like it and why" is only captured when sending a recommendation, not as part of a response. |
 | 4. Recorded, not measured | On the web: up to three words in order, no sliders, no percentages, no colours, no averaged summary, no mood pickers. Still scaffold: the seven words are inherited from a facial-emotion model, the server stores decimals, and the iPhone app still has sliders. |
 | 5. AI is a choice | The choice exists at onboarding and in Account on web and iOS, and the server enforces it. No AI feature or agent connection is live yet, so today "on" changes nothing visible. |
-| 6. Gallery and screening room | The web was rebuilt on one stylesheet and one token set, light and dark, with one navigation. The iPhone app has not been moved over. |
+| 6. The lobby | The web has the identity: midnight and marquee, a colour per person, the recommendation as a note. The iPhone app has not been moved over. |
 | 11. No selling inside | Web copy was stripped of slogans and explanations. The iPhone app has not been reviewed for this. |
 | 7. Television | Not built. The catalog and data model are film-only. |
-| 8. Gentle memory | Not built. There are no notifications of any kind, and an earlier decision ruled reminders out. That decision is reversed by this document. |
+| 8. Gentle memory | Reminders can be set on a recommendation and come due in the app. Nothing is delivered outside the app yet: no email or push provider is connected. See [SERVICES_TO_CONNECT.md](SERVICES_TO_CONNECT.md). |
 | 9. Everywhere | iOS (SwiftUI) and web (React) exist and run. Android does not exist. Nothing is deployed for real use. |
 
 ## Open questions
@@ -158,4 +158,5 @@ Recorded honestly so the gap is visible. Each item is tracked in [ROADMAP.md](RO
 ## Change log
 
 - 2026-11-13: First version, from Prashant's spoken brief. Added the instruction to remove gradient colour fields the same day.
+- 2026-11-16: Principle 6 rewritten again as "the lobby" after the neutral white design was judged to have no identity.
 - 2026-11-13: Principle 6 rewritten after the paper-and-red palette and loose type were rejected. Principle 11 added. Principle 4 gained "order, not amount".
