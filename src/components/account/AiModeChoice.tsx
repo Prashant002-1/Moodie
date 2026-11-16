@@ -28,7 +28,7 @@ export default function AiModeChoice({ value, onChange, disabled, legend }: {
       {options.map(option => <label className="option" key={option.value}>
         <input checked={value === option.value} name="ai-mode" onChange={() => onChange(option.value)} type="radio" value={option.value} />
         <span className="option__title t-title3 serif">{option.title}</span>
-        <ul className="stack stack--tight t-callout secondary" style={{ marginTop: 'var(--m-space-2)' }}>{option.points.map(point => <li key={point}>{point}</li>)}</ul>
+        <ul className="option__points">{option.points.map(point => <li key={point}>{point}</li>)}</ul>
       </label>)}
     </div>
     <p className="hint" style={{ marginTop: 'var(--m-space-3)' }}>AI features are not available yet. Recommendations from people work the same either way.</p>

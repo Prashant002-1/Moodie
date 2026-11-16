@@ -15,7 +15,7 @@ type SearchView = 'films' | 'people';
 export default function Search() {
   const { user } = useUser();
   const [view, setView] = useState<SearchView>('films');
-  return <div className="page page--narrow">
+  return <div className="page">
     <h1 className="sr-only">Search</h1>
     <div className="tabs" role="group" aria-label="Choose search type">
       <button aria-pressed={view === 'films'} onClick={() => setView('films')} type="button">Films</button>
@@ -30,7 +30,7 @@ function TextSearch({ view }: { view: SearchView }) {
   const [submitted, setSubmitted] = useState('');
   const submit = (event: FormEvent) => { event.preventDefault(); setSubmitted(query.trim()); };
   return <>
-    <form className="search" onSubmit={submit} role="search" style={{ marginTop: 'var(--m-space-5)' }}>
+    <form className="search search--lead" onSubmit={submit} role="search" style={{ marginTop: 'var(--m-space-5)' }}>
       <input aria-label={`Search ${view}`} className="input" onChange={event => setQuery(event.target.value)} placeholder={view === 'films' ? 'Film title' : 'Name or username'} type="search" value={query} />
       <button className="btn btn--primary" type="submit">Search</button>
     </form>
@@ -49,12 +49,12 @@ function SearchStart() {
     {pulse.error && <p className="status" role="alert">{pulse.error} <button className="link" onClick={pulse.refresh}>Retry recent responses</button></p>}
     {!!pulse.data?.length && <section aria-labelledby="search-recent-title" className="section">
       <header className="section__head"><h2 id="search-recent-title">Recent responses</h2></header>
-      <div className="poster-grid" style={{ marginTop: 'var(--m-space-4)' }}>{pulse.data.slice(0, 12).map(film => {
+      <div className="wall">{pulse.data.slice(0, 12).map(film => {
         const poster = imageUrl(film.poster_path, 'w342');
-        return <Link className="poster-grid__item" key={film.movie_id} to={`/movie/${film.movie_id}`}>
+        return <Link className="tile" key={film.movie_id} to={`/movie/${film.movie_id}`}>
           <span className="poster">{poster && <img alt="" loading="lazy" src={poster} />}</span>
-          <span className="serif">{film.title}</span>
-          <span className="t-caption muted">{releaseYear(film.release_date)}</span>
+          <span className="tile__title">{film.title}</span>
+          {film.release_date && <span className="tile__sub">{releaseYear(film.release_date)}</span>}
         </Link>;
       })}</div>
     </section>}
@@ -83,19 +83,16 @@ function FilmResults({ query }: { query: string }) {
     {page.error && <p className="notice notice--error" role="alert" style={{ marginTop: 'var(--m-space-4)' }}>{page.error} <button className="link" onClick={page.refresh}>Retry films</button></p>}
     {error && <p className="notice notice--error" role="alert" style={{ marginTop: 'var(--m-space-4)' }}>{error}</p>}
     {library.error && <p className="notice notice--error" role="alert" style={{ marginTop: 'var(--m-space-4)' }}>{library.error} <button className="link" onClick={library.refresh}>Retry library status</button></p>}
-    <section aria-label={`Film results for ${query}`} className="list">{page.items.map(movie => {
+    <section aria-label={`Film results for ${query}`} className="wall" style={{ marginTop: 'var(--m-space-5)' }}>{page.items.map(movie => {
       const poster = imageUrl(movie.poster_path, 'w342');
       const saved = library.get(movie.id)?.saved;
-      return <article className="row" key={movie.id}>
-        <Link aria-hidden="true" className="poster poster--sm" tabIndex={-1} to={`/movie/${movie.id}`}>{poster && <img alt="" loading="lazy" src={poster} />}</Link>
-        <div className="row__main">
-          <h2 className="row__title"><Link to={`/movie/${movie.id}`}>{movie.title}</Link></h2>
-          <p className="t-caption muted">{releaseYear(movie.release_date)}</p>
-          {movie.overview && <p className="t-callout secondary clamp clamp--2">{movie.overview}</p>}
-          <div className="actions" style={{ marginTop: 'var(--m-space-2)' }}>
-            <button aria-pressed={saved} className="btn btn--secondary btn--small" disabled={saved === undefined || busy !== null} onClick={() => void save(movie.id, !!saved)} type="button">{saved ? 'Saved' : 'Save'}</button>
-            <Link className="btn btn--quiet btn--small" to={`/log?movieId=${movie.id}`}>Add a response</Link>
-          </div>
+      return <article className="tile" key={movie.id}>
+        <Link aria-hidden="true" className="poster" tabIndex={-1} to={`/movie/${movie.id}`}>{poster && <img alt="" loading="lazy" src={poster} />}</Link>
+        <h2 className="tile__title"><Link to={`/movie/${movie.id}`}>{movie.title}</Link></h2>
+        {movie.release_date && <p className="tile__sub">{releaseYear(movie.release_date)}</p>}
+        <div className="tile__actions">
+          <button aria-pressed={saved} className="btn btn--quiet btn--small" disabled={saved === undefined || busy !== null} onClick={() => void save(movie.id, !!saved)} type="button">{saved ? 'Saved' : 'Save'}</button>
+          <Link aria-label={`Log ${movie.title}`} className="btn btn--quiet btn--small" to={`/log?movieId=${movie.id}`}>Log</Link>
         </div>
       </article>;
     })}</section>
@@ -126,7 +123,7 @@ function PeopleResults({ query }: { query: string }) {
   return <>
     {page.error && <p className="notice notice--error" role="alert" style={{ marginTop: 'var(--m-space-4)' }}>{page.error} <button className="link" onClick={page.refresh}>Retry people</button></p>}
     {error && <p className="notice notice--error" role="alert" style={{ marginTop: 'var(--m-space-4)' }}>{error}</p>}
-    <ul aria-label="People results" className="list">{page.items.map(person => <PersonRow disabled={busy} key={person.id} onFollow={person => void follow(person)} person={person} />)}</ul>
+    <ul aria-label="People results" className="list measure--list">{page.items.map(person => <PersonRow disabled={busy} key={person.id} onFollow={person => void follow(person)} person={person} />)}</ul>
     {page.loading && <p className="status" role="status">Searching people</p>}
     {page.loaded && !page.loading && !page.items.length && <p className="status">No people found.</p>}
     {page.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore}>Load more people</button></div>}

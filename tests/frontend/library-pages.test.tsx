@@ -23,17 +23,25 @@ beforeEach(() => {
   mocks.status.mockImplementation(async (ids: number[]) => ids.map(id => ({ id, saved: id === 101, viewing_count: id === 101 ? 7 : 0 })));
 });
 
-it('lists entries without a summary of the self and fetches older viewings only on request, grouped by month', async () => {
+it('opens with plain counts and no feeling statistics, and fetches older viewings only on request, grouped by month', async () => {
   mocks.page.mockResolvedValueOnce({ entries: [first], nextOffset: 30 }).mockResolvedValueOnce({ entries: [later], nextOffset: null });
   render(ui(<Diary />));
   expect(await screen.findByText('My first page')).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'September 2026' })).toBeInTheDocument();
   expect(screen.getByRole('heading', { level: 1, name: 'Diary' })).toBeInTheDocument();
+  // The band carries counts of films and viewings only: 120 viewings of 100 films, 20 of them rewatches.
+  const counts = within(await screen.findByRole('list', { name: 'Diary counts' })).getAllByRole('listitem').map(item => item.textContent);
+  expect(counts).toEqual(['100Films', '20Rewatches', '2Last 30 days', '80Public']);
   expect(screen.queryByRole('region', { name: 'Recent diary summary' })).not.toBeInTheDocument();
-  expect(screen.queryByText('120')).not.toBeInTheDocument();
   expect(screen.queryByText(/Last 30 viewing days/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/%|Joy \d|average/i)).not.toBeInTheDocument();
+  expect(screen.getAllByLabelText(/^Feelings:/)).toHaveLength(1);
   const entry = screen.getByText('My first page').closest('article')!;
   expect(within(entry).getByRole('link', { name: 'Recent film' })).toHaveAttribute('href', '/response/11');
+  expect(within(entry).getByRole('heading', { name: 'Recent film 2020' })).toBeInTheDocument();
+  // The day is set large once; the whole date is still there to be read.
+  expect(within(entry).getByText('20')).toBeInTheDocument();
+  expect(within(entry).getByText('Sunday, September 20')).toBeInTheDocument();
   expect(within(entry).getByLabelText('Feelings: Joy')).toBeInTheDocument();
   expect(within(entry).getByText('Private')).toBeInTheDocument();
   expect(within(entry).getByRole('button', { name: 'Delete diary entry for Recent film' })).toBeInTheDocument();
@@ -70,7 +78,7 @@ function Where() {
   const location = useLocation();
   return <p>{location.pathname}{location.search}</p>;
 }
-it('opens a film-scoped owner history and sends the old saved view to the watchlist', async () => {
+it('opens a film-scoped owner history and sends the old saved view to Recommendations', async () => {
   const view = render(ui(<Diary />, '/diary?movieId=101'));
   await screen.findByText('My first page');
   expect(mocks.page.mock.calls[0][0]).toMatchObject({ movieId: 101, limit: 30 });

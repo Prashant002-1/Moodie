@@ -34,12 +34,15 @@ beforeEach(() => {
 it('uses authoritative profile counts and requests distinct film pages on the server', async () => {
   ui(<MemberProfile />, '/member/peer');
   await screen.findByText('The first response');
-  expect(screen.getByRole('button', { name: 'Responses 80' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Films 45' })).toBeInTheDocument();
+  // The counts sit once, in the band, not again on the tabs.
+  const counts = screen.getByRole('group', { name: 'Profile counts' });
+  expect(counts).toHaveTextContent('80 responses');
+  expect(counts).toHaveTextContent('45 films');
+  expect(screen.getByRole('button', { name: 'Responses' })).toHaveAttribute('aria-pressed', 'true');
   expect(screen.getByRole('link', { name: 'Recommend a film' })).toHaveAttribute('href', '/suggestions/new?recipientId=2&recipient=peer');
   expect(mocks.connections).not.toHaveBeenCalled();
   mocks.profile.mockResolvedValueOnce({ person, entries: [{ ...entry, id: 12, movie_id: 102, title: 'Another film' }], nextOffset: null });
-  await userEvent.click(screen.getByRole('button', { name: 'Films 45' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Films' }));
   await screen.findByText('Another film');
   expect(mocks.profile).toHaveBeenLastCalledWith('peer', { view: 'films', offset: undefined }, expect.any(AbortSignal));
   expect(screen.queryByText('A film')).not.toBeInTheDocument();
@@ -62,8 +65,12 @@ it('keeps cached film and public responses when catalog fails, with the response
   mocks.movie.mockRejectedValue(new Error('catalog offline'));
   ui(<MovieDetails />, '/movie/101');
   await screen.findByText('The first response');
-  expect(screen.getByRole('heading', { name: 'A film' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1, name: 'A film 2020' })).toBeInTheDocument();
   expect(screen.getByText('80 responses')).toBeInTheDocument();
+  expect(screen.getByText('Cached synopsis')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Add response' })).toHaveAttribute('href', '/log?movieId=101');
+  expect(screen.getByRole('link', { name: 'Recommend' })).toHaveAttribute('href', '/suggestions/new?movieId=101');
+  expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('aria-pressed', 'false');
   expect(screen.queryByText(/%/)).not.toBeInTheDocument();
   expect(screen.queryByText('What people felt')).not.toBeInTheDocument();
   expect(screen.getByLabelText('Feelings: Joy')).toBeInTheDocument();
@@ -120,6 +127,10 @@ it('ignores an old film search result and pages the current query only on reques
   await userEvent.type(input, 'old'); await userEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
   await userEvent.clear(input); await userEvent.type(input, 'new'); await userEvent.click(screen.getByRole('button', { name: 'Search', exact: true }));
   await screen.findByRole('heading', { name: 'New query film' });
+  // Results are a wall of posters, each with its own Save and Log.
+  expect(screen.getByRole('link', { name: 'New query film' })).toHaveAttribute('href', '/movie/102');
+  expect(screen.getByRole('link', { name: 'Log New query film' })).toHaveAttribute('href', '/log?movieId=102');
+  expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('aria-pressed', 'false');
   await act(async () => resolveOld({ results: [{ ...film, title: 'Stale query film' }], page: 1, total_pages: 1 }));
   expect(screen.queryByText('Stale query film')).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Load more films' }));

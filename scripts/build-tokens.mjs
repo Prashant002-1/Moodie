@@ -21,9 +21,15 @@ const typeLines = Object.entries(tokens.type).filter(([name]) => name !== 'note'
   `  --m-type-${name}-line: ${(role.line / role.size).toFixed(3)};`,
   `  --m-type-${name}-tracking: ${role.tracking ?? 0}em;`,
 ]);
+const personBlock = scheme => [
+  ...tokens.person[scheme].map((value, index) => `  --m-person-${index + 1}: ${value};`),
+  `  --m-color-on-person: ${scheme === 'dark' ? tokens.person.onDark : tokens.person.onLight};`,
+].join('\n');
+const scheme = name => `${colorBlock(name)}\n${personBlock(name)}\n  color-scheme: ${name};`;
 const css = `/* ${banner} */
+/* Dark is Moodie's identity and the default. */
 :root {
-${colorBlock('light')}
+${scheme('dark')}
 ${Object.entries(tokens.font).map(([name, value]) => `  --m-font-${name}: ${value};`).join('\n')}
 ${typeLines.join('\n')}
 ${Object.entries(tokens.space).map(([name, value]) => `  --m-space-${name}: ${value}px;`).join('\n')}
@@ -32,19 +38,17 @@ ${Object.entries(tokens.radius).map(([name, value]) => `  --m-radius-${name}: ${
   --m-motion-base: ${tokens.motion.base}ms;
   --m-motion-slow: ${tokens.motion.slow}ms;
   --m-ease-out: ${tokens.motion.easeOut};
-  color-scheme: light;
+  --m-person-count: ${tokens.person.dark.length};
 }
 
-/* The screening room. Follows the system unless the person chose a theme. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-${colorBlock('dark').replace(/^/gm, '  ')}
-    color-scheme: dark;
-  }
+/* Light is a choice made in Account, or the system's when the person asks to follow it. */
+[data-theme='light'] {
+${scheme('light')}
 }
-[data-theme='dark'] {
-${colorBlock('dark')}
-  color-scheme: dark;
+@media (prefers-color-scheme: light) {
+  [data-theme='system'] {
+${scheme('light').replace(/^/gm, '  ')}
+  }
 }
 `;
 

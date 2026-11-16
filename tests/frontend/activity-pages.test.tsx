@@ -26,6 +26,33 @@ it('opens exact response and conversation destinations and keeps same-time messa
   expect(screen.getByText('Another message')).toBeInTheDocument();
   expect(screen.queryByText('Original response')).not.toBeInTheDocument();
 });
+it('shows a recommendation sent to you as the note it is, and every other event with the person in their colour', async () => {
+  mocks.activity.mockResolvedValue({ activity: [
+    { ...event, kind: 'suggestion', event_id: 'suggestion:7', entry_id: null, suggestion_id: 7, poster_path: '/poster.jpg', note: null, comment_body: 'You would love the last scene.' },
+    { ...event, kind: 'comment', event_id: 'comment:5', comment_body: 'I felt that too.' },
+  ], nextOffset: null });
+  render(<MemoryRouter><Activity /></MemoryRouter>);
+  const [note, comment] = (await screen.findAllByRole('listitem')).map(item => within(item));
+  expect(note.getByRole('link', { name: 'friend' })).toHaveAttribute('href', '/member/friend');
+  expect(note.getByText(/thought of you/)).toBeInTheDocument();
+  expect(note.getByRole('heading', { name: 'A Film' })).toBeInTheDocument();
+  expect(note.getByRole('link', { name: 'A Film' })).toHaveAttribute('href', '/suggestions/7');
+  expect(note.getByText('You would love the last scene.').tagName).toBe('BLOCKQUOTE');
+  expect(note.getByRole('img', { name: 'Poster for A Film' })).toHaveAttribute('src', expect.stringContaining('/poster.jpg'));
+  // The event does not say what has happened to the recommendation since, so the note claims no state.
+  expect(note.queryByText(/Saved|Watched|Replied|Archived/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'recommended A Film to you' })).not.toBeInTheDocument();
+  const row = screen.getByRole('link', { name: 'commented on your response to A Film' }).closest('li')!;
+  expect(row).toHaveAttribute('data-hue', expect.stringMatching(/^[1-7]$/));
+  expect(row.querySelector('.avatar')).toHaveTextContent('f');
+  expect(comment.getByText('I felt that too.').tagName).toBe('BLOCKQUOTE');
+});
+it('falls back to a plain line when a recommendation event has no reason to quote', async () => {
+  mocks.activity.mockResolvedValue({ activity: [{ ...event, kind: 'suggestion', event_id: 'suggestion:8', entry_id: null, suggestion_id: 8, note: null, comment_body: null }], nextOffset: null });
+  render(<MemoryRouter><Activity /></MemoryRouter>);
+  expect(await screen.findByRole('link', { name: 'recommended A Film to you' })).toHaveAttribute('href', '/suggestions/8');
+  expect(screen.queryByText(/thought of you/)).not.toBeInTheDocument();
+});
 it('loads one chronological activity page, without the Following feed, and explicitly appends an older page', async () => {
   mocks.activity.mockResolvedValueOnce({ activity: [event], nextOffset: 40 }).mockResolvedValueOnce({ activity: [{ ...event, event_id: 'follow:2:1', kind: 'follow', entry_id: null }], nextOffset: null });
   render(<MemoryRouter><Activity /></MemoryRouter>);

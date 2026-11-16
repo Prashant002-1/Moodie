@@ -1,36 +1,94 @@
-/* Screen-specific rules for this area. Prefer the shared classes in app.css. */
+/* Screen-specific rules for a film, a response, the diary, the composer and search.
+   Prefer the shared classes in app.css. Tokens only. */
 
-/* A film's year beside its serif title, as on a response. */
-.title-year { font-family: var(--m-font-sans); font-size: var(--m-type-caption-size); line-height: var(--m-type-caption-line); letter-spacing: 0; color: var(--m-color-ink-muted); margin-left: var(--m-space-1); white-space: nowrap; }
+/* ---- The opening of a film or a response ---------------------------------
+   Inside a band: the poster with the title beside it, over the film's artwork.
+   On a phone the actions run the full width under both. */
+.hero { display: flex; align-items: flex-end; gap: var(--m-space-6); }
+.hero__main { flex: 1; min-width: 0; display: grid; gap: var(--m-space-5); }
+.hero__head { min-width: 0; display: grid; gap: var(--m-space-2); }
+.hero__head h1 { overflow-wrap: anywhere; text-wrap: balance; }
+.hero__head h1 a:hover { color: var(--m-color-accent-ink); }
+.hero__head .meta, .hero__head .feelings { font-size: var(--m-type-body-size); line-height: var(--m-type-body-line); }
+.hero__head .meta { color: var(--m-color-ink-secondary); }
+.hero__by { display: flex; align-items: center; gap: var(--m-space-3); margin-bottom: var(--m-space-1); font-size: var(--m-type-body-size); }
+@media (max-width: 820px) {
+  .hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--m-space-4); }
+  .hero__main { display: contents; }
+  .hero__actions { grid-column: 1 / -1; }
+}
 
-/* A poster with its title and year under it, in a grid or a rail. */
-.poster-rail .film-tile .poster { width: 100%; }
-.film-tile__title { font-size: var(--m-type-body-size); line-height: var(--m-type-callout-line); letter-spacing: 0; overflow-wrap: anywhere; }
-a.film-tile:hover .film-tile__title { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+/* Where a title and its year are separated by a real space (so they read as two words), the year needs no margin. */
+.hero__head .year, .entry__main .year { margin-left: 0; }
 
-/* Counts that open a list sit among plain facts. */
-.meta button:hover { color: var(--m-color-ink); }
+/* Reading text keeps a comfortable measure however wide the page is. */
+.measure { max-width: 68ch; }
+.measure--list { max-width: 720px; }
+/* Under a hero the reading column starts where the title starts: the width of an xl poster and the gap beside it. */
+.reading { display: grid; gap: var(--m-space-5); max-width: 640px; }
+@media (min-width: 821px) { .reading--offset { margin-left: calc(230px + var(--m-space-6)); } }
+.reading .response__foot { padding-top: var(--m-space-4); border-top: 1px solid var(--m-color-rule); }
+.reading .response__photo { max-width: 100%; }
 
-/* On a film's page the film is already named, and on a person's page the person. */
+/* On a film's page the film is already named, so its responses lead with the person. */
 .responses--film .response__film, .responses--film .response__body > .poster { display: none; }
-.responses--person .response__head > .avatar, .responses--person .response__head > .byline { display: none; }
 
-/* Comments. The toggle is one of the controls in a response footer; the open
-   panel takes the whole width under that footer. */
+/* ---- Walls ---------------------------------------------------------------
+   A tile can be a whole button (choosing a film) or carry its own small actions (search). */
+ul.wall > li { min-width: 0; }
+button.tile { width: 100%; text-align: left; }
+a.tile:hover .tile__title, button.tile:hover .tile__title, .tile__title a:hover { color: var(--m-color-accent-ink); }
+.tile__actions { display: flex; flex-wrap: wrap; margin: calc(var(--m-space-1) * -1) 0 0 calc(var(--m-space-2) * -1); }
+.tile__actions .btn { padding: 0 var(--m-space-2); }
+.tile__actions [aria-pressed='true'] { color: var(--m-color-accent-ink); }
+/* The search field that leads a screen. */
+.search--lead .input { min-height: var(--m-space-7); padding-left: var(--m-space-4); font-size: var(--m-type-reading-size); }
+.search--lead .btn { min-height: var(--m-space-7); padding: 0 var(--m-space-5); }
+
+/* ---- Diary ---------------------------------------------------------------
+   Filters and search share one line. An entry is the day set large, the
+   poster, then the film and what was written, with its controls at the right. */
+.toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--m-space-4) var(--m-space-6); }
+.toolbar > .tabs { flex: 1 1 240px; }
+.toolbar > .search { flex: 0 1 360px; }
+.entry { display: grid; grid-template-columns: var(--m-space-7) auto minmax(0, 1fr) auto; column-gap: var(--m-space-5); row-gap: var(--m-space-3); align-items: start; }
+.entry__day { display: grid; gap: var(--m-space-1); }
+.entry__n { font-family: var(--m-font-display); font-weight: 650; font-size: var(--m-type-title1-size); line-height: 1; letter-spacing: var(--m-type-title1-tracking); font-variant-numeric: tabular-nums; color: var(--m-color-ink); }
+.entry__main { min-width: 0; max-width: 60ch; display: grid; gap: 6px; }
+.entry__main .row__title a:hover { color: var(--m-color-accent-ink); }
+.entry__main .response__photo { max-width: 160px; }
+.entry__foot { padding-top: var(--m-space-1); }
+@media (max-width: 820px) {
+  .toolbar > .search { flex-basis: 100%; }
+  .entry { grid-template-columns: var(--m-space-6) auto minmax(0, 1fr); column-gap: var(--m-space-3); }
+  .entry > .poster { width: 64px; }
+  .entry__n { font-size: var(--m-type-title2-size); }
+  .entry__foot { grid-column: 3; }
+}
+
+/* ---- Composer ------------------------------------------------------------
+   The chosen film's poster stays beside the form on wide screens and sits above it on phones. */
+.compose { display: grid; grid-template-columns: 230px minmax(0, 680px); gap: var(--m-space-8); align-items: start; }
+.compose__film { position: sticky; top: calc(64px + var(--m-space-5)); display: grid; gap: var(--m-space-4); min-width: 0; }
+/* The heading is the film's name alone; its year sits beside it at the heading's scale. */
+.compose__name { overflow-wrap: anywhere; line-height: var(--m-type-title2-line); }
+.compose__name h2 { display: inline; }
+.compose__name .year { margin-left: 0; font-size: calc(var(--m-type-title2-size) * 0.72); }
+@media (max-width: 820px) {
+  .compose { grid-template-columns: minmax(0, 1fr); gap: var(--m-space-5); }
+  .compose__film { position: static; grid-template-columns: auto minmax(0, 1fr); align-items: end; padding-bottom: var(--m-space-5); border-bottom: 1px solid var(--m-color-rule); }
+}
+
+/* ---- Comments ------------------------------------------------------------
+   The toggle is one of the controls in a response footer; the open panel
+   takes the whole width under that footer. */
 .comments { display: contents; }
 .comments__panel { order: 1; flex: 0 0 100%; min-width: 0; display: grid; gap: var(--m-space-3); padding-top: var(--m-space-3); border-top: 1px solid var(--m-color-rule); color: var(--m-color-ink); font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); }
-.comments__panel .note { font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); }
+.comments__panel .note { font-size: var(--m-type-body-size); line-height: var(--m-type-body-line); color: var(--m-color-ink); }
 .comments__panel .list > :first-child { padding-top: 0; }
+.comments__panel .row { gap: var(--m-space-3); }
 .comments__form { display: flex; align-items: flex-end; gap: var(--m-space-2); }
 .comments__form .textarea { flex: 1; min-width: 0; min-height: 0; }
 
-/* Two people on the same film, side by side with a hairline between them. */
-.shared { display: grid; gap: var(--m-space-4); }
-.shared__side { display: grid; gap: var(--m-space-2); align-content: start; min-width: 0; }
-@media (min-width: 721px) { .shared__side + .shared__side { padding-left: var(--m-space-5); border-left: 1px solid var(--m-color-rule); } }
-@media (max-width: 720px) { .shared__side + .shared__side { padding-top: var(--m-space-4); border-top: 1px solid var(--m-color-rule); } }
-
-/* A long title or handle at the top of a page wraps instead of pushing the page wide. */
-.masthead h1, .response__text h1 { overflow-wrap: anywhere; }
-/* A person's masthead holds several lines, so the avatar sits at the top of them. */
-.masthead.masthead--person { align-items: flex-start; }
+/* A long title at the top of a page wraps instead of pushing the page wide. */
+.masthead h1 { overflow-wrap: anywhere; }

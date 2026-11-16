@@ -15,8 +15,8 @@ enum MoodieTokens {
     }
     enum Radius {
         static let poster: CGFloat = 4
-        static let control: CGFloat = 8
-        static let surface: CGFloat = 12
+        static let control: CGFloat = 6
+        static let surface: CGFloat = 10
         static let pill: CGFloat = 999
     }
     enum Motion {
@@ -27,7 +27,9 @@ enum MoodieTokens {
     /// Semantic colors resolve through the asset catalog so light and dark follow the system.
     enum Palette {
         static let canvas = Color("Canvas")
+        static let band = Color("Band")
         static let surface = Color("Surface")
+        static let surfaceRaised = Color("SurfaceRaised")
         static let sunken = Color("Sunken")
         static let ink = Color("Ink")
         static let inkSecondary = Color("InkSecondary")
@@ -37,6 +39,7 @@ enum MoodieTokens {
         static let accent = Color("Accent")
         static let accentPressed = Color("AccentPressed")
         static let onAccent = Color("OnAccent")
+        static let accentInk = Color("AccentInk")
         static let laurel = Color("Laurel")
         static let inverse = Color("Inverse")
         static let onInverse = Color("OnInverse")

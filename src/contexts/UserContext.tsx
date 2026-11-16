@@ -15,6 +15,7 @@ interface UserContextType {
   signOut: () => Promise<void>;
   updateProfile: (bio: string) => Promise<void>;
   setAiMode: (mode: AiMode) => Promise<void>;
+  setEmailNotifications: (enabled: boolean) => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
   deletionReceipt: { cleanupOwner: number | null } | null;
   retryDraftCleanup: () => Promise<void>;
@@ -75,6 +76,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut: async () => { await authService.logout(); setUser(null); authService.clear(); broadcast(); },
     updateProfile: async bio => setUser(asUser(await authService.profile(bio))),
     setAiMode: async mode => setUser(asUser(await authService.preferences(mode))),
+    setEmailNotifications: async enabled => setUser(asUser(await authService.emailNotifications(enabled))),
     deleteAccount: async password => {
       const owner = user?.id;
       await authService.deleteAccount(password);

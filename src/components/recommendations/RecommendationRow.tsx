@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Movie } from '../../types/movie';
 import { imageUrl, releaseYear } from '../../utils/display';
+import { personHue } from '../../utils/person';
+import { Avatar } from '../common/Avatar';
 import { KeepRecommendation } from '../suggestions/KeepRecommendation';
 import { RecommendationEvidence } from './RecommendationEvidence';
 
@@ -20,12 +22,11 @@ export function RecommendationRow({ movie, showComparison = false, headingLevel 
   const Title = headingLevel === 2 ? 'h2' : 'h3';
 
   return (
-    <article className="row">
+    <article className="row" data-hue={personHue(person.username)}>
       <Link className="poster poster--sm" tabIndex={-1} to={filmLink}>{poster && <img alt={`Poster for ${movie.title}`} loading="lazy" src={poster} />}</Link>
       <div className="row__main">
-        <p className="byline">Through <Link to={`/member/${person.username}`}>@{person.username}</Link></p>
-        <Title className="row__title"><Link to={filmLink}>{movie.title}</Link></Title>
-        {movie.release_date && <p className="t-caption muted">{releaseYear(movie.release_date)}</p>}
+        <p className="rec__from"><Avatar size="sm" to={null} username={person.username} /><span className="byline">Through <Link to={`/member/${person.username}`}>@{person.username}</Link></span></p>
+        <Title className="row__title"><Link to={filmLink}>{movie.title}</Link>{movie.release_date && <> <span className="year">{releaseYear(movie.release_date)}</span></>}</Title>
         <RecommendationEvidence connection={person} movieTitle={movie.title} showComparison={showComparison} />
         {person.response_note && <p className="note clamp">{person.response_note}</p>}
         <div className="actions" style={{ marginTop: 'var(--m-space-2)' }}>

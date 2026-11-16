@@ -5,7 +5,7 @@ import { useDiary } from '../../contexts/DiaryContext';
 import { suggestionService } from '../../services/suggestionService';
 import { apiError } from '../../services/apiClient';
 
-/** Adds a film to the watchlist through one person's response. On your own response it offers to recommend the film instead. */
+/** Saves a film for later through one person's response. On your own response it offers to recommend the film instead. */
 export function KeepRecommendation({ entryId, authorId, movieId, className = 'link' }: { entryId: number; authorId: number; movieId: number; className?: string }) {
   const { user } = useUser();
   const { refresh } = useDiary();
@@ -23,7 +23,7 @@ export function KeepRecommendation({ entryId, authorId, movieId, className = 'li
   };
   if (authorId === user?.id) return <Link className={className} to={`/suggestions/new?movieId=${movieId}&sourceEntryId=${entryId}`}>Recommend</Link>;
   return <>
-    <button className={className} disabled={busy} onClick={() => void keep()} type="button">{busy ? 'Adding' : 'Add to watchlist'}</button>
+    <button className={className} disabled={busy} onClick={() => void keep()} type="button">{busy ? 'Adding' : 'Save for later'}</button>
     {error && <span className="error t-caption" role="alert">{error}</span>}
   </>;
 }

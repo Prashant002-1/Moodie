@@ -210,16 +210,20 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
   </section>;
   if (!draft) return <div className="page page--narrow"><div className="empty"><p role="alert">{error || 'Your response could not be opened.'}</p><div className="actions"><button className="btn btn--secondary" disabled={saving} onClick={() => setRevision(value => value + 1)}>Try again</button>{unreadable && <button className="btn btn--quiet" disabled={saving} onClick={() => void discardUnreadable()}>Discard unreadable draft</button>}<Link className="link" to="/diary">Open Diary</Link></div></div></div>;
 
+  const chosenPoster = imageUrl(draft.film?.poster_path, 'w500');
   if (savedEntry) return <div className="page page--narrow stack stack--loose">
-    <section className="stack">
-      <h1>{savedEntry.title ?? draft.film?.title}</h1>
-      <p className="secondary">In your diary. {savedEntry.visibility === 'public' ? 'Everyone can see it.' : 'Only you can see it.'}</p>
-      <div className="actions">
-        {draft.suggestionId && <Link className="btn btn--primary" to={`/suggestions/${draft.suggestionId}`}>Reply to {draft.suggestionName || 'them'}</Link>}
-        <Link className={`btn ${draft.suggestionId ? 'btn--secondary' : 'btn--primary'}`} to={`/response/${savedEntry.id}`}>Read your response</Link>
-        <Link className="btn btn--quiet" to="/diary">Open Diary</Link>
+    <section className="row">
+      {draft.film && <span className="poster poster--lg">{chosenPoster && <img alt={`Poster for ${draft.film.title}`} src={chosenPoster} />}</span>}
+      <div className="row__main stack">
+        <h1>{savedEntry.title ?? draft.film?.title}</h1>
+        <p className="secondary">In your diary. {savedEntry.visibility === 'public' ? 'Everyone can see it.' : 'Only you can see it.'}</p>
+        <div className="actions">
+          {draft.suggestionId && <Link className="btn btn--primary" to={`/suggestions/${draft.suggestionId}`}>Reply to {draft.suggestionName || 'them'}</Link>}
+          <Link className={`btn ${draft.suggestionId ? 'btn--secondary' : 'btn--primary'}`} to={`/response/${savedEntry.id}`}>Read your response</Link>
+          <Link className="btn btn--quiet" to="/diary">Open Diary</Link>
+        </div>
+        {draft.suggestionId && <p className="hint">Your diary note has not been sent. Your reply is written separately.</p>}
       </div>
-      {draft.suggestionId && <p className="hint">Your diary note has not been sent. Your reply is written separately.</p>}
     </section>
     {storageError && <p className="notice notice--error" role="alert">{storageError} <button className="link" onClick={() => void clearSavedDraft()}>Clear saved draft</button></p>}
     {discoveryLoading && <p className="status" role="status">Loading</p>}
@@ -228,13 +232,13 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
     <div className="actions"><Link className="btn btn--quiet" to="/feed">Return home</Link><button className="btn btn--quiet" onClick={() => navigate('/log', { replace: true, state: { newDraft: crypto.randomUUID() } })}>Add another film</button></div>
   </div>;
 
-  return <div className="page page--narrow">
+  return <div className="page">
     <header className="page__head">
       <h1>{draft.editingId ? 'Edit response' : 'Add a response'}</h1>
       <div className="actions"><span className="t-caption muted" role="status">{!draft.film ? '' : auto.error ? 'Draft not saved' : auto.saved ? 'Draft saved' : 'Saving draft'}</span>
         <button className="btn btn--quiet btn--small" disabled={saving || photoPreparing} onClick={() => setCloseChoice(true)}>Close</button></div>
     </header>
-    {(error || auto.error) && <p className="notice notice--error" role="alert">{error || auto.error}{auto.error && <> <button className="link" onClick={() => void auto.persist().catch(() => undefined)}>Retry draft save</button></>}</p>}
+    {(error || auto.error) && <p className="notice notice--error" role="alert" style={{ marginBottom: 'var(--m-space-5)' }}>{error || auto.error}{auto.error && <> <button className="link" onClick={() => void auto.persist().catch(() => undefined)}>Retry draft save</button></>}</p>}
     {closeChoice && <section className="well stack" aria-label="Close your response" style={{ marginBottom: 'var(--m-space-5)' }}>
       <p className="strong">Keep this draft?</p><div className="actions">
         <button className="btn btn--primary btn--small" disabled={saving} onClick={() => void close(true)}>Keep draft</button>
@@ -245,11 +249,13 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
     {!draft.film || choosingFilm ? <>
       {draft.film && <p style={{ marginBottom: 'var(--m-space-4)' }}><button className="link" onClick={() => setChoosingFilm(false)}>Keep {draft.film.title}</button></p>}
       <FilmPicker onChoose={chooseFilm} />
-    </> : <form className="composer" onSubmit={event => { event.preventDefault(); void save(); }}>
-      <div className="composer__film">
-        <span className="poster poster--sm">{imageUrl(draft.film.poster_path, 'w342') && <img alt={`Poster for ${draft.film.title}`} src={imageUrl(draft.film.poster_path, 'w342')!} />}</span>
-        <div className="row__main"><h2>{draft.film.title}</h2><p className="t-caption muted">{releaseYear(draft.film.release_date)}</p></div>
-        {!draft.editingId && <button className="btn btn--quiet btn--small" disabled={saving || photoPreparing} onClick={() => setChoosingFilm(true)} type="button">Choose another film</button>}
+    </> : <form className="compose" onSubmit={event => { event.preventDefault(); void save(); }}>
+      <div className="compose__film">
+        <span className="poster poster--xl">{chosenPoster && <img alt={`Poster for ${draft.film.title}`} src={chosenPoster} />}</span>
+        <div className="stack stack--tight">
+          <div className="compose__name"><h2>{draft.film.title}</h2>{draft.film.release_date && <> <span className="year">{releaseYear(draft.film.release_date)}</span></>}</div>
+          {!draft.editingId && <p><button className="link t-callout" disabled={saving || photoPreparing} onClick={() => setChoosingFilm(true)} type="button">Choose another film</button></p>}
+        </div>
       </div>
       <fieldset className="composer" disabled={saving || photoPreparing}>
         <legend className="sr-only">Your response to {draft.film.title}</legend>

@@ -5,6 +5,8 @@ import { imageUrl, releaseYear } from '../../utils/display';
 import { ResponseDetails } from '../diary/ResponseDetails';
 import { ResponseComments } from '../discovery/ResponseComments';
 import { KeepRecommendation } from '../suggestions/KeepRecommendation';
+import { Avatar } from '../common/Avatar';
+import { personHue } from '../../utils/person';
 import { Feelings } from './Feelings';
 
 interface ResponseCardProps {
@@ -19,8 +21,8 @@ export function ResponseCard({ entry, ownUserId, onFollow, onLike }: ResponseCar
   const poster = imageUrl(entry.poster_path, 'w342');
   const likes = entry.like_count || 0;
   return <article className="response">
-    <header className="response__head">
-      <Link aria-label={`Open @${entry.username}'s profile`} className="avatar" to={`/member/${entry.username}`}>{entry.username.charAt(0)}</Link>
+    <header className="response__head" data-hue={personHue(entry.username)}>
+      <Avatar username={entry.username} />
       <p className="byline"><Link to={`/member/${entry.username}`}>@{entry.username}</Link></p>
       {onFollow && entry.user_id !== ownUserId && entry.following === false && <button aria-label={`Follow @${entry.username}`} aria-pressed={false} className="btn btn--secondary btn--small" onClick={() => onFollow(entry)} type="button">Follow</button>}
       <Link aria-label="Read response" className="t-caption muted" to={`/response/${entry.id}`}><time dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time></Link>

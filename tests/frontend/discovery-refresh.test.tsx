@@ -32,7 +32,7 @@ it('shows films through a shared film with their evidence above recent responses
   expect(within(through).getByRole('link', { name: 'Next Film' })).toHaveAttribute('href', '/movie/102?from=peer&through=Shared%20Film#response-11');
   expect(within(through).getByRole('link', { name: 'Shared Film' })).toHaveAttribute('href', '/response/10');
   expect(within(through).getByText('A joyful surprise')).toBeInTheDocument();
-  expect(within(through).getByRole('button', { name: 'Add to watchlist' })).toBeInTheDocument();
+  expect(within(through).getByRole('button', { name: 'Save for later' })).toBeInTheDocument();
   expect(within(through).queryByRole('link', { name: /Open/ })).not.toBeInTheDocument();
   expect(within(through).getByRole('link', { name: 'See all' })).toHaveAttribute('href', '/recommendations');
   const recent = screen.getByRole('region', { name: 'Recent responses' });
@@ -76,7 +76,7 @@ it('lists every film recommended through a shared film, each with its person and
   expect(screen.queryByRole('heading', { name: 'Unconnected Film' })).not.toBeInTheDocument();
   expect(screen.getAllByRole('link', { name: '@peer' })[0]).toHaveAttribute('href', '/member/peer');
   expect(screen.getAllByText('A joyful surprise')).toHaveLength(2);
-  expect(screen.getAllByRole('button', { name: 'Add to watchlist' })).toHaveLength(2);
+  expect(screen.getAllByRole('button', { name: 'Save for later' })).toHaveLength(2);
   expect(state.recommendations).toHaveBeenCalledWith(undefined);
   expect(screen.queryByRole('button', { name: /feel/i })).not.toBeInTheDocument();
   expect(screen.queryByRole('search')).not.toBeInTheDocument();
@@ -107,7 +107,7 @@ it('shows recommendations from their own data when the feed is empty and asks on
   const through = await screen.findByRole('region', { name: 'Through films you share' });
   expect(within(through).getByText('A joyful surprise')).toBeInTheDocument();
   expect(await screen.findByText('No public responses yet.')).toBeInTheDocument();
-  expect(state.feed.mock.calls.map(call => call[0])).toEqual(expect.arrayContaining([{ scope: 'everyone', limit: 12, cursor: undefined }, { scope: 'following', limit: 4 }]));
+  expect(state.feed.mock.calls.map(call => call[0])).toEqual(expect.arrayContaining([{ scope: 'everyone', limit: 12, cursor: undefined }, { scope: 'following', limit: 6 }]));
   expect(state.feed).toHaveBeenCalledTimes(2);
   expect(state.response).not.toHaveBeenCalled();
   expect(state.people).not.toHaveBeenCalled();

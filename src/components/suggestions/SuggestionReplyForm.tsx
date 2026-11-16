@@ -5,6 +5,8 @@ import { suggestionService } from '../../services/suggestionService';
 import { apiError } from '../../services/apiClient';
 import { ResponseDetailInputs, ResponseDetails } from '../diary/ResponseDetails';
 import { Feelings } from '../response/Feelings';
+import { personHue } from '../../utils/person';
+import { Avatar } from '../common/Avatar';
 
 export function SuggestionReplyForm({ item, viewing, onSaved, onCancel }: {
   item: FilmSuggestion; viewing: ResponseEntry; onSaved: (item: FilmSuggestion) => void; onCancel: () => void;
@@ -28,7 +30,7 @@ export function SuggestionReplyForm({ item, viewing, onSaved, onCancel }: {
     || JSON.stringify(highlights) !== JSON.stringify(item.reply?.highlights ?? viewing.highlights ?? [])
     || shareFeelings !== (item.reply?.feelings != null) || spoilers !== (item.reply?.contains_spoilers ?? false);
   return <form className="composer" onSubmit={event => { event.preventDefault(); void send(); }}>
-    <header className="section__head"><h2>For {item.sender_username}</h2></header>
+    <header className="section__head" data-hue={personHue(item.sender_username)} style={{ alignItems: 'center' }}><h2>For {item.sender_username}</h2><Avatar size="sm" to={null} username={item.sender_username} /></header>
     <fieldset disabled={busy} style={{ gap: 'var(--m-space-5)' }}><legend className="sr-only">Your reply</legend>
       <ResponseDetailInputs enjoyment={enjoyment} highlights={highlights} onEnjoyment={setEnjoyment} onHighlights={setHighlights} required />
       <div className="field"><label htmlFor="reply-note">Tell them what you thought</label><textarea autoFocus className="textarea" id="reply-note" maxLength={1000} rows={5} value={note} onChange={event => setNote(event.target.value)} /><p className="field__hint">This is separate from your diary note.</p></div>
@@ -36,7 +38,7 @@ export function SuggestionReplyForm({ item, viewing, onSaved, onCancel }: {
         <label className="check"><input type="checkbox" checked={shareFeelings} onChange={event => setShareFeelings(event.target.checked)} />Include my feelings</label>
         <label className="check"><input type="checkbox" checked={spoilers} onChange={event => setSpoilers(event.target.checked)} />Contains spoilers</label>
       </div>
-      <details className="disclosure"><summary>Preview reply</summary><div className="stack stack--tight"><ResponseDetails enjoyment={enjoyment} highlights={highlights} />{note && <p className="note">{note}</p>}{shareFeelings && <Feelings entry={viewing} />}{spoilers && <p className="t-caption muted">Marked as spoilers</p>}</div></details>
+      <details className="disclosure"><summary>Preview reply</summary><div className="stack stack--tight"><ResponseDetails enjoyment={enjoyment} highlights={highlights} />{note && <blockquote className="quote quote--small">{note}</blockquote>}{shareFeelings && <Feelings entry={viewing} />}{spoilers && <p className="t-caption muted">Marked as spoilers</p>}</div></details>
       {error && <p className="notice notice--error" role="alert">{error}</p>}
       <div className="actions"><button className="btn btn--primary" disabled={!enjoyment || busy}>{busy ? 'Sending' : item.reply ? 'Update reply' : 'Send reply'}</button><button type="button" className="btn btn--quiet" onClick={() => { if (!dirty || window.confirm('Discard changes to this reply?')) onCancel(); }}>Cancel</button></div>
     </fieldset>

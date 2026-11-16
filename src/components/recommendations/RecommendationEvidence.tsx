@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { EmotionScores } from '../../types/emotion';
 import { Movie } from '../../types/movie';
 import { feelingsFromOrder } from '../../utils/feelings';
+import { personHue } from '../../utils/person';
 import { Feelings } from '../response/Feelings';
 
 type RecommendationConnection = NonNullable<Movie['recommended_by']>[number];
@@ -30,7 +31,7 @@ export function RecommendationEvidence({ connection, showComparison = false }: R
           <summary>Your responses to {film}</summary>
           <div className="two-up">
             <div className="stack stack--tight"><p className="byline"><strong>You</strong></p><p className="note">{connection.viewer_shared_note}</p></div>
-            <div className="stack stack--tight"><p className="byline"><strong>@{connection.username}</strong></p><p className="note">{connection.person_shared_note}</p></div>
+            <div className="stack stack--tight" data-hue={personHue(connection.username)}><p className="byline"><strong>@{connection.username}</strong></p><p className="note">{connection.person_shared_note}</p></div>
           </div>
         </details>
       )}

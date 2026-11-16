@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import { usePagedResource } from '../../hooks/usePagedResource';
 import { suggestionService } from '../../services/suggestionService';
 import { apiError } from '../../services/apiClient';
+import { personHue } from '../../utils/person';
+import { Avatar } from '../common/Avatar';
 import { Spoiler } from './Spoiler';
 
+/** What two people said to each other about one recommendation, each in their own colour. */
 export function SuggestionMessages({ id, viewerId, onRevoked }: { id: number; viewerId: number; onRevoked: () => void }) {
   const load = useCallback(async (offset: number | undefined, signal: AbortSignal) => {
     const result = await suggestionService.messages(id, offset, signal);
@@ -37,10 +40,13 @@ export function SuggestionMessages({ id, viewerId, onRevoked }: { id: number; vi
   return <section aria-label="Conversation" className="stack">
     <header className="section__head"><h2>Conversation</h2><button disabled={page.loading} onClick={page.refresh}>Refresh conversation</button></header>
     {page.error && <p role="alert" className="notice notice--error">{page.error}</p>}
-    {page.items.length > 0 && <div className="list list--flush">{page.items.map(message => <article className="stack stack--tight" key={message.id}>
-      <header className="meta"><Link className="secondary strong" to={`/member/${encodeURIComponent(message.username)}`}>{message.user_id === viewerId ? 'You' : message.username}</Link><time dateTime={message.created_at}>{new Date(message.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>
-        {message.user_id === viewerId && <button aria-label={`Delete your message from ${new Date(message.created_at).toLocaleDateString()}`} className="link" disabled={deleting != null} onClick={() => void remove(message.id)}>Delete</button>}</header>
-      <Spoiler key={`${message.id}:${message.contains_spoilers}`} hidden={message.contains_spoilers && message.user_id !== viewerId}><p className="note">{message.body}</p></Spoiler>
+    {page.items.length > 0 && <div className="list list--flush">{page.items.map(message => <article className="said" data-hue={personHue(message.username)} key={message.id}>
+      <Avatar username={message.username} />
+      <div className="said__main">
+        <header className="meta"><Link className="who" to={`/member/${encodeURIComponent(message.username)}`}>{message.user_id === viewerId ? 'You' : message.username}</Link><time dateTime={message.created_at}>{new Date(message.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time>
+          {message.user_id === viewerId && <button aria-label={`Delete your message from ${new Date(message.created_at).toLocaleDateString()}`} className="link" disabled={deleting != null} onClick={() => void remove(message.id)}>Delete</button>}</header>
+        <Spoiler key={`${message.id}:${message.contains_spoilers}`} hidden={message.contains_spoilers && message.user_id !== viewerId}><blockquote className="quote quote--small">{message.body}</blockquote></Spoiler>
+      </div>
     </article>)}</div>}
     {page.loading && <p className="status" role="status">Loading conversation</p>}
     {page.next != null && <div className="actions"><button className="btn btn--quiet btn--small" disabled={page.loading} onClick={page.loadMore}>More messages</button></div>}

@@ -2,7 +2,8 @@ import apiClient from './apiClient';
 
 export type AiMode = 'on' | 'off';
 // ai_mode is null until the person chooses during onboarding. It is absent only on older servers.
-export interface AuthUser { id: number; email: string; username: string; bio: string; ai_mode?: AiMode | null }
+// email_notifications is on unless the person turned it off; an older server omits it.
+export interface AuthUser { id: number; email: string; username: string; bio: string; ai_mode?: AiMode | null; email_notifications?: boolean }
 export interface AuthResponse { user: AuthUser; recoveryCode?: string }
 export const authService = {
   async me(): Promise<AuthUser> { return (await apiClient.get('/auth/me')).data.user; },
@@ -12,6 +13,7 @@ export const authService = {
   async logout() { await apiClient.post('/auth/logout'); },
   async profile(bio: string): Promise<AuthUser> { return (await apiClient.patch('/auth/profile', { bio })).data.user; },
   async preferences(aiMode: AiMode): Promise<AuthUser> { return (await apiClient.patch('/auth/preferences', { aiMode })).data.user; },
+  async emailNotifications(enabled: boolean): Promise<AuthUser> { return (await apiClient.patch('/auth/preferences', { emailNotifications: enabled })).data.user; },
   async password(currentPassword: string, password: string) { await apiClient.post('/auth/password', { currentPassword, password }); },
   async deleteAccount(password: string) { await apiClient.delete('/auth/account', { data: { password } }); },
   clear() {

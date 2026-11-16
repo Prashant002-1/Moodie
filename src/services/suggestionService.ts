@@ -13,6 +13,10 @@ export const suggestionService = {
   async get(id: number, signal?: AbortSignal) {
     return (await apiClient.get<Schema['SuggestionResult']>(`/suggestions/${id}`, { signal })).data.suggestion;
   },
+  /** What is waiting, due, sent, watched and replied, counted by the server. */
+  async summary(signal?: AbortSignal) {
+    return (await apiClient.get<Schema['SuggestionSummary']>('/suggestions/summary', { signal })).data;
+  },
   async recipients(q = '', signal?: AbortSignal) {
     return (await apiClient.get<Schema['Recipients']>('/suggestions/recipients', { params: { q }, signal })).data.people;
   },

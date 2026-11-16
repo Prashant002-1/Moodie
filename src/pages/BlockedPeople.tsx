@@ -5,6 +5,8 @@ import { useDiary } from '../contexts/DiaryContext';
 import { usePagedResource } from '../hooks/usePagedResource';
 import { safetyService } from '../services/safetyService';
 import { apiError } from '../services/apiClient';
+import { Avatar } from '../components/common/Avatar';
+import { personHue } from '../utils/person';
 
 export default function BlockedPeople() {
   const { user } = useUser();
@@ -33,8 +35,8 @@ export default function BlockedPeople() {
     {page.items.length > 0 && <p className="hint">Unblocking allows interaction again. It does not restore follows.</p>}
     {notice && <p className="notice" role="status" style={{ marginTop: 'var(--m-space-4)' }}>{notice}</p>}
     {(error || page.error) && <p className="notice notice--error" role="alert" style={{ marginTop: 'var(--m-space-4)' }}>{error || page.error} <button className="link" onClick={page.refresh}>Refresh list</button></p>}
-    <ul className="list">{page.items.map(person => <li className="row row--center" key={person.id}>
-      <span aria-hidden="true" className="avatar">{person.username.charAt(0)}</span>
+    <ul className="list">{page.items.map(person => <li className="row row--center" data-hue={personHue(person.username)} key={person.id}>
+      <Avatar to={null} username={person.username} />
       <span className="row__main"><span className="strong truncate">@{person.username}</span></span>
       <button aria-label={`Unblock @${person.username}`} className="btn btn--secondary btn--small" disabled={busy !== null} onClick={() => void unblock(person.id, person.username)}>Unblock</button>
     </li>)}</ul>

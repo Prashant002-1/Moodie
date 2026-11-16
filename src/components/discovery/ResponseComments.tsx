@@ -7,6 +7,8 @@ import { useDiary } from '../../contexts/DiaryContext';
 import { usePagedResource } from '../../hooks/usePagedResource';
 import { apiError } from '../../services/apiClient';
 import { discoveryService } from '../../services/discoveryService';
+import { personHue } from '../../utils/person';
+import { Avatar } from '../common/Avatar';
 
 export function ResponseComments({ entryId, initialCount = 0 }: { entryId: number; initialCount?: number }) {
   const { user } = useUser();
@@ -62,8 +64,8 @@ function CommentPanel({ entryId, setCount, body, setBody }: { entryId: number; s
     finally { setSaving(false); }
   };
   return <div className="comments__panel">
-    {page.items.length > 0 && <ul className="list">{page.items.map(comment => <li className="row" key={comment.id}>
-      <span aria-hidden="true" className="avatar avatar--sm">{comment.username.charAt(0)}</span>
+    {page.items.length > 0 && <ul className="list">{page.items.map(comment => <li className="row" data-hue={personHue(comment.username)} key={comment.id}>
+      <Avatar size="sm" username={comment.username} />
       <div className="row__main">
         <p className="byline"><Link to={`/member/${comment.username}`}>@{comment.username}</Link> <time className="t-caption muted" dateTime={comment.created_at}>{new Date(comment.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time></p>
         <p className="note">{comment.body}</p>

@@ -16,7 +16,7 @@ export function SuggestionViewingPicker({ item, onChoose, onCancel, busy }: {
     <header className="section__head"><h2>Your viewings of {item.title}</h2><button disabled={busy} onClick={onCancel}>Cancel</button></header>
     {page.error && <p className="notice notice--error" role="alert">{page.error} <button className="link" onClick={page.refresh}>Retry</button></p>}
     {page.items.length > 0 && <ul className="list list--flush">{page.items.map(entry => <li key={entry.id}><button className="row pick" disabled={busy} onClick={() => onChoose(entry.id)}>
-      <span className="row__main"><strong>{formatCalendarDate(entry.watched_on, { dateStyle: 'medium' })}</strong><span className="note clamp">{entry.note || 'No note.'}</span><span className="t-caption muted">{entry.visibility === 'private' ? 'Private response' : 'Public response'}</span></span>
+      <span className="row__main"><span className="meta"><strong className="secondary">{formatCalendarDate(entry.watched_on, { dateStyle: 'medium' })}</strong><span>{entry.visibility === 'private' ? 'Private response' : 'Public response'}</span></span><span className="note clamp">{entry.note || 'No note.'}</span></span>
     </button></li>)}</ul>}
     {page.loading && <p className="status" role="status">Loading viewings</p>}
     {page.loaded && !page.items.length && <p className="status">No viewings of this film.</p>}

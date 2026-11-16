@@ -1,22 +1,27 @@
 import { FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useDiary } from '../contexts/DiaryContext';
 import { authService } from '../services/authService';
 import { apiError } from '../services/apiClient';
 import { ThemeChoice, readTheme, saveTheme } from '../utils/theme';
 import AiModeChoice from '../components/account/AiModeChoice';
+import { Avatar } from '../components/common/Avatar';
+import { personHue } from '../utils/person';
 
-type AccountView = 'profile' | 'appearance' | 'ai' | 'account' | 'password';
-const views: [AccountView, string][] = [['profile', 'Profile'], ['appearance', 'Appearance'], ['ai', 'AI'], ['account', 'Account'], ['password', 'Password']];
-const themes: [ThemeChoice, string][] = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']];
+type AccountView = 'profile' | 'appearance' | 'notifications' | 'ai' | 'account' | 'password';
+const views: [AccountView, string][] = [['profile', 'Profile'], ['appearance', 'Appearance'], ['notifications', 'Notifications'], ['ai', 'AI'], ['account', 'Account'], ['password', 'Password']];
+// Dark is Moodie's identity and the default, so it comes first.
+const themes: [ThemeChoice, string][] = [['dark', 'Dark'], ['light', 'Light'], ['system', 'System']];
 const count = (value: number, one: string, many: string) => `${value} ${value === 1 ? one : many}`;
 
 export default function Account() {
-  const { user, updateProfile, setAiMode, signOut, deleteAccount } = useUser();
+  const { user, updateProfile, setAiMode, setEmailNotifications, signOut, deleteAccount } = useUser();
   const { summary } = useDiary();
   const navigate = useNavigate();
-  const [view, setView] = useState<AccountView>('profile');
+  // An email's "turn these off" link opens Account on its tab: /account?view=notifications.
+  const [params] = useSearchParams();
+  const [view, setView] = useState<AccountView>(() => views.find(([tab]) => tab === params.get('view'))?.[0] ?? 'profile');
   const [bio, setBio] = useState(user?.bio || '');
   const [theme, setTheme] = useState<ThemeChoice>(readTheme);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -45,14 +50,14 @@ export default function Account() {
     {error && <p className="notice notice--error" role="alert">{error}</p>}
     {notice && <p className="notice" role="status">{notice}</p>}
     {view === 'profile' && <form className="stack" onSubmit={event => { event.preventDefault(); void run(() => updateProfile(bio), 'Profile saved.'); }}>
-      <div className="row row--center">
-        <span aria-hidden="true" className="avatar avatar--lg">{user?.username.charAt(0)}</span>
+      {user && <div className="account__who" data-hue={personHue(user.username)}>
+        <Avatar size="lg" to={null} username={user.username} />
         <div className="row__main">
-          <p className="strong">@{user?.username}</p>
+          <p className="who">@{user.username}</p>
           <p className="meta"><span>{count(summary?.entries ?? 0, 'response', 'responses')}</span><span>{summary?.public_entries ?? 0} public</span><span>{count(summary?.saved ?? 0, 'saved film', 'saved films')}</span></p>
-          <p className="t-caption"><Link className="link" to={`/member/${user?.username}`}>Public profile</Link></p>
         </div>
-      </div>
+        <Link className="btn btn--secondary btn--small" to={`/member/${user.username}`}>Public profile</Link>
+      </div>}
       <div className="field"><label htmlFor="account-bio">Public bio</label><textarea className="textarea" id="account-bio" maxLength={240} value={bio} onChange={event => setBio(event.target.value)} />{bio.length > 200 && <span className="field__hint">{bio.length} / 240</span>}</div>
       <div className="actions actions--spread">
         <button className="btn btn--primary" disabled={busy} type="submit">{busy ? 'Saving' : 'Save profile'}</button>
@@ -65,6 +70,11 @@ export default function Account() {
         <input checked={theme === choice} name="theme" onChange={() => chooseTheme(choice)} type="radio" value={choice} /><span className="option__title">{label}</span>
       </label>)}</div>
     </fieldset>}
+    {view === 'notifications' && <div className="stack stack--tight">
+      <label className="check"><input checked={user?.email_notifications ?? true} disabled={busy} type="checkbox"
+        onChange={event => { const on = event.target.checked; void run(() => setEmailNotifications(on), on ? 'Email notifications are on.' : 'Email notifications are off.'); }} />Email me when someone recommends a film, replies, or a reminder comes due</label>
+      <p className="hint">Moodie is not sending emails yet. Your choice is kept for when it does.</p>
+    </div>}
     {view === 'ai' && <AiModeChoice disabled={busy} legend="Choose how Moodie works" value={user?.ai_mode ?? null}
       onChange={mode => { if (mode !== user?.ai_mode) void run(() => setAiMode(mode), mode === 'on' ? 'AI is on for your account.' : 'AI is off for your account.'); }} />}
     {view === 'password' && <form className="stack" onSubmit={savePassword}>

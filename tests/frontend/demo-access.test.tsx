@@ -4,6 +4,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { vi } from 'vitest';
 import { UserProvider, useUser } from '../../src/contexts/UserContext';
 import Auth from '../../src/pages/Auth';
+import Home from '../../src/pages/Home';
 import ProtectedRoute from '../../src/components/common/ProtectedRoute';
 
 const mocks = vi.hoisted(() => ({ me: vi.fn(), register: vi.fn(), login: vi.fn(), logout: vi.fn() }));
@@ -15,6 +16,7 @@ const Probe = () => {
   return <><p>Opened for {user?.username}</p><button onClick={() => void signOut()}>Sign out</button></>;
 };
 const renderApp = (path: string) => render(<UserProvider><MemoryRouter initialEntries={[path]}><Routes>
+  <Route path="/" element={<Home />} />
   <Route path="/signup" element={<Auth mode="signup" />} />
   <Route path="/signin" element={<Auth mode="signin" />} />
   <Route path="/feed" element={<ProtectedRoute><Probe /></ProtectedRoute>} />
@@ -76,4 +78,21 @@ it('keeps a failed sign-in on the form with a useful error', async () => {
   await userEvent.type(screen.getByLabelText('Password'), 'wrong');
   await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('password is incorrect');
+});
+
+it('opens the signed-out front page with Sign up and Sign in, and shows its sample note and wall as examples that lead nowhere', async () => {
+  renderApp('/');
+  expect(await screen.findByRole('heading', { level: 1, name: 'Films and shows, found through people.' })).toBeInTheDocument();
+  // The samples are not live content: the only links are the two ways in.
+  expect(screen.getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/signup', '/signin']);
+  expect(screen.getByRole('region', { name: /^Example: a recommendation/ })).toHaveTextContent('hiro thought of you');
+  expect(screen.getByRole('region', { name: /^Example: new responses/ })).toHaveTextContent('ananya');
+  expect(screen.getAllByText('Example')).toHaveLength(2);
+  expect(screen.getByText(/in words, not stars/)).toBeInTheDocument();
+});
+
+it('sends a signed-in person from the front page to their feed', async () => {
+  mocks.me.mockResolvedValue(user);
+  renderApp('/');
+  expect(await screen.findByText('Opened for alice')).toBeInTheDocument();
 });

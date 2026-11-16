@@ -32,19 +32,21 @@ const People: React.FC = () => {
   };
 
   return (
-    <div className="page page--narrow">
-      <h1 className="sr-only">People</h1>
-      <div aria-label="Choose people view" className="tabs" role="group">
+    <div className="page">
+      <header className="page__head people__head">
+        <h1>People</h1>
+        <form className="search" onSubmit={event => { event.preventDefault(); setTerm(query.trim()); }} role="search">
+          <input aria-label="Search people" className="input" maxLength={200} onChange={event => setQuery(event.target.value)} placeholder="Username or film" type="search" value={query} />
+          <button className="btn btn--secondary">Search</button>
+        </form>
+      </header>
+      <div aria-label="Choose people view" className="tabs" role="group" style={{ marginBottom: 'var(--m-space-5)' }}>
         <button aria-pressed={view === 'following'} onClick={() => setView('following')} type="button">Following</button>
         <button aria-pressed={view === 'discover'} onClick={() => setView('discover')} type="button">Discover</button>
       </div>
-      <form className="search" onSubmit={event => { event.preventDefault(); setTerm(query.trim()); }} role="search" style={{ marginTop: 'var(--m-space-5)' }}>
-        <input aria-label="Search people" className="input" maxLength={200} onChange={event => setQuery(event.target.value)} placeholder="Username or film" type="search" value={query} />
-        <button className="btn btn--secondary">Search</button>
-      </form>
 
-      {(page.error || actionError) && <p className="notice notice--error" role="alert" style={{ marginTop: 'var(--m-space-4)' }}>{page.error || actionError} <button className="link" onClick={page.refresh}>Refresh people</button></p>}
-      {page.items.length > 0 && <ul aria-label={view === 'following' ? 'People you follow' : 'People to discover'} className="list">
+      {(page.error || actionError) && <p className="notice notice--error" role="alert" style={{ marginBottom: 'var(--m-space-4)' }}>{page.error || actionError} <button className="link" onClick={page.refresh}>Refresh people</button></p>}
+      {page.items.length > 0 && <ul aria-label={view === 'following' ? 'People you follow' : 'People to discover'} className="people">
         {page.items.map(person => <PersonRow disabled={busy !== null} key={person.id} onFollow={person => void toggleFollow(person)} person={person} />)}
       </ul>}
       {page.loading && <p className="status" role="status">Loading people</p>}

@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import AiModeChoice from '../components/account/AiModeChoice';
+import BrandMark from '../components/brand/BrandMark';
 import { useUser } from '../contexts/UserContext';
 import { apiError } from '../services/apiClient';
 import type { AiMode } from '../services/authService';
@@ -25,7 +26,7 @@ export default function Welcome() {
     catch (caught) { setError(apiError(caught, 'Your choice could not be saved. Try again.')); setBusy(false); }
   };
   return <form className="page page--narrow stack stack--loose" onSubmit={submit} style={{ paddingTop: 'var(--m-space-8)' }}>
-    <p className="wordmark">Moodie</p>
+    <p className="wordmark"><BrandMark />Moodie</p>
     <h1>With or without AI?</h1>
     <AiModeChoice disabled={busy} legend="Choose how Moodie works" onChange={setChoice} value={choice} />
     {error && <p className="notice notice--error" role="alert">{error}</p>}
