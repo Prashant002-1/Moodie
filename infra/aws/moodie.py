@@ -13,7 +13,8 @@ import time
 
 ROOT = Path(__file__).resolve().parents[2]
 STATE = ROOT / '.aws'
-ACCOUNT = 'YOUR_AWS_ACCOUNT_ID'
+# The account is named outside the repository so it never lands in public history.
+ACCOUNT = os.environ.get('MOODIE_AWS_ACCOUNT_ID', '')
 
 
 def command(args, **kwargs):
@@ -24,6 +25,8 @@ class Moodie:
     def __init__(self, profile='atlas-sso-admin', region='us-east-1', stack='moodie-dev'):
         self.base = ['aws', '--profile', profile, '--region', region]
         self.region, self.stack = region, stack
+        if not ACCOUNT:
+            raise RuntimeError('Set MOODIE_AWS_ACCOUNT_ID to the 12-digit account that owns the stack. Stopped before mutation.')
         if self.aws('sts', 'get-caller-identity')['Account'] != ACCOUNT:
             raise RuntimeError('Wrong AWS account. Stopped before mutation.')
         self.outputs = {v['OutputKey']: v['OutputValue'] for v in self.aws('cloudformation', 'describe-stacks', '--stack-name', stack)['Stacks'][0].get('Outputs', [])}

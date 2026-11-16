@@ -6,7 +6,7 @@ Current deployment and verification status: [AWS development verification](../..
 
 ## Account and data boundary
 
-- Account: `YOUR_AWS_ACCOUNT_ID`, region `us-east-1`, stack `moodie-dev`.
+- Account: set `MOODIE_AWS_ACCOUNT_ID` in your shell to the 12-digit account that owns the stack (kept out of this public repository). Region `us-east-1`, stack `moodie-dev`.
 - Use the existing `atlas-sso-admin` SSO profile. Its historical name does not restrict it to Atlas. Every deployment command checks the account before mutation.
 - All application resources, secrets, roles, and images are Moodie-specific. No retired Atlas artifact or database is reused.
 - The first application database starts empty. No local accounts, diary records, photos, or sample social content are imported. TMDB populates film metadata when requested.
