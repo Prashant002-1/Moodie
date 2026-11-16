@@ -31,4 +31,6 @@ export const env = {
     ? path.resolve(projectRoot, configuredSnapshotPath)
     : undefined,
   tmdbApiKey: process.env.TMDB_API_KEY || '',
+  // Where links in an email lead. Set to the public address of the web app when one exists.
+  webUrl: (process.env.MOODIE_WEB_URL || 'http://localhost:5173').replace(/\/+$/, ''),
 };

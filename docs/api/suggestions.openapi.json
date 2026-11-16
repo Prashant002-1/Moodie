@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Moodie personal recommendations",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Native-first shared contract. See ../RECOMMENDATION_LIFECYCLE.md for state, privacy and web translation. No Beli integration dependency. Existing diary and activity APIs are extended additively; see DiaryCreateAdditions and includeSuggestions=true activity event documentation."
   },
   "servers": [
@@ -201,10 +201,12 @@
               "enum": [
                 "received",
                 "sent",
-                "archived"
+                "archived",
+                "reminders"
               ],
               "default": "received"
-            }
+            },
+            "description": "received: recommendations to the viewer that are not archived. sent: recommendations from the viewer, plus discovered ones their recipient has opened by replying. archived: recommendations to the viewer that they archived. reminders: recommendations to the viewer that are not archived and have remind_at set."
           },
           {
             "name": "movieId",
@@ -259,7 +261,7 @@
             }
           }
         ],
-        "description": "Ordered by latest shared activity then ID. Recipient archive filter is ignored for entryId so attribution stays reachable in diary history. q uses literal case-insensitive substring matching."
+        "description": "Ordered by latest shared activity then ID, except box=reminders, which is ordered by remind_at then ID (soonest first, so reminders that are already due come first). Recipient archive filter is ignored for entryId so attribution stays reachable in diary history. q uses literal case-insensitive substring matching."
       },
       "post": {
         "operationId": "createSuggestion",
@@ -363,6 +365,48 @@
         "description": "One conversation per sender/recipient/movie/origin. A duplicate returns the original record unchanged. Discovery saves the film atomically and restores its recommendation from archive. This is not a notification to its source."
       }
     },
+    "/api/suggestions/summary": {
+      "get": {
+        "operationId": "getSuggestionSummary",
+        "summary": "Count the viewer's recommendations by what is waiting, due, sent, watched and replied",
+        "tags": [
+          "Personal recommendations"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Request failed; retry with the same identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Counts for the signed-in person over the same viewer-specific projection the lists use. A recommendation whose other participant is blocked in either direction, removed by moderation, or deleted is not counted, exactly as it is not listed. Nothing here reveals the other person's private state."
+      }
+    },
     "/api/suggestions/{id}": {
       "parameters": [
         {
@@ -456,7 +500,7 @@
       },
       "patch": {
         "operationId": "updateSuggestion",
-        "summary": "Save, archive, restore, or link an owned same-film viewing",
+        "summary": "Save, archive, restore, link an owned same-film viewing, or set and clear the recipient's reminder",
         "tags": [
           "Personal recommendations"
         ],
@@ -552,7 +596,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Recipient only: any other participant receives 404. remind sets remind_at and may be repeated to change it; it is refused with 409 while the recommendation is archived or has a linked viewing. clear_reminder removes it. archive and link (including a viewing recorded with suggestionId, and a reply) also clear the reminder. No reminder is delivered by email or push: remind_at only orders and marks the reminders box."
       }
     },
     "/api/suggestions/{id}/reply": {
@@ -1243,6 +1288,17 @@
               }
             ]
           },
+          "backdrop_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The film's wide artwork path from the catalog, when it has one."
+          },
           "release_date": {
             "anyOf": [
               {
@@ -1273,6 +1329,16 @@
               "shared"
             ]
           },
+          "progress": {
+            "type": "string",
+            "enum": [
+              "sent",
+              "saved",
+              "watched",
+              "replied"
+            ],
+            "description": "How far the recommendation has got, as far as this viewer may know. For the recipient: replied when a reply exists, else watched when a viewing is linked, else saved when the film is in their saved films, else sent. For the sender: replied when a reply exists, else watched when the recipient has a public response to this film that the sender can see and that was created after the recommendation, else sent. The sender is never told about a save, an archive or a private viewing."
+          },
           "linked_entry_id": {
             "anyOf": [
               {
@@ -1283,6 +1349,18 @@
                 "type": "null"
               }
             ]
+          },
+          "remind_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the recipient asked to be reminded to watch this. Always null for the sender. Cleared when the recommendation is archived or a viewing is linked. Due when it is not later than now. Nothing delivers it."
           },
           "source_entry_id": {
             "anyOf": [
@@ -1345,12 +1423,15 @@
           "movie_id",
           "title",
           "poster_path",
+          "backdrop_path",
           "release_date",
           "created_at",
           "updated_at",
           "archived",
           "status",
+          "progress",
           "linked_entry_id",
+          "remind_at",
           "source_entry_id",
           "source_note",
           "source_feelings",
@@ -1358,7 +1439,7 @@
           "message_count",
           "conversation_open"
         ],
-        "description": "Viewer-specific projection. Sender never receives linked_entry_id or recipient archive or watched state. Discovered records stay invisible to the source until the first explicit reply. After retraction, status shared preserves the established conversation without the reply. Source evidence is nullable and read live."
+        "description": "Viewer-specific projection. Sender never receives linked_entry_id, remind_at, or recipient archive or watched state. Discovered records stay invisible to the source until the first explicit reply. After retraction, status shared preserves the established conversation without the reply. Source evidence is nullable and read live."
       },
       "SuggestionResult": {
         "type": "object",
@@ -1395,6 +1476,67 @@
         "required": [
           "suggestions",
           "nextOffset"
+        ]
+      },
+      "SuggestionSummary": {
+        "type": "object",
+        "properties": {
+          "received_total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Recommendations to the viewer that are not archived. The size of box=received."
+          },
+          "received_new": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Recommendations to the viewer that are not archived with status suggested: no reply, no linked viewing, and the film is not in their saved films."
+          },
+          "received_saved": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Recommendations to the viewer that are not archived with status saved: no reply, no linked viewing, and the film is in their saved films."
+          },
+          "received_to_reply": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Recommendations to the viewer that are not archived with status watched: a viewing is linked and no reply has been sent."
+          },
+          "reminders": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Recommendations to the viewer that are not archived with remind_at set. The size of box=reminders."
+          },
+          "reminders_due": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Recommendations to the viewer that are not archived with remind_at not later than now."
+          },
+          "sent_total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Recommendations in the viewer's sent box (sent by them, or discovered through them and opened by a reply). The size of box=sent."
+          },
+          "sent_watched": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Recommendations in the viewer's sent box (sent by them, or discovered through them and opened by a reply) with progress watched or replied: the recipient replied, or published a response to the film after it was recommended that the viewer can see. A private viewing is never counted."
+          },
+          "sent_replied": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Recommendations in the viewer's sent box (sent by them, or discovered through them and opened by a reply) with status replied: a reply currently exists."
+          }
+        },
+        "required": [
+          "received_total",
+          "received_new",
+          "received_saved",
+          "received_to_reply",
+          "reminders",
+          "reminders_due",
+          "sent_total",
+          "sent_watched",
+          "sent_replied"
         ]
       },
       "CreateSuggestion": {
@@ -1480,6 +1622,34 @@
             "required": [
               "action",
               "entryId"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "remind"
+              },
+              "remindAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "An ISO 8601 date-time with a time zone designator. Must be later than now and no more than one year from now."
+              }
+            },
+            "required": [
+              "action",
+              "remindAt"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "clear_reminder"
+              }
+            },
+            "required": [
+              "action"
             ]
           }
         ]

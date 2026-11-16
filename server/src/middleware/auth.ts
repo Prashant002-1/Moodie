@@ -3,7 +3,7 @@ import pool from '../config/database';
 import { clearSessionCookie, hashToken, readSessionToken } from '../services/sessionService';
 
 export interface AuthRequest extends Request {
-  user?: { id: number; email: string; username: string; bio: string; ai_mode: 'on' | 'off' | null };
+  user?: { id: number; email: string; username: string; bio: string; ai_mode: 'on' | 'off' | null; email_notifications: boolean };
 }
 
 const authenticate = (required: boolean) => async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -14,7 +14,7 @@ const authenticate = (required: boolean) => async (req: AuthRequest, res: Respon
   }
   try {
     const result = await pool.query(
-      `SELECT u.id, u.email, u.username, u.bio, u.ai_mode FROM sessions s JOIN users u ON u.id = s.user_id
+      `SELECT u.id, u.email, u.username, u.bio, u.ai_mode, u.email_notifications FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`, [hashToken(token)],
     );
     if (!result.rowCount) {

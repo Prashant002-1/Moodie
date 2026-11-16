@@ -10,6 +10,7 @@ import libraryRoutes from './routes/library';
 import safetyRoutes from './routes/safety';
 import recommendationRoutes from './routes/recommendations';
 import suggestionRoutes from './routes/suggestions';
+import devRoutes from './routes/dev';
 
 const app = express();
 
@@ -50,6 +51,8 @@ app.use('/api/library', libraryRoutes);
 app.use('/api/safety', safetyRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/suggestions', suggestionRoutes);
+// Previews for people building Moodie. Never registered in production.
+if (process.env.NODE_ENV !== 'production') app.use('/api/dev', devRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'API route not found' }));
 
 if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {

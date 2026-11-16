@@ -53,6 +53,15 @@ await pool.query(`INSERT INTO film_suggestions(sender_id,recipient_id,movie_id,o
   (4,1,666277,'sent','For that conversation we had about the lives we might have lived. The last scene stayed with me.',5),
   (3,1,976893,'discovered','',4)`);
 await pool.query('INSERT INTO saved_films(user_id,movie_id) VALUES(1,976893)');
+// Reminders the viewer set for themselves: one already due, one still ahead.
+await pool.query("UPDATE film_suggestions SET remind_at = CURRENT_TIMESTAMP - INTERVAL '2 hours' WHERE id = 1");
+await pool.query("UPDATE film_suggestions SET remind_at = CURRENT_TIMESTAMP + INTERVAL '3 days' WHERE id = 2");
+// Films the viewer recommended: ananya replied; hiro has not answered yet.
+await pool.query(`INSERT INTO film_suggestions(sender_id,recipient_id,movie_id,origin,reason,linked_entry_id,shared_at,created_at) VALUES
+  (1,2,244786,'sent','You play. I want to know if the last scene feels like a win to you.',2,CURRENT_TIMESTAMP - INTERVAL '1 day',CURRENT_TIMESTAMP - INTERVAL '6 days'),
+  (1,4,785084,'sent','You said you wanted one that stays with you. This did, for days.',NULL,NULL,CURRENT_TIMESTAMP - INTERVAL '2 days')`);
+await pool.query(`INSERT INTO suggestion_replies(suggestion_id,entry_id,enjoyment,highlights,note,created_at,updated_at) VALUES
+  (4,2,'loved','{music,ending}','It felt like a win and a loss at once. I have not stopped thinking about his face.',CURRENT_TIMESTAMP - INTERVAL '1 day',CURRENT_TIMESTAMP - INTERVAL '1 day')`);
 // Cached-only search/details keep QA deterministic and avoid remote catalog requests.
 const server = app.listen(3101,'127.0.0.1');
 server.on('listening',()=>console.log('Native QA API ready at http://127.0.0.1:3101; account ios_viewer; disposable data '+process.env.DATABASE_PATH));

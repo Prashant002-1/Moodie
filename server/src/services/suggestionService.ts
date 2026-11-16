@@ -24,12 +24,17 @@ export async function linkSuggestion(client: DatabaseClient, id: number, viewer:
   if (suggestion.movie_id !== movie) throw new SuggestionError(400, 'Choose a viewing of this film.');
   const reply = (await client.query('SELECT entry_id FROM suggestion_replies WHERE suggestion_id=$1', [id])).rows[0];
   if (reply && Number(reply.entry_id) !== entry) throw new SuggestionError(409, 'Remove the existing reply before linking another viewing.');
-  await client.query('UPDATE film_suggestions SET linked_entry_id = $2 WHERE id = $1', [id, entry]);
+  // A reminder is to watch the film. Once a viewing is linked it has done its work.
+  await client.query('UPDATE film_suggestions SET linked_entry_id = $2, remind_at = NULL WHERE id = $1', [id, entry]);
 }
 
+// `progress` is how far a recommendation has got, as far as this viewer may know.
+// The sender is never told about a save, an archive or a private viewing: for them
+// it moves on a reply, or on a public response to the film that the recipient
+// published after it was sent. `remind_at` is the recipient's alone.
 const projection = `SELECT s.id, s.origin, s.reason, s.created_at,
   s.sender_id, sender.username AS sender_username, s.recipient_id, recipient.username AS recipient_username,
-  s.movie_id, m.title, m.poster_path, m.release_date,
+  s.movie_id, m.title, m.poster_path, m.backdrop_path, m.release_date,
   CASE WHEN s.recipient_id = $1 THEN s.archived ELSE FALSE END AS archived,
   (s.origin = 'sent' OR s.shared_at IS NOT NULL) AS conversation_open,
   CASE WHEN r.suggestion_id IS NOT NULL THEN 'replied'
@@ -38,7 +43,14 @@ const projection = `SELECT s.id, s.origin, s.reason, s.created_at,
        WHEN s.linked_entry_id IS NOT NULL THEN 'watched'
        WHEN EXISTS(SELECT 1 FROM saved_films sf WHERE sf.user_id = $1 AND sf.movie_id = s.movie_id) THEN 'saved'
        ELSE 'suggested' END AS status,
+  CASE WHEN r.suggestion_id IS NOT NULL THEN 'replied'
+       WHEN s.recipient_id = $1 AND s.linked_entry_id IS NOT NULL THEN 'watched'
+       WHEN s.recipient_id = $1 AND EXISTS(SELECT 1 FROM saved_films sf WHERE sf.user_id = $1 AND sf.movie_id = s.movie_id) THEN 'saved'
+       WHEN s.recipient_id <> $1 AND EXISTS(SELECT 1 FROM diary_entries pw WHERE pw.user_id = s.recipient_id AND pw.movie_id = s.movie_id
+         AND pw.visibility = 'public' AND pw.created_at >= s.created_at AND ${visibleResponse('$1', 'pw')}) THEN 'watched'
+       ELSE 'sent' END AS progress,
   CASE WHEN s.recipient_id = $1 THEN s.linked_entry_id ELSE NULL END AS linked_entry_id,
+  CASE WHEN s.recipient_id = $1 THEN s.remind_at ELSE NULL END AS remind_at,
   de.id AS source_entry_id, de.note AS source_note,
   CASE WHEN de.id IS NOT NULL THEN json_build_object('neutral',de.neutral::float,'happy',de.happy::float,
     'sad',de.sad::float,'angry',de.angry::float,'fearful',de.fearful::float,'disgusted',de.disgusted::float,'surprised',de.surprised::float) ELSE NULL END AS source_feelings,
@@ -63,6 +75,7 @@ export async function loadSuggestions(viewer: number, filters: { id?: number; bo
   } else {
     where.push('s.recipient_id = $1');
     if (!filters.entryId) where.push(filters.box === 'archived' ? 's.archived' : 'NOT s.archived');
+    if (filters.box === 'reminders') where.push('s.remind_at IS NOT NULL');
   }
   if (filters.movieId) where.push(`s.movie_id = ${param(filters.movieId)}`);
   // Filtering must not reveal a recipient's private viewing through a sender's inbox.
@@ -70,7 +83,27 @@ export async function loadSuggestions(viewer: number, filters: { id?: number; bo
   if (filters.personId) where.push(`(s.sender_id = ${param(filters.personId)} OR s.recipient_id = $${values.length})`);
   if (filters.q) where.push(`POSITION(${param(filters.q.toLowerCase())} IN LOWER(m.title || ' ' || sender.username || ' ' || recipient.username || ' ' || s.reason)) > 0`);
   const limit = param(filters.limit ?? 31), offset = param(filters.offset ?? 0);
-  return (await pool.query(`${projection} WHERE ${where.join(' AND ')} ORDER BY updated_at DESC, s.id DESC LIMIT ${limit} OFFSET ${offset}`, values)).rows;
+  const order = filters.box === 'reminders' && !filters.id ? 's.remind_at, s.id' : 'updated_at DESC, s.id DESC';
+  return (await pool.query(`${projection} WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT ${limit} OFFSET ${offset}`, values)).rows;
+}
+
+// Counts over the same viewer-specific projection the lists use, so a number
+// here always agrees with what its list shows.
+export async function summarizeSuggestions(viewer: number) {
+  const received = 'x.recipient_id = $1 AND NOT x.archived', sent = 'x.sender_id = $1 AND x.conversation_open';
+  const count = (condition: string, name: string) => `COUNT(*) FILTER (WHERE ${condition})::int AS ${name}`;
+  return (await pool.query(`SELECT ${[
+    count(received, 'received_total'),
+    count(`${received} AND x.status = 'suggested'`, 'received_new'),
+    count(`${received} AND x.status = 'saved'`, 'received_saved'),
+    count(`${received} AND x.status = 'watched'`, 'received_to_reply'),
+    count(`${received} AND x.remind_at IS NOT NULL`, 'reminders'),
+    count(`${received} AND x.remind_at <= CURRENT_TIMESTAMP`, 'reminders_due'),
+    count(sent, 'sent_total'),
+    count(`${sent} AND x.progress IN ('watched','replied')`, 'sent_watched'),
+    count(`${sent} AND x.status = 'replied'`, 'sent_replied'),
+  ].join(', ')} FROM (${projection} WHERE ${visiblePerson('$1', 's.sender_id')} AND ${visiblePerson('$1', 's.recipient_id')}
+    AND (s.recipient_id = $1 OR s.sender_id = $1)) x`, [viewer])).rows[0];
 }
 
 export async function loadSuggestion(viewer: number, id: number) {

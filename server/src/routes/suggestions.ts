@@ -4,7 +4,8 @@ import pool from '../config/database';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { visiblePerson, visibleResponse } from '../services/communitySafety';
 import { ensureMovie } from '../services/movieCacheService';
-import { enjoymentSchema, highlightsSchema, linkSuggestion, loadSuggestion, loadSuggestions, requireSuggestion, SuggestionError } from '../services/suggestionService';
+import { queueEmail } from '../notifications/outbox';
+import { enjoymentSchema, highlightsSchema, linkSuggestion, loadSuggestion, loadSuggestions, requireSuggestion, SuggestionError, summarizeSuggestions } from '../services/suggestionService';
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -31,11 +32,16 @@ router.get('/recipients', handle(async (req, res, user) => {
 }));
 
 router.get('/', handle(async (req, res, user) => {
-  const query = z.object({ box: z.enum(['received', 'sent', 'archived']).default('received'),
+  const query = z.object({ box: z.enum(['received', 'sent', 'archived', 'reminders']).default('received'),
     movieId: idSchema.optional(), entryId: idSchema.optional(), personId: idSchema.optional(), q: z.string().trim().max(200).optional(),
     limit: z.coerce.number().int().min(1).max(100).default(30), offset: z.coerce.number().int().min(0).default(0) }).parse(req.query);
   const rows = await loadSuggestions(user, { ...query, limit: query.limit + 1 });
   res.json({ suggestions: rows.slice(0, query.limit), nextOffset: rows.length > query.limit ? query.offset + query.limit : null });
+}));
+
+// Registered before /:id so "summary" is never read as an identifier.
+router.get('/summary', handle(async (_req, res, user) => {
+  res.json(await summarizeSuggestions(user));
 }));
 
 router.post('/', handle(async (req, res, user) => {
@@ -69,6 +75,9 @@ router.post('/', handle(async (req, res, user) => {
     if (data.origin === 'discovered') {
       await client.query('INSERT INTO saved_films(user_id,movie_id) VALUES($1,$2) ON CONFLICT DO NOTHING', [recipient,movie]);
       await client.query('UPDATE film_suggestions SET archived=FALSE WHERE id=$1', [existing.id]);
+    } else if (result.rows[0]) {
+      // The recipient hears about a film someone chose for them, once. Keeping a film through a public response emails no one.
+      await queueEmail(client, 'recommendation', existing.id);
     }
     return existing.id;
   });
@@ -81,7 +90,8 @@ router.get('/:id', handle(async (req, res, user) => {
 
 router.patch('/:id', handle(async (req, res, user) => {
   const id = idSchema.parse(req.params.id);
-  const data = z.object({ action: z.enum(['save','archive','restore','link']), entryId: idSchema.optional() }).parse(req.body);
+  const data = z.object({ action: z.enum(['save','archive','restore','link','remind','clear_reminder']), entryId: idSchema.optional(),
+    remindAt: z.string().datetime({ offset: true }).optional() }).parse(req.body);
   await pool.transaction(async client => {
     const suggestion = await requireSuggestion(client,id,user,true);
     if (data.action === 'save') {
@@ -91,7 +101,19 @@ router.patch('/:id', handle(async (req, res, user) => {
       const entry = await client.query('SELECT id FROM diary_entries WHERE id=$1 AND user_id=$2 AND movie_id=$3', [data.entryId ?? null,user,suggestion.movie_id]);
       if (!entry.rowCount) throw new SuggestionError(400, 'Choose one of your viewings of this film.');
       await linkSuggestion(client,id,user,suggestion.movie_id,entry.rows[0].id);
-    } else await client.query('UPDATE film_suggestions SET archived=$2 WHERE id=$1', [id,data.action === 'archive']);
+    } else if (data.action === 'remind') {
+      // A reminder is the recipient's own note to watch the film. `queueDueReminders` queues its email when the time comes.
+      const at = data.remindAt ? new Date(data.remindAt) : null, now = new Date();
+      const latest = new Date(now); latest.setFullYear(latest.getFullYear() + 1);
+      if (!at || at <= now) throw new SuggestionError(400, 'Choose a time in the future.');
+      if (at > latest) throw new SuggestionError(400, 'Choose a time within the next year.');
+      if (suggestion.archived) throw new SuggestionError(409, 'Restore this recommendation before setting a reminder.');
+      if (suggestion.linked_entry_id != null) throw new SuggestionError(409, 'You have already watched this film.');
+      // Stored like every other time here: the instant, in the database session's zone.
+      await client.query('UPDATE film_suggestions SET remind_at=$2::timestamptz WHERE id=$1', [id,at.toISOString()]);
+    } else if (data.action === 'clear_reminder') await client.query('UPDATE film_suggestions SET remind_at=NULL WHERE id=$1', [id]);
+    else if (data.action === 'archive') await client.query('UPDATE film_suggestions SET archived=TRUE, remind_at=NULL WHERE id=$1', [id]);
+    else await client.query('UPDATE film_suggestions SET archived=FALSE WHERE id=$1', [id]);
   });
   res.json({ suggestion: await loadSuggestion(user,id) });
 }));
@@ -115,6 +137,8 @@ router.put('/:id/reply', handle(async (req, res, user) => {
       [id,data.entryId,data.enjoyment,data.highlights,data.note,feelings ? JSON.stringify(feelings) : null,data.containsSpoilers]);
     await linkSuggestion(client,id,user,suggestion.movie_id,data.entryId);
     await client.query('UPDATE film_suggestions SET shared_at=COALESCE(shared_at,CURRENT_TIMESTAMP) WHERE id=$1', [id]);
+    // The person who recommended the film hears how it landed, once: editing the reply does not email them again.
+    await queueEmail(client, 'reply', id);
   });
   res.json({ suggestion: await loadSuggestion(user,id) });
 }));

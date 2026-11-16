@@ -10,7 +10,7 @@ const username = z.string().trim().toLowerCase().min(3).max(30).regex(/^[a-z0-9_
 const registerSchema = z.object({ email, username, password });
 const loginSchema = z.object({ identifier: z.string().trim().toLowerCase().min(1).max(255), password: z.string().min(1).max(128) });
 // ai_mode is null until the person makes the choice during onboarding.
-const publicUser = (row: Record<string, unknown>) => ({ id: row.id, email: row.email, username: row.username, bio: row.bio || '', ai_mode: row.ai_mode ?? null });
+const publicUser = (row: Record<string, unknown>) => ({ id: row.id, email: row.email, username: row.username, bio: row.bio || '', ai_mode: row.ai_mode ?? null, email_notifications: row.email_notifications ?? true });
 
 const failure = (error: unknown, res: Response, next: NextFunction) => {
   if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors[0].message, details: error.errors });
@@ -45,7 +45,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       await client.query('SELECT pg_advisory_xact_lock(7812401)');
       const existing = await client.query('SELECT 1 FROM users WHERE LOWER(email) = $1 OR LOWER(username) = $2', [data.email, data.username]);
       if (existing.rowCount) throw Object.assign(new Error('Account exists'), { code: '23505' });
-      const inserted = await client.query('INSERT INTO users (email, username, password_hash, recovery_hash) VALUES ($1, $2, $3, $4) RETURNING id, email, username, bio, ai_mode', [data.email, data.username, passwordHash, recoveryHash]);
+      const inserted = await client.query('INSERT INTO users (email, username, password_hash, recovery_hash) VALUES ($1, $2, $3, $4) RETURNING id, email, username, bio, ai_mode, email_notifications', [data.email, data.username, passwordHash, recoveryHash]);
       return { user: publicUser(inserted.rows[0]), token: await newSession(inserted.rows[0].id, client) };
     });
     setSessionCookie(res, result.token);
@@ -81,17 +81,22 @@ export const me = (req: AuthRequest, res: Response) => res.json({ user: req.user
 export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { bio } = z.object({ bio: z.string().trim().max(240) }).parse(req.body);
-    const result = await pool.query('UPDATE users SET bio = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, email, username, bio, ai_mode', [bio, req.user!.id]);
+    const result = await pool.query('UPDATE users SET bio = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, email, username, bio, ai_mode, email_notifications', [bio, req.user!.id]);
     res.json({ user: publicUser(result.rows[0]) });
   } catch (error) { failure(error, res, next); }
 };
 
 // The AI choice is an account setting, not a device setting: it decides whether any
 // language-model feature or external assistant connection may act for this person.
+// The email choice decides whether anything is queued for their inbox. Each is
+// optional so one can be changed without restating the other.
+const preferencesSchema = z.object({ aiMode: z.enum(['on', 'off']).optional(), emailNotifications: z.boolean().optional() }).strict()
+  .refine(data => data.aiMode !== undefined || data.emailNotifications !== undefined, 'Choose a preference to change.');
 export const updatePreferences = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { aiMode } = z.object({ aiMode: z.enum(['on', 'off']) }).strict().parse(req.body);
-    const result = await pool.query('UPDATE users SET ai_mode = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, email, username, bio, ai_mode', [aiMode, req.user!.id]);
+    const { aiMode, emailNotifications } = preferencesSchema.parse(req.body);
+    const result = await pool.query(`UPDATE users SET ai_mode = COALESCE($1, ai_mode), email_notifications = COALESCE($2::boolean, email_notifications),
+      updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING id, email, username, bio, ai_mode, email_notifications`, [aiMode ?? null, emailNotifications ?? null, req.user!.id]);
     res.json({ user: publicUser(result.rows[0]) });
   } catch (error) { failure(error, res, next); }
 };

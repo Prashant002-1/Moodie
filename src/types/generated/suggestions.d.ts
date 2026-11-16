@@ -30,7 +30,7 @@ export interface paths {
         };
         /**
          * List recommendations with server-projected state
-         * @description Ordered by latest shared activity then ID. Recipient archive filter is ignored for entryId so attribution stays reachable in diary history. q uses literal case-insensitive substring matching.
+         * @description Ordered by latest shared activity then ID, except box=reminders, which is ordered by remind_at then ID (soonest first, so reminders that are already due come first). Recipient archive filter is ignored for entryId so attribution stays reachable in diary history. q uses literal case-insensitive substring matching.
          */
         get: operations["listSuggestions"];
         put?: never;
@@ -39,6 +39,26 @@ export interface paths {
          * @description One conversation per sender/recipient/movie/origin. A duplicate returns the original record unchanged. Discovery saves the film atomically and restores its recommendation from archive. This is not a notification to its source.
          */
         post: operations["createSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/suggestions/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count the viewer's recommendations by what is waiting, due, sent, watched and replied
+         * @description Counts for the signed-in person over the same viewer-specific projection the lists use. A recommendation whose other participant is blocked in either direction, removed by moderation, or deleted is not counted, exactly as it is not listed. Nothing here reveals the other person's private state.
+         */
+        get: operations["getSuggestionSummary"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -61,7 +81,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Save, archive, restore, or link an owned same-film viewing */
+        /**
+         * Save, archive, restore, link an owned same-film viewing, or set and clear the recipient's reminder
+         * @description Recipient only: any other participant receives 404. remind sets remind_at and may be repeated to change it; it is refused with 409 while the recommendation is archived or has a linked viewing. clear_reminder removes it. archive and link (including a viewing recorded with suggestionId, and a reply) also clear the reminder. No reminder is delivered by email or push: remind_at only orders and marks the reminders box.
+         */
         patch: operations["updateSuggestion"];
         trace?: never;
     };
@@ -156,7 +179,7 @@ export interface components {
             created_at: string;
             updated_at: string;
         };
-        /** @description Viewer-specific projection. Sender never receives linked_entry_id or recipient archive or watched state. Discovered records stay invisible to the source until the first explicit reply. After retraction, status shared preserves the established conversation without the reply. Source evidence is nullable and read live. */
+        /** @description Viewer-specific projection. Sender never receives linked_entry_id, remind_at, or recipient archive or watched state. Discovered records stay invisible to the source until the first explicit reply. After retraction, status shared preserves the established conversation without the reply. Source evidence is nullable and read live. */
         Suggestion: {
             id: number;
             /** @enum {string} */
@@ -169,13 +192,22 @@ export interface components {
             movie_id: number;
             title: string;
             poster_path: string | null;
+            /** @description The film's wide artwork path from the catalog, when it has one. */
+            backdrop_path: string | null;
             release_date: string | null;
             created_at: string;
             updated_at: string;
             archived: boolean;
             /** @enum {string} */
             status: "suggested" | "sent" | "saved" | "watched" | "replied" | "shared";
+            /**
+             * @description How far the recommendation has got, as far as this viewer may know. For the recipient: replied when a reply exists, else watched when a viewing is linked, else saved when the film is in their saved films, else sent. For the sender: replied when a reply exists, else watched when the recipient has a public response to this film that the sender can see and that was created after the recommendation, else sent. The sender is never told about a save, an archive or a private viewing.
+             * @enum {string}
+             */
+            progress: "sent" | "saved" | "watched" | "replied";
             linked_entry_id: number | null;
+            /** @description When the recipient asked to be reminded to watch this. Always null for the sender. Cleared when the recommendation is archived or a viewing is linked. Due when it is not later than now. Nothing delivers it. */
+            remind_at: string | null;
             source_entry_id: number | null;
             source_note: string | null;
             source_feelings: components["schemas"]["Feelings"] | null;
@@ -190,6 +222,26 @@ export interface components {
         SuggestionsPage: {
             suggestions: components["schemas"]["Suggestion"][];
             nextOffset: number | null;
+        };
+        SuggestionSummary: {
+            /** @description Recommendations to the viewer that are not archived. The size of box=received. */
+            received_total: number;
+            /** @description Recommendations to the viewer that are not archived with status suggested: no reply, no linked viewing, and the film is not in their saved films. */
+            received_new: number;
+            /** @description Recommendations to the viewer that are not archived with status saved: no reply, no linked viewing, and the film is in their saved films. */
+            received_saved: number;
+            /** @description Recommendations to the viewer that are not archived with status watched: a viewing is linked and no reply has been sent. */
+            received_to_reply: number;
+            /** @description Recommendations to the viewer that are not archived with remind_at set. The size of box=reminders. */
+            reminders: number;
+            /** @description Recommendations to the viewer that are not archived with remind_at not later than now. */
+            reminders_due: number;
+            /** @description Recommendations in the viewer's sent box (sent by them, or discovered through them and opened by a reply). The size of box=sent. */
+            sent_total: number;
+            /** @description Recommendations in the viewer's sent box (sent by them, or discovered through them and opened by a reply) with progress watched or replied: the recipient replied, or published a response to the film after it was recommended that the viewer can see. A private viewing is never counted. */
+            sent_watched: number;
+            /** @description Recommendations in the viewer's sent box (sent by them, or discovered through them and opened by a reply) with status replied: a reply currently exists. */
+            sent_replied: number;
         };
         CreateSuggestion: {
             /** @constant */
@@ -210,6 +262,17 @@ export interface components {
             /** @constant */
             action: "link";
             entryId: number;
+        } | {
+            /** @constant */
+            action: "remind";
+            /**
+             * Format: date-time
+             * @description An ISO 8601 date-time with a time zone designator. Must be later than now and no more than one year from now.
+             */
+            remindAt: string;
+        } | {
+            /** @constant */
+            action: "clear_reminder";
         };
         ReplyInput: {
             entryId: number;
@@ -350,7 +413,8 @@ export interface operations {
     listSuggestions: {
         parameters: {
             query?: {
-                box?: "received" | "sent" | "archived";
+                /** @description received: recommendations to the viewer that are not archived. sent: recommendations from the viewer, plus discovered ones their recipient has opened by replying. archived: recommendations to the viewer that they archived. reminders: recommendations to the viewer that are not archived and have remind_at set. */
+                box?: "received" | "sent" | "archived" | "reminders";
                 movieId?: number;
                 /** @description Filter by the viewer's linked diary entry. Never returns another person's linked viewing, including in the sent box. */
                 entryId?: number;
@@ -492,6 +556,44 @@ export interface operations {
             };
             /** @description Conflicting retry or viewing association */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed; retry with the same identity */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getSuggestionSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionSummary"];
+                };
+            };
+            /** @description Session required */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

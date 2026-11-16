@@ -24,6 +24,8 @@ public struct FilmSuggestion: Decodable, Identifiable, Sendable {
     public let movieId: Int
     public let title: String
     public let posterPath: String?
+    /// Wide artwork for the film. Absent from older servers.
+    public let backdropPath: String?
     public let releaseDate: String?
     public let createdAt: String
     public let updatedAt: String
@@ -31,6 +33,10 @@ public struct FilmSuggestion: Decodable, Identifiable, Sendable {
     public let conversationOpen: Bool?
     public let status: String
     public let linkedEntryId: Int?
+    /// When the recipient asked to be reminded to watch this (ISO 8601). Always nil for the sender. Nothing delivers it.
+    public let remindAt: String?
+    /// How far the recommendation has got, as far as this viewer may know: sent, saved, watched or replied.
+    public let progress: String?
     public let sourceEntryId: Int?
     public let sourceNote: String?
     public let sourceFeelings: Feelings?
@@ -78,7 +84,9 @@ public struct SuggestionInput: Encodable, Sendable {
 public struct SuggestionAction: Encodable, Sendable {
     public let action: String
     public let entryId: Int?
-    public init(_ action: String, entryId: Int? = nil) { self.action = action; self.entryId = entryId }
+    /// ISO 8601 with a time zone, for the "remind" action only.
+    public let remindAt: String?
+    public init(_ action: String, entryId: Int? = nil, remindAt: String? = nil) { self.action = action; self.entryId = entryId; self.remindAt = remindAt }
 }
 public struct SuggestionReplyInput: Encodable, Sendable {
     public let entryId: Int

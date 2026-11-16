@@ -43,6 +43,15 @@ import Testing
         #expect(page.nextCursor == "abc_123")
         #expect(ResponseDraft(response: page.entries[0]).watchedOn == "2026-08-01")
     }
+
+    @Test func signedInAccountDecodesWhenTheServerAddsTheEmailChoice() throws {
+        // The web reads `email_notifications`; this client has no setting for it yet and must not trip on it.
+        let json = #"{"id":1,"email":"sam@example.test","username":"sam","bio":"","ai_mode":"off","email_notifications":true}"#
+        let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let account = try decoder.decode(Member.self, from: Data(json.utf8))
+        #expect(account.username == "sam")
+        #expect(account.aiMode == "off")
+    }
     @Test func activityUsesServerIdentityAndDecodesLegacyEvents() throws {
         let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
         let json = #"{"activity":[{"event_id":"suggestion_message:1","kind":"suggestion_message","created_at":"2026-01-01","actor_id":2,"username":"friend","suggestion_id":9},{"event_id":"suggestion_message:2","kind":"suggestion_message","created_at":"2026-01-01","actor_id":2,"username":"friend","suggestion_id":9}],"nextOffset":null}"#
@@ -103,6 +112,18 @@ import Testing
         #expect(body["shareFeelings"] as? Bool == false)
         #expect(body["note"] as? String == "My separate reply")
         #expect(body["emotions"] == nil && body["expressionImage"] == nil)
+    }
+    @Test func recommendationDecodesReminderArtworkAndProgressAndStillReadsOlderPayloads() throws {
+        let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let fields = #""id":9,"origin":"sent","reason":"For the quiet ending","sender_id":2,"sender_username":"ananya","recipient_id":1,"recipient_username":"sam","movie_id":101,"title":"A Film","poster_path":null,"release_date":null,"created_at":"2026-01-01","updated_at":"2026-01-02","archived":false,"status":"saved","linked_entry_id":null,"source_entry_id":null,"source_note":null,"source_feelings":null,"message_count":0,"reply":null"#
+        let current = try decoder.decode(SuggestionResult.self, from: Data(#"{"suggestion":{\#(fields),"backdrop_path":"/wide.jpg","remind_at":"2026-11-21T16:00:00.000Z","progress":"saved","a_field_from_the_future":1}}"#.utf8)).suggestion
+        #expect(current.backdropPath == "/wide.jpg" && current.remindAt == "2026-11-21T16:00:00.000Z" && current.progress == "saved")
+        let older = try decoder.decode(SuggestionResult.self, from: Data(#"{"suggestion":{\#(fields)}}"#.utf8)).suggestion
+        #expect(older.backdropPath == nil && older.remindAt == nil && older.progress == nil)
+        let remind = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(SuggestionAction("remind", remindAt: "2026-11-21T16:00:00Z"))) as? [String: Any])
+        #expect(remind["action"] as? String == "remind" && remind["remindAt"] as? String == "2026-11-21T16:00:00Z")
+        let save = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(SuggestionAction("save"))) as? [String: Any])
+        #expect(save["remindAt"] == nil && save["entryId"] == nil)
     }
 }
 

@@ -38,6 +38,8 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS recovery_hash VARCHAR(255);
 -- NULL means the person has not chosen yet. 'off' keeps every language-model
 -- feature and external assistant connection away from the account.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_mode VARCHAR(8) CHECK (ai_mode IN ('on', 'off'));
+-- The person's choice about email. On by default; nothing is queued for them when off.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN NOT NULL DEFAULT TRUE;
 
 CREATE TABLE IF NOT EXISTS sessions (
     token_hash CHAR(64) PRIMARY KEY,
@@ -386,6 +388,10 @@ CREATE INDEX IF NOT EXISTS suggestions_recipient ON film_suggestions(recipient_i
 CREATE INDEX IF NOT EXISTS suggestions_sender ON film_suggestions(sender_id, created_at DESC, id DESC);
 -- Opening a conversation is explicit and survives retracting a particular reply.
 ALTER TABLE film_suggestions ADD COLUMN IF NOT EXISTS shared_at TIMESTAMP;
+-- The recipient's own reminder to watch a recommended film. Only they can see
+-- it. It is cleared when they archive the recommendation or link a viewing.
+ALTER TABLE film_suggestions ADD COLUMN IF NOT EXISTS remind_at TIMESTAMP;
+CREATE INDEX IF NOT EXISTS suggestions_reminders ON film_suggestions(recipient_id, remind_at) WHERE remind_at IS NOT NULL;
 
 -- A reply is an explicitly shared message, never an automatic copy of a diary.
 -- Deleting its viewing also retracts the reply. Visibility edits do not publish
@@ -418,3 +424,24 @@ UPDATE film_suggestions s SET shared_at = COALESCE(
     (SELECT MIN(m.created_at) FROM suggestion_messages m WHERE m.suggestion_id=s.id))
 WHERE s.shared_at IS NULL AND (EXISTS(SELECT 1 FROM suggestion_replies r WHERE r.suggestion_id=s.id)
     OR EXISTS(SELECT 1 FROM suggestion_messages m WHERE m.suggestion_id=s.id));
+
+-- Email waiting to go out. One row per person, kind and recommendation, so
+-- nothing is queued twice. `payload` is what the email said when it was queued;
+-- delivery reads the recommendation again and skips a row that no longer applies.
+-- `error` holds why a row was skipped or failed. `claimed_at` is a short lease
+-- so two delivery runs never hand the same row to a provider.
+CREATE TABLE IF NOT EXISTS notification_outbox (
+    id BIGSERIAL PRIMARY KEY,
+    recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL CHECK (kind IN ('recommendation', 'reminder', 'reply')),
+    suggestion_id BIGINT NOT NULL REFERENCES film_suggestions(id) ON DELETE CASCADE,
+    payload JSONB NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'skipped', 'failed')),
+    error TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    claimed_at TIMESTAMP,
+    sent_at TIMESTAMP,
+    UNIQUE (recipient_id, kind, suggestion_id)
+);
+CREATE INDEX IF NOT EXISTS notification_outbox_pending ON notification_outbox(id) WHERE status = 'pending';
