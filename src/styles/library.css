@@ -46,7 +46,7 @@ a.tile:hover .tile__title, button.tile:hover .tile__title, .tile__title a:hover 
 .tile__actions .btn { padding: 0 var(--m-space-2); }
 .tile__actions [aria-pressed='true'] { color: var(--m-color-ink); }
 /* The search field that leads a screen. */
-.search--lead .input { min-height: var(--m-space-7); padding-left: var(--m-space-4); font-size: var(--m-type-reading-size); }
+.search--lead .input { min-height: var(--m-space-7); padding-left: var(--m-space-4); font-size: 1.125rem; }
 .search--lead .btn { min-height: var(--m-space-7); padding: 0 var(--m-space-5); }
 
 /* ---- Diary ---------------------------------------------------------------
@@ -81,7 +81,7 @@ a.tile:hover .tile__title, button.tile:hover .tile__title, .tile__title a:hover 
 /* The heading is the film's name alone; its year sits beside it at the heading's scale. */
 .compose__name { overflow-wrap: anywhere; line-height: var(--m-type-title2-line); }
 .compose__name h2 { display: inline; }
-.compose__name .year { margin-left: 0; font-size: calc(var(--m-type-title2-size) * 0.72); }
+.compose__name .year { margin-left: 0; font-size: calc(var(--m-type-title2-size) * 0.6); }
 @media (max-width: 820px) {
   .compose { grid-template-columns: minmax(0, 1fr); gap: var(--m-space-5); }
   .compose__film { position: static; grid-template-columns: auto minmax(0, 1fr); align-items: end; }

@@ -20,7 +20,7 @@ Six things carry it.
 3. **Ink is the accent.** The primary button, a selected chip, a state mark and the focus ring are the ink colour on the canvas (bone on near-black in dark, near-black on paper in light). There is no brand hue in the interface.
 4. **People are a disc of colour.** Every person has one of seven muted tones from their username. It fills their avatar and nothing else: names are ink. The seven are one family, the same lightness and strength.
 5. **Words first, in one column.** A response leads with what the person wrote; the film follows as a small line: poster, title, feelings. Screens that are a stream of words (Home, Recommendations, a recommendation, a response, Diary, Activity) are one reading column, 720px wide, with one left edge from top to bottom. Counts are a line of plain words, never a scoreboard.
-6. **Three voices of type.** A heavy serif for titles and section headings, in sentence case. The same serif, regular, for what people wrote, and italic for what they said to you. A sans for everything the interface says. Capitals and letter-spacing are not used for navigation, tabs, headings or badges.
+6. **Three voices of type.** Cormorant, semibold, for titles and section headings, in sentence case. The same serif, medium, for what people wrote, and italic for what they said to you. Jost, a geometric sans, for everything the interface says. Capitals and letter-spacing are not used for navigation, tabs, headings or badges.
 
 ## Tokens
 
@@ -56,24 +56,24 @@ Rules:
 
 ## Typography
 
-- **Display and reading:** Fraunces (variable, with optical size). Heavy for titles, regular for notes, italic for words said to someone.
-- **Interface:** Inter on the web and Android, the system face on iOS.
+- **Titles and people's words:** Cormorant (variable, 300 to 700). A Garamond drawn for display: tall, sharp and calm, like a film's title card. Semibold for titles and headings, medium for notes, medium italic for words said to someone. It has a small x-height, so it is set a step larger than a text face would be.
+- **Interface:** Jost (variable). A geometric sans in the Futura tradition. Regular for text, medium and semibold for controls. iOS uses the system face.
 
 | Role | Size / line | Weight | Face | Use |
 | --- | --- | --- | --- | --- |
-| display | 44 / 48 | 600 | Serif | The front page headline. |
-| title1 | 34 / 38 | 650 | Serif | Page and film titles. |
-| title2 | 24 / 28 | 650 | Serif | A film in a response or list. |
-| title3 | 19 / 24 | 650 | Serif | A film in a row. |
-| quote | 20 / 30 | 400 italic | Serif | What someone said to you. |
-| reading | 17 / 27 | 400 | Serif | What someone wrote about a film. |
-| body | 15 / 22 | 400 | Sans | The interface. |
-| callout | 14 / 20 | 400 | Sans | Secondary interface text. |
-| caption | 13 / 18 | 400 | Sans | Metadata. |
-| heading | 22 / 28 | 600 | Serif | Section headings, in sentence case. |
-| label | 11 / 14 | 600, small capitals, +0.09em | Sans | Only a mark on a sample ("Example"). |
+| display | 54 / 56 | 600 | Serif | The front page headline, a film's title on its own page. |
+| title1 | 40 / 42 | 600 | Serif | Page titles, a film in a full-size note. |
+| title2 | 28 / 31 | 600 | Serif | A film in a compact note. |
+| title3 | 22 / 26 | 600 | Serif | A film in a row or under a response. |
+| heading | 26 / 31 | 600 | Serif | Section headings, in sentence case. |
+| quote | 23 / 32 | 500 italic | Serif | What someone said to you. |
+| reading | 20 / 29 | 500 | Serif | What someone wrote about a film. |
+| body | 16 / 23 | 400 | Sans | The interface. |
+| callout | 15 / 21 | 400 | Sans | Secondary interface text. |
+| caption | 14 / 19 | 400 | Sans | Metadata. |
+| label | 12 / 15 | 600, small capitals, +0.08em | Sans | Only a mark on a sample ("Example"). |
 
-Small capitals are not used for navigation, tabs, section headings or badges. They read as a database.
+A year beside a title is set in the sans at 0.6 of the title's size. Small capitals are not used for navigation, tabs, section headings or badges.
 
 ## Layout
 
