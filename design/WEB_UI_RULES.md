@@ -43,6 +43,9 @@ These hold on every screen. A new screen follows them from the start.
 - **An action answers where it was taken.** Follow, like and Save for later change the control in place. They do not move the person to another page or reload the list under them.
 - **A disabled primary button says what it is waiting for**, in a `.hint` beside it.
 - **Nothing is asked about nothing.** No "keep this draft?" for a response nobody started writing.
+- **Before something that cannot be taken back, Moodie asks in the page.** `const confirm = useConfirm()` (`src/hooks/useConfirm.ts`), then `if (!(await confirm({ title: 'Delete this viewing?', body: '…', action: 'Delete' }))) return;`. Never `window.confirm`.
+- **A failed change is said once.** Show it beside the control when the screen has a place for it. Otherwise say nothing: the banner in `Layout.tsx` speaks for any failed write whose message is not already in view.
+- **A film with no artwork is still a film.** `.poster` draws its own placeholder mark when it has no image; do not hide the poster.
 - **Missing is said plainly.** A removed or private thing gets a heading that says so and one way onward, not an error with a Retry that cannot work.
 - **Touch targets are 44px.** The rules are in the "Touch" block at the end of `app.css`; a new kind of small control is added there.
 - The layout has no sideways scroll from 320px up. The top bar tightens between 821px and 960px.

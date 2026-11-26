@@ -124,7 +124,7 @@ const Feed = () => {
       <DueReminders />
       {notes.error && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={notes.refresh}>Retry</button></p>}
       {user && fresh.length > 0 && <section aria-label="Personal recommendations">
-        <header className="section__head"><h2>Recommended to you</h2><Link to="/suggestions">All recommendations</Link></header>
+        <header className="section__head"><h2>Recommended to you</h2><Link to="/suggestions">See all<span className="sr-only"> recommendations</span></Link></header>
         <div className="notes">{fresh.slice(0, 3).map(item => <RecommendationNote act compact item={item} key={item.id} primary={false} viewerId={user.id} />)}</div>
       </section>}
       {summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Log a film</Link></div>}

@@ -30,7 +30,7 @@ export function SuggestionReplyForm({ item, viewing, onSaved, onCancel }: {
     || JSON.stringify(highlights) !== JSON.stringify(item.reply?.highlights ?? viewing.highlights ?? [])
     || shareFeelings !== (item.reply?.feelings != null) || spoilers !== (item.reply?.contains_spoilers ?? false);
   return <form className="composer" onSubmit={event => { event.preventDefault(); void send(); }}>
-    <header className="section__head" data-hue={personHue(item.sender_username)} style={{ alignItems: 'center' }}><h2>For {item.sender_username}</h2><Avatar size="sm" to={null} username={item.sender_username} /></header>
+    <header className="section__head" data-hue={personHue(item.sender_username)} style={{ alignItems: 'center', justifyContent: 'flex-start', gap: 'var(--m-space-3)' }}><Avatar to={null} username={item.sender_username} /><h2>For {item.sender_username}</h2></header>
     <fieldset disabled={busy} style={{ gap: 'var(--m-space-5)' }}><legend className="sr-only">Your reply</legend>
       <ResponseDetailInputs enjoyment={enjoyment} highlights={highlights} onEnjoyment={setEnjoyment} onHighlights={setHighlights} required />
       <div className="field"><label htmlFor="reply-note">Tell them what you thought</label><textarea autoFocus className="textarea" id="reply-note" maxLength={1000} rows={5} value={note} onChange={event => setNote(event.target.value)} /><p className="field__hint">This is separate from your diary note.</p></div>

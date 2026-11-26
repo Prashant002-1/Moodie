@@ -317,7 +317,7 @@ it('shows only reminders that have come due on home, each with I watched it and 
   const section = await screen.findByRole('region', { name: 'Reminders' });
   expect(mocks.list).toHaveBeenCalledWith({ box: 'reminders', limit: 12 }, expect.any(AbortSignal));
   expect(within(section).getByRole('heading', { level: 2, name: 'Reminders' })).toBeInTheDocument();
-  expect(within(section).getByRole('link', { name: 'All reminders' })).toHaveAttribute('href', '/suggestions?box=reminders');
+  expect(within(section).getByRole('link', { name: 'See all reminders' })).toHaveAttribute('href', '/suggestions?box=reminders');
   expect(within(section).getAllByRole('article')).toHaveLength(1);
   expect(within(section).queryByText('Not yet')).not.toBeInTheDocument();
   const note = within(section).getByRole('article');

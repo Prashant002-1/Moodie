@@ -150,7 +150,7 @@ main > * { animation: enter var(--m-motion-slow) var(--m-ease-out) backwards; }
 /* A title with one control beside it stays on one line at every width. */
 .page__head--bar { flex-wrap: nowrap; align-items: flex-start; }
 .page__head--bar > .btn { flex: none; }
-.stack { display: grid; gap: var(--m-space-4); }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--m-space-4); }
 .stack--tight { gap: var(--m-space-2); }
 .stack--loose { gap: var(--m-space-7); }
 .section { margin-top: var(--m-space-8); }
@@ -294,7 +294,7 @@ a.row:hover .row__title, button.row:hover .row__title { text-decoration: underli
 .columns { columns: 2; column-gap: var(--m-space-7); }
 .columns > * { break-inside: avoid; }
 /* Responses one under another in a reading column. */
-.responses { display: grid; gap: var(--m-space-3); }
+.responses { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--m-space-3); }
 @media (max-width: 820px) { .columns { columns: 1; } }
 
 /* ---- People's words ------------------------------------------------------

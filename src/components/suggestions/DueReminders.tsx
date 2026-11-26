@@ -25,7 +25,7 @@ export function DueReminders() {
   if (!user || (!due.length && !moved)) return null;
   return <section aria-label="Reminders">
     {due.length > 0 && <>
-      <header className="section__head"><h2>Reminders</h2><Link to="/suggestions?box=reminders">All reminders</Link></header>
+      <header className="section__head"><h2>Reminders</h2><Link to="/suggestions?box=reminders">See all<span className="sr-only"> reminders</span></Link></header>
       <div className="notes">{due.map(item => <RecommendationNote compact item={item} key={item.id} later onChange={change} primary={false} viewerId={user.id} />)}</div>
     </>}
     {moved && <p className="t-caption muted" role="status" style={{ marginTop: due.length ? 'var(--m-space-3)' : 0 }}>{moved}</p>}

@@ -48,7 +48,7 @@
 /* ---- The recommendations hub --------------------------------------------- */
 .hub__head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--m-space-4); }
 a.stat:hover .stat__l { color: var(--m-color-ink); }
-.notes { display: grid; gap: var(--m-space-6); }
+.notes { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--m-space-6); }
 
 /* ---- Writing a recommendation -------------------------------------------- */
 /* The form at the left, the note as it will arrive at the right. On a phone the note sits above Send. */
