@@ -4,11 +4,13 @@ import { useDiary } from '../contexts/DiaryContext';
 import { useUser } from '../contexts/UserContext';
 import { apiError } from '../services/apiClient';
 import { ReportInput, reportReasons, safetyService } from '../services/safetyService';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export default function Report() {
   const { kind, id } = useParams();
   const [params] = useSearchParams();
   const { user } = useUser();
+  usePageTitle('Report');
   const personId = Number(params.get('personId'));
   if (!['response', 'comment', 'person'].includes(kind ?? '') || !Number.isSafeInteger(Number(id)) || Number(id) <= 0 || !Number.isSafeInteger(personId) || personId <= 0 || personId === user?.id) {
     return <section className="page page--narrow"><div className="empty"><h1>Report unavailable</h1><Link className="link" to="/feed">Home</Link></div></section>;

@@ -8,9 +8,11 @@ import { apiError } from '../services/apiClient';
 import { ResponseDetails } from '../components/diary/ResponseDetails';
 import { Feelings } from '../components/response/Feelings';
 import { formatCalendarDate, imageUrl, releaseYear } from '../utils/display';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export default function Diary() {
   const { error, refresh, summary } = useDiary();
+  usePageTitle('Diary');
   const [params] = useSearchParams();
   const movieId = Number(params.get('movieId')) > 0 ? Number(params.get('movieId')) : undefined;
   // Saved films live on the Watchlist page.

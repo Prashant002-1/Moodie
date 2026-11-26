@@ -7,6 +7,7 @@ import { suggestionService } from '../services/suggestionService';
 import { RecommendationNote } from '../components/suggestions/RecommendationNote';
 import { SavedFilms } from '../components/watchlist/SavedFilms';
 import type { FilmSuggestion, SuggestionQuery, SuggestionSummary } from '../types/suggestion';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 type InboxBox = NonNullable<SuggestionQuery['box']>;
 // "saved" is a tab on this page only. It is never sent to the recommendations API.
@@ -31,6 +32,7 @@ const stats: [string, HubBox, (summary: SuggestionSummary) => number][] = [
 /** The recommendations hub: what people thought of you for, what you asked to be reminded of, and what came of what you sent. */
 export default function Suggestions() {
   const { user } = useUser();
+  usePageTitle('Recommendations');
   const [params, setParams] = useSearchParams();
   const box = tabs.find(([value]) => value === params.get('box'))?.[0] ?? 'received';
   const changeBox = (value: HubBox) => setParams(previous => { const next = new URLSearchParams(previous); next.set('box', value); return next; });
@@ -39,7 +41,7 @@ export default function Suggestions() {
   return <>
     <section className="band band--tight"><div className="box stack" style={{ gap: 'var(--m-space-5)' }}>
       <div className="hub__head"><h1>Recommendations</h1><Link className="btn btn--primary" to="/suggestions/new">Recommend a film</Link></div>
-      {summary.data && <div aria-label="Recommendations in numbers" className="stats stats--hub" role="group">{stats.map(([label, target, count]) =>
+      {summary.data && summary.data.received_total + summary.data.sent_total + summary.data.reminders > 0 && <div aria-label="Recommendations in numbers" className="stats stats--hub" role="group">{stats.map(([label, target, count]) =>
         <Link className="stat" key={label} to={`/suggestions?box=${target}`}><span className="stat__n">{count(summary.data!)}</span><span className="stat__l">{label}</span></Link>)}</div>}
       {summary.error && <p className="status" role="alert" style={{ padding: 0 }}>Counts could not be loaded. <button className="link" onClick={summary.refresh}>Retry counts</button></p>}
     </div></section>

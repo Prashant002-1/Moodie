@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { apiError } from '../services/apiClient';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export default function Auth({ mode }: { mode: 'signup' | 'signin' | 'recover' }) {
   const { user, loading, sessionError, refreshSession, signUp, signIn, recover } = useUser();
@@ -17,11 +18,14 @@ export default function Auth({ mode }: { mode: 'signup' | 'signin' | 'recover' }
   const [recoveryInput, setRecoveryInput] = useState('');
   const [recoveryCode, setRecoveryCode] = useState('');
   const [savedCode, setSavedCode] = useState(false);
+  const [copied, setCopied] = useState<'yes' | 'failed' | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const signup = mode === 'signup';
   const recovery = mode === 'recover';
   const title = signup ? 'Sign up' : recovery ? 'Recover your account' : 'Sign in';
+  usePageTitle(recoveryCode ? 'Keep your recovery code' : title);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (submitting) return;
@@ -36,6 +40,11 @@ export default function Auth({ mode }: { mode: 'signup' | 'signin' | 'recover' }
     } catch (caught) { setError(apiError(caught, 'Could not connect to Moodie. Try again.')); }
     finally { setSubmitting(false); }
   };
+  const copyCode = async () => {
+    // The clipboard is unavailable on an insecure address and in some private windows.
+    try { await navigator.clipboard.writeText(recoveryCode); setCopied('yes'); }
+    catch { setCopied('failed'); }
+  };
   if (loading) return <div className="loading" role="status">Checking your session</div>;
   if (user && !submitting && !recoveryCode) return <Navigate to={destination} replace />;
   if (recoveryCode) return <section className="page page--form stack">
@@ -43,6 +52,10 @@ export default function Auth({ mode }: { mode: 'signup' | 'signin' | 'recover' }
     <p className="secondary">Save this in your password manager. You will need it if you forget your password. It is shown only once, and there is no email reset.</p>
     {recovery && <p className="secondary">This replaces your previous recovery code.</p>}
     <code className="recovery-code">{recoveryCode}</code>
+    <div className="actions">
+      <button className="btn btn--secondary btn--small" onClick={() => void copyCode()} type="button">{copied === 'yes' ? 'Copied' : 'Copy code'}</button>
+      {copied === 'failed' && <span className="hint" role="status">Copying is not available here. Select the code and copy it.</span>}
+    </div>
     <label className="check"><input type="checkbox" checked={savedCode} onChange={event => setSavedCode(event.target.checked)} />I saved my recovery code</label>
     <button className="btn btn--primary btn--block" disabled={!savedCode} onClick={() => navigate(destination, { replace: true })}>Continue to Moodie</button>
   </section>;
@@ -53,13 +66,14 @@ export default function Auth({ mode }: { mode: 'signup' | 'signin' | 'recover' }
       <div className="field"><label htmlFor="auth-email">Email</label><input className="input" id="auth-email" type="email" autoComplete="email" maxLength={255} required value={email} onChange={event => setEmail(event.target.value)} /></div>
       <div className="field"><label htmlFor="auth-username">Username</label><input aria-describedby="auth-username-hint" className="input" id="auth-username" autoComplete="username" minLength={3} maxLength={30} pattern="[A-Za-z0-9_]+" required value={username} onChange={event => setUsername(event.target.value)} /><span className="field__hint" id="auth-username-hint">3 to 30 letters, numbers, or underscores. This is public.</span></div>
     </> : <div className="field"><label htmlFor="auth-identifier">Email or username</label><input className="input" id="auth-identifier" autoComplete="username" maxLength={255} required value={identifier} onChange={event => setIdentifier(event.target.value)} /></div>}
-    {recovery && <div className="field"><label htmlFor="auth-recovery-code">Recovery code</label><input className="input" id="auth-recovery-code" autoComplete="off" required maxLength={128} value={recoveryInput} onChange={event => setRecoveryInput(event.target.value)} /></div>}
-    <div className="field"><label htmlFor="auth-password">{recovery ? 'New password' : 'Password'}</label><input aria-describedby={signup || recovery ? 'auth-password-hint' : undefined} className="input" id="auth-password" type="password" autoComplete={signup || recovery ? 'new-password' : 'current-password'} minLength={signup || recovery ? 10 : 1} maxLength={128} required value={password} onChange={event => setPassword(event.target.value)} />{(signup || recovery) && <span className="field__hint" id="auth-password-hint">At least 10 characters.</span>}</div>
-    {(signup || recovery) && <div className="field"><label htmlFor="auth-confirmation">Confirm password</label><input className="input" id="auth-confirmation" type="password" autoComplete="new-password" maxLength={128} required value={confirmation} onChange={event => setConfirmation(event.target.value)} /></div>}
+    {recovery && <div className="field"><label htmlFor="auth-recovery-code">Recovery code</label><input aria-describedby="auth-recovery-hint" className="input" id="auth-recovery-code" autoComplete="off" required maxLength={128} value={recoveryInput} onChange={event => setRecoveryInput(event.target.value)} /><span className="field__hint" id="auth-recovery-hint">The code you were shown when you joined or last recovered.</span></div>}
+    <div className="field"><label htmlFor="auth-password">{recovery ? 'New password' : 'Password'}</label><input aria-describedby={signup || recovery ? 'auth-password-hint' : undefined} className="input" id="auth-password" type={showPassword ? 'text' : 'password'} autoComplete={signup || recovery ? 'new-password' : 'current-password'} minLength={signup || recovery ? 10 : 1} maxLength={128} required value={password} onChange={event => setPassword(event.target.value)} />{(signup || recovery) && <span className="field__hint" id="auth-password-hint">At least 10 characters.</span>}</div>
+    {(signup || recovery) && <div className="field"><label htmlFor="auth-confirmation">Confirm password</label><input className="input" id="auth-confirmation" type={showPassword ? 'text' : 'password'} autoComplete="new-password" maxLength={128} required value={confirmation} onChange={event => setConfirmation(event.target.value)} /></div>}
+    <label className="check"><input checked={showPassword} onChange={event => setShowPassword(event.target.checked)} type="checkbox" />Show password</label>
     {error && <p className="notice notice--error" role="alert">{error}</p>}
     <button className="btn btn--primary btn--block" disabled={submitting} type="submit">{submitting ? 'Please wait' : title}</button>
     <p className="actions actions--spread t-callout">
-      {signup ? <Link className="link" to="/signin" state={location.state}>Sign in</Link> : <Link className="link" to="/signup" state={location.state}>Sign up</Link>}
+      {signup ? <span>Already have an account? <Link className="link" to="/signin" state={location.state}>Sign in</Link></span> : <span>New to Moodie? <Link className="link" to="/signup" state={location.state}>Sign up</Link></span>}
       {mode === 'signin' ? <Link className="link" to="/recover" state={location.state}>Forgot password?</Link> : recovery && <Link className="link" to="/signin" state={location.state}>Sign in</Link>}
     </p>
   </form>;

@@ -16,11 +16,13 @@ import { usePagedResource } from '../hooks/usePagedResource';
 import { useResource } from '../hooks/useResource';
 import { apiError } from '../services/apiClient';
 import { recommendationService } from '../services/recommendationService';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 type FeedView = 'for-you' | 'following' | 'everyone';
 
 const Feed = () => {
   const { user } = useUser();
+  usePageTitle('Home');
   const { summary, revision: diaryRevision, currentSignal, refresh: refreshDiary } = useDiary();
   const [params, setParams] = useSearchParams();
   const view: FeedView = params.get('view') === 'following' ? 'following' : params.get('view') === 'everyone' ? 'everyone' : 'for-you';

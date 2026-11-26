@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { DiscoveryPathCard } from '../components/recommendations/DiscoveryPathCard';
 import { useDiary } from '../contexts/DiaryContext';
 import { RecommendationResponse, recommendationService } from '../services/recommendationService';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 /** Films that reached the viewer through a film they share with someone. */
 const Recommendations = () => {
   const { currentSignal, revision } = useDiary();
+  usePageTitle('Through films you share');
   const [data, setData] = useState<RecommendationResponse | null>(null);
   const [requestVersion, setRequestVersion] = useState(0);
   const [loading, setLoading] = useState(true);

@@ -8,6 +8,7 @@ import { ThemeChoice, readTheme, saveTheme } from '../utils/theme';
 import AiModeChoice from '../components/account/AiModeChoice';
 import { Avatar } from '../components/common/Avatar';
 import { personHue } from '../utils/person';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 type AccountView = 'profile' | 'appearance' | 'notifications' | 'ai' | 'account' | 'password';
 const views: [AccountView, string][] = [['profile', 'Profile'], ['appearance', 'Appearance'], ['notifications', 'Notifications'], ['ai', 'AI'], ['account', 'Account'], ['password', 'Password']];
@@ -18,6 +19,7 @@ const count = (value: number, one: string, many: string) => `${value} ${value ==
 export default function Account() {
   const { user, updateProfile, setAiMode, setEmailNotifications, signOut, deleteAccount } = useUser();
   const { summary } = useDiary();
+  usePageTitle('Account');
   const navigate = useNavigate();
   // An email's "turn these off" link opens Account on its tab: /account?view=notifications.
   const [params] = useSearchParams();

@@ -28,6 +28,9 @@ export const newResponseDraft = (film: DraftFilm | null = null): ResponseDraft =
   version: 1, film, watchedOn: localDay(), note: '', visibility: 'private', emotions: emptyFeelings(),
   enjoyment: null, highlights: [], expressionImage: null, clientRequestId: crypto.randomUUID(),
 });
+/** Nothing felt, said or attached yet. Such a draft is never worth interrupting a person to ask about. */
+export const untouchedDraft = (draft: ResponseDraft) => !draft.editingId && !draft.note.trim() && !draft.expressionImage
+  && !draft.enjoyment && !draft.highlights.length && !Object.values(draft.emotions).some(value => value > 0);
 export const draftFromResponse = (entry: ResponseEntry): ResponseDraft => ({
   ...newResponseDraft({ id: entry.movie_id, title: entry.title, poster_path: entry.poster_path ?? null, release_date: entry.release_date ?? '' }),
   editingId: entry.id, watchedOn: entry.watched_on.slice(0, 10), note: entry.note, visibility: entry.visibility,

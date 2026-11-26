@@ -9,6 +9,7 @@ import { usePagedResource } from '../hooks/usePagedResource';
 import type { FilmSuggestion } from '../types/suggestion';
 import { imageUrl } from '../utils/display';
 import { personHue } from '../utils/person';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const filters: [ActivityFilter, string][] = [['all', 'All'], ['response', 'Responses'], ['recommendations', 'Recommendations'], ['like', 'Likes'], ['comment', 'Comments'], ['follow', 'Follows']];
 // What happened, as the words before and after the film title. Follows have no film.
@@ -47,6 +48,7 @@ function receivedNote(event: ActivityEvent, viewer: { id: number; username?: str
 
 export default function Activity() {
   const { user } = useUser();
+  usePageTitle('Activity');
   const { revision } = useDiary();
   const [kind, setKind] = useState<ActivityFilter>('all');
   const load = useCallback(async (offset: number | undefined, signal: AbortSignal) => {

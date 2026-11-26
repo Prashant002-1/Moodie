@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Link, Navigate, Outlet, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Routes, Route } from 'react-router-dom';
 import { ErrorBoundary, LoadingSpinner, ProtectedRoute } from './components/common';
 import { UserProvider } from './contexts/UserContext';
 import { DiaryProvider } from './contexts/DiaryContext';
@@ -26,6 +26,7 @@ const AccountDeleted = lazy(() => import('./pages/AccountDeleted'));
 const About = lazy(() => import('./pages/About'));
 const Response = lazy(() => import('./pages/Response'));
 const Welcome = lazy(() => import('./pages/Welcome'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
   return <ErrorBoundary><UserProvider><BrowserRouter>
@@ -60,7 +61,7 @@ function App() {
         </Route>
         <Route path="community" element={<Navigate replace to="/feed" />} />
         <Route path="movie-match" element={<Navigate replace to="/feed" />} />
-        <Route path="*" element={<div className="page page--narrow"><div className="empty"><h1>Page not found</h1><Link className="link" to="/">Return home</Link></div></div>} />
+        <Route path="*" element={<NotFound />} />
       </Route></Routes>
     </Suspense>
   </BrowserRouter></UserProvider></ErrorBoundary>;

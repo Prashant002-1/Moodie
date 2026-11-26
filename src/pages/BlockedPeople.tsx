@@ -7,9 +7,11 @@ import { safetyService } from '../services/safetyService';
 import { apiError } from '../services/apiClient';
 import { Avatar } from '../components/common/Avatar';
 import { personHue } from '../utils/person';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export default function BlockedPeople() {
   const { user } = useUser();
+  usePageTitle('Blocked people');
   const { refresh } = useDiary();
   const [busy, setBusy] = useState<number | null>(null);
   const [error, setError] = useState('');

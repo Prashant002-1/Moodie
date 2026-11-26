@@ -10,7 +10,7 @@ import { recommendationService } from '../services/recommendationService';
 import { apiError } from '../services/apiClient';
 import { DraftUnreadable, ResponseDraftSession, responseDraftStore, StoredResponseDraft } from '../services/responseDraftStore';
 import { useDraftAutosave } from '../hooks/useDraftAutosave';
-import { DraftFilm, ResponseDraft, draftFromResponse, localDay, newResponseDraft, responseDraftInput } from '../types/responseDraft';
+import { DraftFilm, ResponseDraft, draftFromResponse, localDay, newResponseDraft, responseDraftInput, untouchedDraft } from '../types/responseDraft';
 import { DiaryEntry } from '../types/diary';
 import { FilmSuggestion } from '../types/suggestion';
 import { Movie } from '../types/movie';
@@ -21,6 +21,7 @@ import { FeelingChoices } from '../components/diary/FeelingChoices';
 import { AttributionPicker } from '../components/diary/AttributionPicker';
 import { ResponseDetailInputs } from '../components/diary/ResponseDetails';
 import { RecommendationSpotlight } from '../components/recommendations/RecommendationSpotlight';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 interface ComposerRequest { movieId?: number; entryId?: number; suggestionId?: number }
 interface DraftChoice { stored: StoredResponseDraft; incoming: ResponseDraft | null }
@@ -59,8 +60,13 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
   const closed = useRef(false);
   const resumed = useRef(false);
   const mounted = useRef(true);
-  const auto = useDraftAutosave(session, draft, !savedEntry && !closed.current);
+  // The response exactly as it was opened. Until the person changes it there is nothing to keep.
+  const pristine = useRef<ResponseDraft | null>(null);
+  const keepable = Boolean(draft) && (session?.saved != null || (draft !== pristine.current && !untouchedDraft(draft!)));
+  const auto = useDraftAutosave(session, draft, !savedEntry && !closed.current && keepable);
+  const location = useLocation();
   const { movieId, entryId, suggestionId } = request;
+  usePageTitle(draft?.editingId ? 'Edit response' : draft?.film ? `Log ${draft.film.title}` : 'Log a film');
 
   useEffect(() => {
     mounted.current = true;
@@ -90,7 +96,13 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
     const open = async () => {
       const stored = await responseDraftStore.read(ownerId);
       if (!active) return;
-      if (stored && (movieId || entryId || suggestionId)) {
+      // A stored draft with nothing in it is replaced without asking.
+      if (stored && untouchedDraft(stored.draft) && (movieId || entryId || suggestionId)) {
+        const value = await incoming();
+        if (!active) return;
+        setDraft(value);
+        setSession(new ResponseDraftSession(ownerId, stored.revision, stored.draft));
+      } else if (stored && (movieId || entryId || suggestionId)) {
         // Recovery stays available even if the newly requested film is offline.
         setChoice({ stored, incoming: null }); setOpening(false);
         const value = await incoming();
@@ -98,6 +110,7 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
       } else {
         const value = stored?.draft ?? await incoming();
         if (!active) return;
+        if (!stored) pristine.current = value;
         setDraft(value);
         setSession(new ResponseDraftSession(ownerId, stored?.revision ?? null, stored?.draft ?? null));
       }
@@ -148,7 +161,8 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
     try {
       if (keep) await session.save(draft); else await session.finish();
       closed.current = true;
-      navigate('/diary');
+      // Back to where the composer was opened from; the diary when it was opened directly.
+      if (location.key === 'default') navigate('/diary'); else navigate(-1);
     } catch (error) { setError(error instanceof Error ? error.message : 'Your draft could not be updated.'); }
     finally { setSaving(false); }
   };
@@ -233,10 +247,11 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
   </div>;
 
   return <div className="page">
-    <header className="page__head">
-      <h1>{draft.editingId ? 'Edit response' : 'Add a response'}</h1>
-      <div className="actions"><span className="t-caption muted" role="status">{!draft.film ? '' : auto.error ? 'Draft not saved' : auto.saved ? 'Draft saved' : 'Saving draft'}</span>
-        <button className="btn btn--quiet btn--small" disabled={saving || photoPreparing} onClick={() => setCloseChoice(true)}>Close</button></div>
+    <header className="page__head page__head--bar">
+      <div><h1>{draft.editingId ? 'Edit response' : 'Add a response'}</h1>
+        <p className="t-caption muted" role="status">{!keepable ? '' : auto.error ? 'Draft not saved' : auto.saved ? 'Draft saved' : 'Saving draft'}</p></div>
+      {/* With nothing written there is nothing to ask about: Close just closes. */}
+      <button className="btn btn--quiet btn--small" disabled={saving || photoPreparing} onClick={() => { if (keepable) setCloseChoice(true); else void close(false); }}>Close</button>
     </header>
     {(error || auto.error) && <p className="notice notice--error" role="alert" style={{ marginBottom: 'var(--m-space-5)' }}>{error || auto.error}{auto.error && <> <button className="link" onClick={() => void auto.persist().catch(() => undefined)}>Retry draft save</button></>}</p>}
     {closeChoice && <section className="well stack" aria-label="Close your response" style={{ marginBottom: 'var(--m-space-5)' }}>
@@ -275,7 +290,9 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
             : <label className="btn btn--secondary btn--small"><ImagePlus aria-hidden="true" size={16} /><span>Choose a photo</span><input accept="image/jpeg,image/png,image/webp" className="sr-only" type="file" onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; void choosePhoto(file); }} /></label>}
         </details>
         <div className="composer__save">
-          <span className="hint">{draft.suggestionId ? `Your reply to ${draft.suggestionName || 'them'} is written separately, after saving.` : ''}</span>
+          <span className="hint">{!Object.values(draft.emotions).some(value => value > 0) ? 'Choose at least one feeling to save.'
+            : !draft.watchedOn || draft.watchedOn > localDay() ? 'Choose a date that is not in the future.'
+            : draft.suggestionId ? `Your reply to ${draft.suggestionName || 'them'} is written separately, after saving.` : ''}</span>
           <button className="btn btn--primary" disabled={!responseDraftInput(draft) || saving || photoPreparing}>{saving ? 'Saving response' : draft.editingId ? 'Save changes' : 'Save response'}</button>
         </div>
       </fieldset>

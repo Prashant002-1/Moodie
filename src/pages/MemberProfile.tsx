@@ -12,9 +12,11 @@ import { useUser } from '../contexts/UserContext';
 import { imageUrl, releaseYear } from '../utils/display';
 import { personHue } from '../utils/person';
 import { CommunityEntry, ResponseEntry, discoveryService, MemberProfile as MemberProfileData } from '../services/discoveryService';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const MemberProfile: React.FC = () => {
   const { username = '' } = useParams();
+  usePageTitle(`@${username}`);
   const { user } = useUser();
   const actionLocks = useRef(new Set<string>());
   const { revision, refresh } = useDiary();
@@ -60,7 +62,7 @@ const MemberProfile: React.FC = () => {
   };
 
   if (loading && !person) return <div className="loading" role="status">Loading profile</div>;
-  if (!person) return <div className="page page--narrow"><div className="empty"><h1>{error || 'Member not found'}</h1><button className="btn btn--secondary" onClick={page.refresh} type="button">Retry profile</button></div></div>;
+  if (!person) return <div className="page page--narrow"><div className="empty"><h1>{error || 'Member not found'}</h1><div className="actions"><button className="btn btn--secondary" onClick={page.refresh} type="button">Retry profile</button><Link className="link" to="/people">Find people</Link></div></div></div>;
   const own = user?.id === person.id;
 
   const hue = personHue(person.username);

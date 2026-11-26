@@ -1,10 +1,12 @@
 import { Link, useParams } from 'react-router-dom';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export default function About() {
   const { topic } = useParams();
   const support = import.meta.env.VITE_SUPPORT_URL;
   const supportURL = typeof support === 'string' && /^(https:\/\/|mailto:)/.test(support) ? support : null;
   const title = topic === 'privacy' ? 'Privacy' : topic === 'community' ? 'Community guidelines' : topic === 'credits' ? 'Credits' : 'Page not found';
+  usePageTitle(title);
   return <article className="page page--narrow">
     <header className="page__head"><h1>{title}</h1><Link className="link t-callout" to="/account">Account</Link></header>
     <div className="stack">

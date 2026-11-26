@@ -19,6 +19,7 @@ import { SuggestionReplyForm } from '../components/suggestions/SuggestionReplyFo
 import { SuggestionViewingPicker } from '../components/suggestions/SuggestionViewingPicker';
 import { SuggestionMessages } from '../components/suggestions/SuggestionMessages';
 import { Spoiler } from '../components/suggestions/Spoiler';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export default function SuggestionDetail() {
   const { id } = useParams();
@@ -48,6 +49,7 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
       }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [id, revision]);
+  usePageTitle(item ? `${item.title}, ${item.recipient_id === viewerId ? `from ${item.sender_username}` : `for ${item.recipient_username}`}` : 'Recommendation');
   const refresh = () => setRevision(value => value + 1);
   const update = async (action: SuggestionAction) => {
     if (busy) return;
@@ -81,6 +83,7 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
       <div className="box stack">
         <div className="actions actions--spread t-caption"><Link className="link" to="/suggestions">Recommendations</Link><button className="link" onClick={refresh} disabled={loading || busy}>Refresh</button></div>
         {loading && !item && <p className="status" role="status">Loading recommendation</p>}
+        {!loading && !item && <h1>This recommendation is not available</h1>}
         {item && <RecommendationNote headingLevel={1} item={item} page tracker viewerId={viewerId}>
           {item.source_entry_id && <p className="t-caption"><Link className="link" to={`/response/${item.source_entry_id}`}>Their response</Link></p>}
           {item.origin === 'discovered' && !item.conversation_open && <p className="hint">Kept from their response. Only you can see this.</p>}

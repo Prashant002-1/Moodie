@@ -14,6 +14,7 @@ import { KeepRecommendation } from '../components/suggestions/KeepRecommendation
 import { Avatar } from '../components/common/Avatar';
 import { formatCalendarDate, imageUrl, releaseYear } from '../utils/display';
 import { personHue } from '../utils/person';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export default function Response() {
   const { id } = useParams();
@@ -55,13 +56,17 @@ function ResponseReader({ id, viewerId }: { id: number; viewerId: number }) {
     catch (error) { setError(apiError(error)); }
     finally { setBusy(false); }
   };
+  usePageTitle(entry ? `${entry.username} on ${entry.title}` : 'Response');
   const poster = imageUrl(entry?.poster_path, 'w500');
   const backdrop = imageUrl(entry?.backdrop_path, 'w1280');
   const likes = entry?.like_count || 0;
   const problem = error && <p role="alert" className="notice notice--error">{error} <button className="link" onClick={() => setRevision(value => value + 1)} type="button">Retry</button></p>;
-  if (!entry) return <div className="page page--narrow stack">
-    {problem}
-    {loading && <p className="status" role="status">Loading response</p>}
+  if (!entry) return <div className="page page--narrow">
+    {loading ? <p className="status" role="status">Loading response</p> : <div className="empty">
+      <h1>This response is not available</h1>
+      {problem}
+      <Link className="link" to="/feed">Return home</Link>
+    </div>}
   </div>;
   return <article>
     <section className={`band${backdrop ? ' band--art' : ''}`}>

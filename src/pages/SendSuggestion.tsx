@@ -10,10 +10,12 @@ import { imageUrl, releaseYear } from '../utils/display';
 import { personHue } from '../utils/person';
 import { Avatar } from '../components/common/Avatar';
 import { RecommendationNote } from '../components/suggestions/RecommendationNote';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 /** Writing a recommendation: a film, a person, and why, with the note they will receive beside it. */
 export default function SendSuggestion() {
   const { user } = useUser();
+  usePageTitle('Recommend a film');
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const movieId = Number(params.get('movieId')) || undefined;

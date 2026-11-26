@@ -18,6 +18,9 @@ beforeEach(() => { vi.stubGlobal('indexedDB', new IDBFactory()); });
  * Provides mock implementations of createObjectURL and revokeObjectURL
  * for testing file and media blob operations.
  */
+// jsdom has no layout: a page that opens at its top has nothing to scroll.
+window.scrollTo = vi.fn();
+
 global.URL.createObjectURL = vi.fn().mockReturnValue('mock-url');
 global.URL.revokeObjectURL = vi.fn();
 

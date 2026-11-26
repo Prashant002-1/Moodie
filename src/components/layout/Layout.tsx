@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, BookOpen, House, Plus, Search, Send, UsersRound } from 'lucide-react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
 import { personHue } from '../../utils/person';
 import BrandMark from '../brand/BrandMark';
@@ -31,8 +31,21 @@ const Layout: React.FC = () => {
     document.addEventListener('keydown', close); document.addEventListener('pointerdown', close);
     return () => { document.removeEventListener('keydown', close); document.removeEventListener('pointerdown', close); };
   }, [adding]);
-  // Onboarding is one decision: nothing competes with it.
-  const onboarding = Boolean(user) && location.pathname === '/welcome';
+  // A new page opens at its top. Going back returns to where the person was, and
+  // a link to a place inside a page (a response on a film) is left to that page.
+  const navigationType = useNavigationType();
+  useEffect(() => {
+    if (navigationType !== 'POP' && !location.hash) window.scrollTo?.(0, 0);
+  }, [location.pathname, location.hash, navigationType]);
+  // Artwork that fails to load leaves its placeholder, never a broken-image mark.
+  useEffect(() => {
+    const failed = (event: Event) => { if (event.target instanceof HTMLImageElement) event.target.dataset.failed = ''; };
+    document.addEventListener('error', failed, true);
+    return () => document.removeEventListener('error', failed, true);
+  }, []);
+  // Onboarding is one decision at a time: nothing competes with keeping the
+  // recovery code (still on the sign-up or recovery page) or the first choice.
+  const onboarding = Boolean(user) && ['/welcome', '/signup', '/recover'].includes(location.pathname);
 
   return (
     <div className={`app${user ? ' app--signed-in' : ''}`}>

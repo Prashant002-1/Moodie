@@ -9,11 +9,13 @@ import { imageUrl, releaseYear } from '../utils/display';
 import { useLibraryState } from '../hooks/useLibraryState';
 import { usePagedResource } from '../hooks/usePagedResource';
 import { useResource } from '../hooks/useResource';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 type SearchView = 'films' | 'people';
 
 export default function Search() {
   const { user } = useUser();
+  usePageTitle('Search');
   const [view, setView] = useState<SearchView>('films');
   return <div className="page">
     <h1 className="sr-only">Search</h1>

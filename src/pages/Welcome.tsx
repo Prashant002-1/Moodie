@@ -5,6 +5,7 @@ import BrandMark from '../components/brand/BrandMark';
 import { useUser } from '../contexts/UserContext';
 import { apiError } from '../services/apiClient';
 import type { AiMode } from '../services/authService';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 /** First page after joining: one decision, made before anything else is shown. */
 export default function Welcome() {
@@ -16,6 +17,7 @@ export default function Welcome() {
   const [choice, setChoice] = useState<AiMode | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  usePageTitle('Welcome');
   // Someone who has already chosen changes it in Account, not here.
   if (user && user.ai_mode != null && !busy) return <Navigate replace to={destination} />;
   const submit = async (event: FormEvent) => {

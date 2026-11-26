@@ -13,6 +13,7 @@ import { useResource } from '../hooks/useResource';
 import { Movie } from '../types/movie';
 import { formatRuntime, imageUrl, releaseYear } from '../utils/display';
 import { personHue } from '../utils/person';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const MovieDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +40,7 @@ const MovieDetails: React.FC = () => {
   const cached = responses.metadata?.film;
   const movie: Movie | null = catalog.data ?? (cached ? { ...cached, overview: cached.overview ?? '', release_date: cached.release_date ?? '', genre_ids: [], popularity: 0, vote_average: 0, vote_count: 0 } : null);
   const setPublicEntries = responses.updateItems;
+  usePageTitle(movie?.title ?? 'Film');
 
   useEffect(() => {
     if (!publicEntries.length || !hash) return;
@@ -85,7 +87,7 @@ const MovieDetails: React.FC = () => {
   };
 
   if (!movie && (catalog.loading || responses.loading)) return <div className="loading" role="status">Loading film</div>;
-  if (!movie) return <div className="page page--narrow"><div className="empty"><h1>Film could not be loaded</h1><button className="btn btn--secondary" onClick={() => { catalog.refresh(); responses.refresh(); }} type="button">Retry film</button></div></div>;
+  if (!movie) return <div className="page page--narrow"><div className="empty"><h1>Film could not be loaded</h1><div className="actions"><button className="btn btn--secondary" onClick={() => { catalog.refresh(); responses.refresh(); }} type="button">Retry film</button><Link className="link" to="/search">Search films</Link></div></div></div>;
 
   const poster = imageUrl(movie.poster_path, 'w500');
   const backdrop = imageUrl(movie.backdrop_path, 'w1280');

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 export default function AccountDeleted() {
   const { deletionReceipt, retryDraftCleanup } = useUser();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  usePageTitle(deletionReceipt ? 'Account deleted' : 'Account');
   return <section className="page page--form stack"><h1>{deletionReceipt ? 'Account deleted' : 'Account'}</h1>
     {deletionReceipt && <p className="secondary">Your account and its content have been removed from Moodie.</p>}
     {deletionReceipt?.cleanupOwner != null && <>
