@@ -60,7 +60,7 @@ const MovieDetails: React.FC = () => {
       else await saveFilm(movie.id);
       setNotice(wasSaved ? 'Removed from saved films.' : 'Saved for later.');
     } catch {
-      setNotice('That change could not be saved. Try again.');
+      // The failure is said once, by the banner that stays in view.
     } finally {
       setSaving(false);
     }
@@ -79,7 +79,6 @@ const MovieDetails: React.FC = () => {
       if (next) await discoveryService.like(entry.id);
       else await discoveryService.unlike(entry.id);
     } catch {
-      setNotice('Your like could not be updated. Try again.');
       setPublicEntries(current => current.map(item => item.id === entry.id
         ? { ...item, liked: !next, like_count: Math.max(0, item.like_count + (next ? -1 : 1)) }
         : item));

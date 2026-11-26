@@ -19,10 +19,26 @@ const Layout: React.FC = () => {
   const { user, loading: authLoading } = useUser();
   const [actionError, setActionError] = useState('');
   useEffect(() => {
-    const failed = (event: Event) => setActionError((event as CustomEvent<string>).detail);
+    // A failed change is said once. Most screens say it themselves, beside the
+    // control; the banner is for the ones that do not.
+    let timer = 0;
+    const failed = (event: Event) => {
+      const message = (event as CustomEvent<string>).detail;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        // Said already only if the person can see it: an alert at the top of a long page they have scrolled down does not count.
+        const said = [...document.querySelectorAll('main [role="alert"]')].some(alert => {
+          const box = alert.getBoundingClientRect();
+          return alert.textContent?.includes(message) && box.height > 0 && box.bottom > 0 && box.top < window.innerHeight;
+        });
+        if (!said) setActionError(message);
+      }, 200);
+    };
     window.addEventListener('moodie:action-error', failed);
-    return () => window.removeEventListener('moodie:action-error', failed);
+    return () => { window.clearTimeout(timer); window.removeEventListener('moodie:action-error', failed); };
   }, []);
+  // The banner belongs to the page it was raised on.
+  useEffect(() => setActionError(''), [location.pathname]);
   const [adding, setAdding] = useState(false);
   // Moving between pages is silent to a screen reader unless the new page is named aloud.
   const [announced, setAnnounced] = useState('');

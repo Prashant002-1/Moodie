@@ -244,6 +244,10 @@ main > * { animation: enter var(--m-motion-slow) var(--m-ease-out) backwards; }
 /* ---- Films --------------------------------------------------------------- */
 .poster { position: relative; display: block; flex: none; width: 96px; aspect-ratio: 2 / 3; background: var(--m-color-surface-raised); border-radius: var(--m-radius-poster); overflow: hidden; transition: transform var(--m-motion-base) var(--m-ease-out); }
 .poster img { width: 100%; height: 100%; object-fit: cover; }
+/* A film with no artwork, or artwork that did not load, shows a quiet film mark instead of an empty box. */
+.poster:not(:has(img:not([data-failed])))::after { content: ''; position: absolute; inset: 0; background: var(--m-color-ink-muted); opacity: 0.55;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2'/%3E%3Cpath d='M7 3v18M3 7.5h4M3 12h18M3 16.5h4M17 3v18M17 7.5h4M17 16.5h4'/%3E%3C/svg%3E") center / min(40%, 40px) no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2'/%3E%3Cpath d='M7 3v18M3 7.5h4M3 12h18M3 16.5h4M17 3v18M17 7.5h4M17 16.5h4'/%3E%3C/svg%3E") center / min(40%, 40px) no-repeat; }
 /* A poster that opens something lifts a little under the pointer. It is never outlined. */
 a.poster:hover, a:hover > .poster, .tile:hover .poster { transform: translateY(-3px) scale(1.015); }
 .poster--xs { width: 40px; }
