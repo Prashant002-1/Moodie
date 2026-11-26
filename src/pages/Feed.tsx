@@ -109,59 +109,51 @@ const Feed = () => {
   // When nothing could be read, say it once.
   const homeFailed = forYou && Boolean(page.error && circle.error && notes.error && recommendations.error);
   const retryHome = () => { page.refresh(); circle.refresh(); notes.refresh(); recommendations.refresh(); };
-  // The film someone most recently thought of you for lights the top of Home.
-  const ambient = imageUrl(fresh[0]?.backdrop_path, 'w1280');
   const hour = new Date().getHours();
   const senders = [...new Set(notes.items.filter(item => item.origin === 'sent').map(item => item.sender_username))];
-  return <>
+  // Home is one column: the same width and the same left edge from the greeting to the last response.
+  return <div className="page page--narrow">
     <h1 className="sr-only">Home</h1>
-    {forYou && user && <section className={`band band--tight${ambient ? ' band--art' : ''}`} aria-label="Personal recommendations">
-      {ambient && <img alt="" className="band__art" src={ambient} />}
-      <div className="box stack" style={{ gap: 'var(--m-space-6)' }}>
-      <p className="greeting">Good {hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'}, <strong>{user.username}</strong>.
-        {senders.length > 0 && <> {senders.slice(0, 2).map((name, index) => <span key={name}>{index > 0 && ' and '}<Link className="who" data-hue={personHue(name)} to={`/member/${encodeURIComponent(name)}`}>{name}</Link></span>)}{senders.length > 2 && ' and others'} thought of you.</>}
-      </p>
+    <div aria-label="Choose home view" className="tabs" role="group" style={{ marginBottom: 'var(--m-space-6)' }}><button aria-pressed={forYou} onClick={() => setView('for-you')}>For you</button><button aria-pressed={view === 'following'} onClick={() => setView('following')}>Following</button><button aria-pressed={view === 'everyone'} onClick={() => setView('everyone')}>Everyone</button></div>
+    {actionError && <p className="notice notice--error" role="alert">{actionError}</p>}
+    {homeFailed ? <p className="notice notice--error" role="alert">Home could not be loaded. <button className="link" onClick={retryHome}>Retry</button></p>
+    : forYou ? <div className="stack stack--loose">
+      {user && <p className="greeting">Good {hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'}, <strong>{user.username}</strong>.
+        {senders.length > 0 && <span className="greeting__more"> {senders.slice(0, 2).map((name, index) => <span key={name}>{index > 0 && ' and '}<Link className="who" to={`/member/${encodeURIComponent(name)}`}>{name}</Link></span>)}{senders.length > 2 && ' and others'} thought of you.</span>}
+      </p>}
       <DueReminders />
-      {notes.error && !homeFailed && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={notes.refresh}>Retry</button></p>}
-      {fresh.length > 0 && <>
-        <header className="section__head" style={{ marginBottom: 0 }}><h2>Recommended to you</h2><Link to="/suggestions">All recommendations</Link></header>
-        <RecommendationNote ambient={Boolean(ambient)} item={fresh[0]} viewerId={user.id} />
-        {fresh.length > 1 && <div className={fresh.length > 2 ? 'two-up' : undefined}>{fresh.slice(1, 3).map(item => <RecommendationNote compact item={item} key={item.id} viewerId={user.id} />)}</div>}
-      </>}
-    </div></section>}
-    <div className="page">
-      <div aria-label="Choose home view" className="tabs" role="group" style={{ marginBottom: 'var(--m-space-6)' }}><button aria-pressed={forYou} onClick={() => setView('for-you')}>For you</button><button aria-pressed={view === 'following'} onClick={() => setView('following')}>Following</button><button aria-pressed={view === 'everyone'} onClick={() => setView('everyone')}>Everyone</button></div>
-      {actionError && <p className="notice notice--error" role="alert">{actionError}</p>}
-      {homeFailed ? <p className="notice notice--error" role="alert">Home could not be loaded. <button className="link" onClick={retryHome}>Retry</button></p>
-      : forYou ? <div className="stack stack--loose">
-        {summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Log a film</Link></div>}
-        {wall.length > 0 && <section aria-label="New from people you follow"><header className="section__head"><h2>New from friends</h2><button onClick={() => setView('following')}>See all</button></header>
-          <div className="wall">{wall.map(entry => <article className="tile" data-hue={personHue(entry.username)} key={entry.id}>
-            <Link aria-label={`${entry.username} on ${entry.title}`} className="tile__art" to={`/response/${entry.id}`}>
-              <span className="poster">{imageUrl(entry.poster_path, 'w342') && <img alt="" loading="lazy" src={imageUrl(entry.poster_path, 'w342')!} />}</span>
-              <Avatar className="tile__who" size="sm" to={null} username={entry.username} />
-            </Link>
-            <Link className="tile__name who" to={`/member/${entry.username}`}>{entry.username}</Link>
-            <p className="tile__sub">{feelingWords(entry).slice(0, 2).join(' · ') || entry.title}</p>
-          </article>)}</div>
-        </section>}
-        {recommendations.loading && !recommendations.data && <p className="status" role="status">Loading</p>}
-        {recommendations.error && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={recommendations.refresh}>Try again</button></p>}
-        {films.length > 0 && <section aria-labelledby="recommendations-title"><header className="section__head"><h2 id="recommendations-title">Through films you share</h2><Link to="/recommendations">See all</Link></header><div className="list">{films.slice(0, 3).map(movie => <DiscoveryPathCard key={movie.id} movie={movie} />)}</div></section>}
-        <section aria-label="Recent responses"><header className="section__head"><h2>{!others.length && circle.items.length ? 'From people you follow' : 'Recent responses'}</h2><Link to="/people">Find people</Link></header>
-          {circle.error && <p className="status" role="alert">Responses could not be loaded. <button className="link" onClick={circle.refresh}>Retry</button></p>}
-          {page.error && <p className="status" role="alert">{page.error} <button className="link" onClick={page.refresh}>Retry</button></p>}
-          <div className="columns">{recent.slice(0, 6).map(card)}</div>
-          {!recent.length && !page.loading && !circle.loading && !page.error && !circle.error && <p className="status">No public responses yet.</p>}
-        </section>
-      </div> : <div className="page--narrow" style={{ margin: '0 auto' }}>
-        {page.error && <p className="status" role="alert">{page.error} <button className="link" onClick={page.refresh}>Retry responses</button></p>}
-        <section aria-label={view === 'following' ? 'Responses from people you follow' : 'Public responses'}>{page.items.map(card)}</section>
-        {page.loading && <p className="status" role="status">Loading responses</p>}
-        {page.loaded && !page.loading && !page.error && !page.items.length && <div className="empty"><p>No responses here yet.</p><div className="actions"><Link className="link" to="/people">Find people</Link><Link className="link" to="/log">Log a film</Link></div></div>}
-        {page.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore}>Older responses</button></div>}
-      </div>}
-    </div>
-  </>;
+      {notes.error && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={notes.refresh}>Retry</button></p>}
+      {user && fresh.length > 0 && <section aria-label="Personal recommendations">
+        <header className="section__head"><h2>Recommended to you</h2><Link to="/suggestions">All recommendations</Link></header>
+        <div className="notes">{fresh.slice(0, 3).map(item => <RecommendationNote compact item={item} key={item.id} viewerId={user.id} />)}</div>
+      </section>}
+      {summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Log a film</Link></div>}
+      {wall.length > 0 && <section aria-label="New from people you follow"><header className="section__head"><h2>New from friends</h2><button onClick={() => setView('following')}>See all</button></header>
+        <div className="wall wall--fit">{wall.map(entry => <article className="tile" data-hue={personHue(entry.username)} key={entry.id}>
+          <Link aria-label={`${entry.username} on ${entry.title}`} className="tile__art" to={`/response/${entry.id}`}>
+            <span className="poster">{imageUrl(entry.poster_path, 'w342') && <img alt="" loading="lazy" src={imageUrl(entry.poster_path, 'w342')!} />}</span>
+            <Avatar className="tile__who" size="sm" to={null} username={entry.username} />
+          </Link>
+          <Link className="tile__name who" to={`/member/${entry.username}`}>{entry.username}</Link>
+          <p className="tile__sub">{feelingWords(entry).slice(0, 2).join(' · ') || entry.title}</p>
+        </article>)}</div>
+      </section>}
+      {recommendations.loading && !recommendations.data && <p className="status" role="status">Loading</p>}
+      {recommendations.error && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={recommendations.refresh}>Try again</button></p>}
+      {films.length > 0 && <section aria-labelledby="recommendations-title"><header className="section__head"><h2 id="recommendations-title">Through films you share</h2><Link to="/recommendations">See all</Link></header><div className="list list--flush">{films.slice(0, 3).map(movie => <DiscoveryPathCard key={movie.id} movie={movie} />)}</div></section>}
+      <section aria-label="Recent responses"><header className="section__head"><h2>{!others.length && circle.items.length ? 'From people you follow' : 'Recent responses'}</h2><Link to="/people">Find people</Link></header>
+        {circle.error && <p className="status" role="alert">Responses could not be loaded. <button className="link" onClick={circle.refresh}>Retry</button></p>}
+        {page.error && <p className="status" role="alert">{page.error} <button className="link" onClick={page.refresh}>Retry</button></p>}
+        <div className="responses">{recent.slice(0, 6).map(card)}</div>
+        {!recent.length && !page.loading && !circle.loading && !page.error && !circle.error && <p className="status">No public responses yet.</p>}
+      </section>
+    </div> : <>
+      {page.error && <p className="status" role="alert">{page.error} <button className="link" onClick={page.refresh}>Retry responses</button></p>}
+      <section aria-label={view === 'following' ? 'Responses from people you follow' : 'Public responses'} className="responses">{page.items.map(card)}</section>
+      {page.loading && <p className="status" role="status">Loading responses</p>}
+      {page.loaded && !page.loading && !page.error && !page.items.length && <div className="empty"><p>No responses here yet.</p><div className="actions"><Link className="link" to="/people">Find people</Link><Link className="link" to="/log">Log a film</Link></div></div>}
+      {page.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore}>Older responses</button></div>}
+    </>}
+  </div>;
 };
 export default Feed;

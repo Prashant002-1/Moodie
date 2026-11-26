@@ -12,27 +12,15 @@
 .evidence__felt { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--m-space-2); font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); color: var(--m-color-ink-secondary); }
 
 /* ---- The recommendation note --------------------------------------------- */
-/* Film artwork behind the right side of a full-size note, under a scrim in the
-   note's own surface colour so the words stay readable. */
-/* The artwork has no edges: it fades in from the left and out at the top and bottom. */
-.rec__art { position: absolute; z-index: -1; inset: calc(var(--m-space-5) * -1) calc(var(--m-space-6) * -1) calc(var(--m-space-5) * -1) 0; pointer-events: none;
-  -webkit-mask-image: linear-gradient(to right, transparent 34%, #000 68%, #000 84%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 30%, #000 70%, transparent 100%); -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(to right, transparent 34%, #000 68%, #000 84%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 30%, #000 70%, transparent 100%); mask-composite: intersect; }
-.rec__art img { position: absolute; top: 0; right: 0; width: 70%; height: 100%; object-fit: cover; object-position: center 20%; opacity: 0.55; border-radius: var(--m-radius-surface); }
-.rec--art .rec__main { position: relative; }
 .rec__main > .quote { max-width: 60ch; }
 /* The note with the film left out: on that film's own page. */
 .rec.rec--words { grid-template-columns: minmax(0, 1fr); }
-/* The note at the top of its own page lies straight on the band, over the film's artwork. */
-/* The same for the first note on Home: its words lie on the artwork that fills the top of the page. */
-.rec.rec--page, .rec.rec--ambient { padding: 0; }
-.rec.rec--page::before, .rec.rec--ambient::before { content: none; }
 /* A note that cannot be opened yet: the preview while it is being written. */
 .rec--preview .quote:empty { display: none; }
 .rec__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--m-space-2) var(--m-space-3); }
 .rec .actions { gap: var(--m-space-2); }
 
-/* What happened to a recommendation you sent: four steps, the reached ones in the other person's colour. */
+/* What happened to a recommendation you sent: four steps, the reached ones filled. */
 .tracker { display: flex; flex-wrap: wrap; align-items: center; row-gap: var(--m-space-2); }
 .tracker > li { display: inline-flex; align-items: center; }
 .tracker > li + li::before { content: ''; width: var(--m-space-3); height: 1px; background: var(--m-color-rule-strong); }
@@ -60,7 +48,7 @@
 /* ---- The recommendations hub --------------------------------------------- */
 .hub__head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--m-space-4); }
 a.stat:hover .stat__l { color: var(--m-color-ink); }
-.notes { display: grid; gap: var(--m-space-7); }
+.notes { display: grid; gap: var(--m-space-6); }
 
 /* ---- Writing a recommendation -------------------------------------------- */
 /* The form at the left, the note as it will arrive at the right. On a phone the note sits above Send. */
@@ -75,7 +63,7 @@ a.stat:hover .stat__l { color: var(--m-color-ink); }
 /* People to choose from: each in their own colour. */
 .people-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--m-space-2); }
 .person-pick { display: flex; align-items: center; gap: var(--m-space-3); width: 100%; padding: var(--m-space-2) var(--m-space-3); border-radius: var(--m-radius-control); background: var(--m-color-surface-raised); text-align: left; transition: background var(--m-motion-fast) var(--m-ease-out); }
-.person-pick:hover { background: color-mix(in srgb, var(--hue, var(--m-color-ink-muted)) 22%, var(--m-color-surface-raised)); }
+.person-pick:hover { background: var(--m-color-rule-strong); }
 .person-pick > span:last-child { min-width: 0; display: grid; }
 
 /* ---- A conversation ------------------------------------------------------ */

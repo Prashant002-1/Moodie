@@ -39,18 +39,18 @@ export default function Suggestions() {
   const loadSummary = useCallback((signal: AbortSignal) => suggestionService.summary(signal), []);
   const summary = useResource(`${user?.id}:recommendation-summary`, loadSummary);
   return <>
-    <section className="band band--tight"><div className="box stack" style={{ gap: 'var(--m-space-5)' }}>
+    <section className="band band--tight"><div className="box box--narrow stack" style={{ gap: 'var(--m-space-5)' }}>
       <div className="hub__head"><h1>Recommendations</h1><Link className="btn btn--primary" to="/suggestions/new">Recommend a film</Link></div>
       {summary.data && summary.data.received_total + summary.data.sent_total + summary.data.reminders > 0 && <div aria-label="Recommendations in numbers" className="stats stats--hub" role="group">{stats.map(([label, target, count]) =>
         <Link className="stat" key={label} to={`/suggestions?box=${target}`}><span className="stat__n">{count(summary.data!)}</span><span className="stat__l">{label}</span></Link>)}</div>}
       {summary.error && <p className="status" role="alert" style={{ padding: 0 }}>Counts could not be loaded. <button className="link" onClick={summary.refresh}>Retry counts</button></p>}
     </div></section>
-    <div className="page">
+    <div className="page page--narrow">
       <div aria-label="Choose recommendations view" className="tabs" role="group">{tabs.map(([value, label, count]) => {
         const total = summary.data ? count(summary.data) : null;
         return <button aria-pressed={box === value} key={value} onClick={() => changeBox(value)}>{label}{total != null && total > 0 && <span className="tabs__count">{total}</span>}</button>;
       })}</div>
-      <div style={{ marginTop: 'var(--m-space-5)' }}>{box === 'saved' ? <div className="page--narrow"><SavedFilms /></div> : <SuggestionInbox box={box} onChanged={summary.refresh} />}</div>
+      <div style={{ marginTop: 'var(--m-space-5)' }}>{box === 'saved' ? <SavedFilms /> : <SuggestionInbox box={box} onChanged={summary.refresh} />}</div>
     </div>
   </>;
 }
@@ -86,7 +86,7 @@ function SuggestionInbox({ box, onChanged }: { box: InboxBox; onChanged: () => v
     </form>
     {(personId || movieId || entryId) && <p className="t-caption muted">Showing this {personId ? 'connection' : movieId ? 'film' : 'viewing'}. <Link className="link" to="/suggestions">All recommendations</Link></p>}
     {page.error && <p className="notice notice--error" role="alert">{page.error} <button className="link" onClick={page.refresh}>Retry</button></p>}
-    {page.items.length > 0 && <div className={box === 'archived' ? 'two-up' : 'notes'}>{page.items.map(item =>
+    {page.items.length > 0 && <div className="notes">{page.items.map(item =>
       <RecommendationNote compact={box === 'archived'} headingLevel={2} item={item} key={item.id} onChange={change} primary={false} tracker={box === 'sent'} viewerId={user!.id} />)}</div>}
     {page.loading && <p className="status" role="status">Loading recommendations</p>}
     {page.loaded && !page.loading && !page.items.length && <div className="empty">

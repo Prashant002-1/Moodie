@@ -8,7 +8,6 @@ import { suggestionService } from '../services/suggestionService';
 import { discoveryService, ResponseEntry } from '../services/discoveryService';
 import { apiError } from '../services/apiClient';
 import { FilmSuggestion, SuggestionAction } from '../types/suggestion';
-import { imageUrl } from '../utils/display';
 import { personHue } from '../utils/person';
 import { Avatar } from '../components/common/Avatar';
 import { ResponseDetails } from '../components/diary/ResponseDetails';
@@ -78,12 +77,10 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
     finally { setBusy(false); }
   };
   const received = item?.recipient_id === viewerId;
-  const backdrop = imageUrl(item?.backdrop_path, 'w1280');
   const saved = item ? library.get(item.movie_id) : undefined;
   return <>
-    <section className={`band band--tight${backdrop ? ' band--art' : ''}`}>
-      {backdrop && <img alt="" className="band__art" src={backdrop} />}
-      <div className="box stack">
+    <section className="band band--tight">
+      <div className="box box--narrow stack">
         <div className="actions actions--spread t-caption"><Link className="link" to="/suggestions">Recommendations</Link><button className="link" onClick={refresh} disabled={loading || busy}>Refresh</button></div>
         {loading && !item && <p className="status" role="status">Loading recommendation</p>}
         {!loading && !item && <h1>{gone ? 'This recommendation is not available' : 'This recommendation could not be loaded'}</h1>}
@@ -94,8 +91,8 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
         </RecommendationNote>}
       </div>
     </section>
-    {/* The same left edge as the note above, at a reading width. */}
-    <div className="page"><div className="page--narrow stack stack--loose">
+    {/* The same column as the note above. */}
+    <div className="page page--narrow"><div className="stack stack--loose">
       {error && !gone && <p className="notice notice--error" role="alert">{error} <button className="link" onClick={refresh}>Retry</button></p>}
       {item && sentTo && <p className="notice" role="status">Sent to {sentTo}.</p>}
       {item && <>

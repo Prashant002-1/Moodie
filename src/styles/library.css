@@ -4,18 +4,23 @@
 /* ---- The opening of a film or a response ---------------------------------
    Inside a band: the poster with the title beside it, over the film's artwork.
    On a phone the actions run the full width under both. */
-.hero { display: flex; align-items: flex-end; gap: var(--m-space-6); }
+.hero { display: flex; align-items: center; gap: var(--m-space-6); }
 .hero__main { flex: 1; min-width: 0; display: grid; gap: var(--m-space-5); }
 .hero__head { min-width: 0; display: grid; gap: var(--m-space-2); }
 .hero__head h1 { overflow-wrap: anywhere; text-wrap: balance; }
-.hero__head h1 a:hover { color: var(--m-color-accent-ink); }
+.hero__head h1 a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .hero__head .meta, .hero__head .feelings { font-size: var(--m-type-body-size); line-height: var(--m-type-body-line); }
 .hero__head .meta { color: var(--m-color-ink-secondary); }
+.hero__about { max-width: 60ch; }
+/* Two sets of tabs on one line: what is shown, and whose. */
+.switches { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--m-space-2) var(--m-space-5); margin-bottom: var(--m-space-4); }
+.switches > .tabs:last-child:not(:first-child) { margin-right: calc(var(--m-space-3) * -1); }
 .hero__by { display: flex; align-items: center; gap: var(--m-space-3); margin-bottom: var(--m-space-1); font-size: var(--m-type-body-size); }
 @media (max-width: 820px) {
   .hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--m-space-4); }
   .hero__main { display: contents; }
-  .hero__actions { grid-column: 1 / -1; }
+  .hero__actions, .hero__about { grid-column: 1 / -1; }
+  .switches > .tabs:last-child:not(:first-child) { margin-right: 0; }
 }
 
 /* Where a title and its year are separated by a real space (so they read as two words), the year needs no margin. */
@@ -24,9 +29,7 @@
 /* Reading text keeps a comfortable measure however wide the page is. */
 .measure { max-width: 68ch; }
 .measure--list { max-width: 720px; }
-/* Under a hero the reading column starts where the title starts: the width of an xl poster and the gap beside it. */
 .reading { display: grid; gap: var(--m-space-5); max-width: 640px; }
-@media (min-width: 821px) { .reading--offset { margin-left: calc(230px + var(--m-space-6)); } }
 .reading .response__foot { padding-top: var(--m-space-2); }
 .reading .response__photo { max-width: 100%; }
 
@@ -38,10 +41,10 @@
    A tile can be a whole button (choosing a film) or carry its own small actions (search). */
 ul.wall > li { min-width: 0; }
 button.tile { width: 100%; text-align: left; }
-a.tile:hover .tile__title, button.tile:hover .tile__title, .tile__title a:hover { color: var(--m-color-accent-ink); }
+a.tile:hover .tile__title, button.tile:hover .tile__title, .tile__title a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .tile__actions { display: flex; flex-wrap: wrap; margin: calc(var(--m-space-1) * -1) 0 0 calc(var(--m-space-2) * -1); }
 .tile__actions .btn { padding: 0 var(--m-space-2); }
-.tile__actions [aria-pressed='true'] { color: var(--m-color-accent-ink); }
+.tile__actions [aria-pressed='true'] { color: var(--m-color-ink); }
 /* The search field that leads a screen. */
 .search--lead .input { min-height: var(--m-space-7); padding-left: var(--m-space-4); font-size: var(--m-type-reading-size); }
 .search--lead .btn { min-height: var(--m-space-7); padding: 0 var(--m-space-5); }
@@ -61,7 +64,7 @@ a.tile:hover .tile__title, button.tile:hover .tile__title, .tile__title a:hover 
 .entry__main { grid-column: 2; grid-row: 2; }
 .entry__foot { grid-column: 3; grid-row: 1 / span 2; }
 .entry .entry__main { min-width: 0; max-width: 60ch; display: grid; gap: 6px; }
-.entry__main .row__title a:hover { color: var(--m-color-accent-ink); }
+.entry__main .row__title a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .entry__main .response__photo { max-width: 160px; }
 .entry__foot { padding-top: var(--m-space-1); }
 @media (max-width: 820px) {

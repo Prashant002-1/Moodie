@@ -8,7 +8,6 @@ import { personHue } from '../utils/person';
 
 // Sample people and real films, so the front page shows Moodie's own objects
 // before anyone has an account. Nothing here is live content.
-const art = '/7HR38hMBl23lf38MAN63y4pKsHz.jpg'; // Past Lives, the film in the note below
 const note = {
   from: 'hiro', title: 'Past Lives', year: '2023', poster: '/k3waqVXSnvCZWfJYNtdamTgTtTA.jpg',
   reason: 'For that conversation we had about the lives we might have lived. The last scene stayed with me.',
@@ -29,8 +28,7 @@ export default function Home() {
   if (loading) return null;
   if (user) return <Navigate replace to="/feed" />;
   return <>
-    <section className="band band--art">
-      <img alt="" className="band__art" src={imageUrl(art, 'w1280')!} />
+    <section className="band">
       <div className="box"><div className="frontpage__hero">
         <h1 className="t-display">Films and shows, found through people.</h1>
         <p>A friend recommends a film and says why. You watch it, and tell them how it landed.</p>

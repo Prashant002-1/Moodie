@@ -15,9 +15,6 @@
 /* The two-line clamp needs both classes to win over `.clamp` in app.css. */
 .clamp.clamp--2 { -webkit-line-clamp: 2; }
 
-/* A person's page opens in their colour. */
-.band[data-hue] { background: linear-gradient(to bottom, color-mix(in srgb, var(--hue) 22%, var(--m-color-canvas)) 0%, var(--m-color-canvas) 100%); }
-
 /* ---- A person's page ------------------------------------------------------
    The band: their avatar in their colour, their name, their words, their counts. */
 .profile { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--m-space-6); row-gap: var(--m-space-4); align-items: start; }
@@ -26,10 +23,10 @@
 .profile__name h1 { overflow-wrap: anywhere; min-width: 0; }
 .profile__bio { max-width: 56ch; }
 .profile__common button { font-family: var(--m-font-display); font-weight: 650; font-size: var(--m-type-body-size); color: var(--m-color-ink); letter-spacing: 0; }
-.profile__common button:hover { color: var(--m-color-accent-ink); }
+.profile__common button:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 /* A count that opens a list. */
 button.stat { text-align: left; }
-button.stat:hover .stat__l, button.stat[aria-expanded='true'] .stat__l { color: var(--m-color-accent-ink); }
+button.stat:hover .stat__l, button.stat[aria-expanded='true'] .stat__l { color: var(--m-color-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 @media (max-width: 820px) {
   .profile { column-gap: var(--m-space-4); align-items: center; }
   .profile > .avatar { width: var(--m-space-8); height: var(--m-space-8); font-size: var(--m-type-title2-size); }
@@ -49,10 +46,10 @@ button.stat:hover .stat__l, button.stat[aria-expanded='true'] .stat__l { color: 
 .pair__main { min-width: 0; display: grid; gap: var(--m-space-4); align-content: start; }
 .pair__head { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--m-space-2); min-width: 0; }
 .pair__head h2 { overflow-wrap: anywhere; min-width: 0; }
-.pair__head h2 a:hover { color: var(--m-color-accent-ink); }
+.pair__head h2 a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .pair__head .year { font-size: var(--m-type-body-size); margin-left: 0; }
 .pair__sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--m-space-5); }
-.pair__side { min-width: 0; display: grid; gap: var(--m-space-2); align-content: start; padding-left: var(--m-space-4); border-left: 2px solid var(--hue, var(--m-color-rule-strong)); }
+.pair__side { min-width: 0; display: grid; gap: var(--m-space-2); align-content: start; }
 .pair__who { display: flex; align-items: center; gap: var(--m-space-2); font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); }
 @media (max-width: 820px) {
   .pair { gap: var(--m-space-4); align-items: center; }
@@ -68,14 +65,12 @@ button.stat:hover .stat__l, button.stat[aria-expanded='true'] .stat__l { color: 
 /* Search beside the page title on a wide screen, under it and full width on a phone. */
 .people__head > .search { flex: 0 1 360px; }
 @media (max-width: 820px) { .people__head > .search { flex-basis: 100%; } }
-/* A person's card is lit by their own colour, like a note from them. */
-.person { position: relative; isolation: isolate; min-width: 0; display: grid; gap: var(--m-space-3); align-content: start; padding: var(--m-space-3) 0; }
-.person::before { content: ''; position: absolute; z-index: -1; inset: calc(var(--m-space-7) * -1) calc(var(--m-space-6) * -1); pointer-events: none; background: radial-gradient(ellipse 40% 50% at 40% 50%, color-mix(in srgb, var(--hue, var(--m-color-accent)) 24%, transparent) 0%, color-mix(in srgb, var(--hue, var(--m-color-accent)) 11%, transparent) 45%, transparent 100%); }
+.person { min-width: 0; display: grid; gap: var(--m-space-3); align-content: start; }
 .person__head { display: flex; align-items: center; gap: var(--m-space-4); }
 .person__name { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--m-space-2); row-gap: var(--m-space-1); }
 .person__name .who { font-size: var(--m-type-title3-size); line-height: var(--m-type-title3-line); letter-spacing: var(--m-type-title3-tracking); overflow-wrap: anywhere; min-width: 0; }
 .person__latest { display: flex; align-items: flex-start; gap: var(--m-space-3); }
-.person__latest .tile__title a:hover { color: var(--m-color-accent-ink); }
+.person__latest .tile__title a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 
 
 /* ---- Activity -------------------------------------------------------------

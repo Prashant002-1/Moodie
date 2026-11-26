@@ -26,11 +26,11 @@ export default function Diary() {
     [summary.public_entries, 'Public'],
   ] : [];
   return <>
-    <section className="band band--tight"><div className="box page__head" style={{ marginBottom: 0 }}>
+    <section className="band band--tight"><div className="box box--narrow page__head" style={{ marginBottom: 0 }}>
       <h1>Diary</h1>
       {summary && summary.entries > 0 && <ul aria-label="Diary counts" className="stats">{counts.map(([count, label]) => <li className="stat" key={label}><span className="stat__n">{count}</span><span className="stat__l">{label}</span></li>)}</ul>}
     </div></section>
-    <div className="page">
+    <div className="page page--narrow">
       {error && <p className="notice notice--error" role="alert" style={{ marginBottom: 'var(--m-space-4)' }}>{error} <button className="link" onClick={() => void refresh()} type="button">Retry</button></p>}
       <ViewingHistory key={movieId ?? 'all'} movieId={movieId} />
     </div>

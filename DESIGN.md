@@ -1,25 +1,26 @@
 ---
 name: Moodie
 description: Films and shows, found through people.
-direction: "Afterglow"
+direction: "Screening Room"
 tokens: design/tokens.json
 ---
 
 # Design system: Moodie
 
-Revised 2026-11-26. Fourth direction. The first (warm paper and a red accent) was rejected as muddy. The second (neutral white, hairlines, no colour) was clean and had no identity. The third, The Lobby, borrowed its parts from Letterboxd (a hard bar, labels on hairlines, outlined poster grids, big-number counts, film-first review cards) and read as a clone of it, with every screen cut into sections. This one keeps the midnight canvas, the marquee yellow, people's colours and the three voices of type, and changes how a screen is put together.
+Revised 2026-11-26. Fifth direction. The first (warm paper and a red accent) was rejected as muddy. The second (neutral white, hairlines, no colour) was clean and had no identity. The third, The Lobby, borrowed its parts from Letterboxd and read as a clone of it, with every screen cut into sections. The fourth, Afterglow, removed the sections but lit everything with gradients, glows, a bright yellow and seven neon person colours, and was rejected as too bright and not solid. This one keeps the fourth's structure (one surface, words first, three voices of type) and makes it flat and quiet.
 
-## Direction: Afterglow
+## Direction: Screening Room
 
-The light a film leaves on the people who watched it. A screen is one continuous surface in a dark room. Nothing on it is boxed off from the rest. What separates one thing from the next is space, type, a person's colour and a film's artwork, never a line or a frame.
+A dark room with the lights down. The interface is one tone of ink on one tone of canvas. The only colour on a screen comes from film posters and from people's avatars.
 
-Five things carry it.
+Six things carry it.
 
-1. **One surface.** No rules between sections, no outlined cards, no hard bars. The top bar is clear at the top of a page and frosts over only once the page moves under it. A page that opens with a film or a person starts under the bar and melts into the page below, with no edge.
-2. **People are light.** Every person has one of seven colours from their username. It is their avatar and their name, and it falls on the page behind what they said or sent, like light from a lamp, fading out with no edge. A person's own page opens washed in their colour. A feed of friends is visibly a feed of *different people*.
-3. **Films are atmosphere.** Artwork runs to the top of the window behind a film, a response, a recommendation and the top of Home, and fades into the page. Posters have no outline; one that opens something lifts a little under the pointer.
-4. **Words first.** A response leads with what the person wrote. The film it is about follows as a small line: poster, title, feelings. A recommendation is a note: the person, the film and their reason, set straight on the page. Counts are a line of plain words ("2 responses, 1 follower"), never a scoreboard.
-5. **Three voices of type.** A heavy serif for titles and for section headings, set in sentence case straight on the page. The same serif, regular, for what people wrote, and italic for what they said to you. A sans for everything the interface says. Capitals and letter-spacing are not used for navigation, tabs, headings or badges.
+1. **One surface.** No rules between sections, no outlined cards, no hard bars. The top bar is the page's own colour. What separates one thing from the next is space and type, never a line or a frame.
+2. **Flat.** No gradients, no glows, no washes, no translucent or blurred layers, no artwork faded behind text. Every fill is one solid tone.
+3. **Ink is the accent.** The primary button, a selected chip, a state mark and the focus ring are the ink colour on the canvas (bone on near-black in dark, near-black on paper in light). There is no brand hue in the interface.
+4. **People are a disc of colour.** Every person has one of seven muted tones from their username. It fills their avatar and nothing else: names are ink. The seven are one family, the same lightness and strength.
+5. **Words first, in one column.** A response leads with what the person wrote; the film follows as a small line: poster, title, feelings. Screens that are a stream of words (Home, Recommendations, a recommendation, a response, Diary, Activity) are one reading column, 720px wide, with one left edge from top to bottom. Counts are a line of plain words, never a scoreboard.
+6. **Three voices of type.** A heavy serif for titles and section headings, in sentence case. The same serif, regular, for what people wrote, and italic for what they said to you. A sans for everything the interface says. Capitals and letter-spacing are not used for navigation, tabs, headings or badges.
 
 ## Tokens
 
@@ -31,26 +32,27 @@ Dark is the identity and the default. Light is offered in Account, Appearance (D
 
 | Role | Dark | Light | Use |
 | --- | --- | --- | --- |
-| canvas | `#0E1220` | `#FFFFFF` | The page. |
-| band | `#151B2E` | `#F2F4FA` | The wash that opens a page and fades into the canvas. |
-| surface | `#171D31` | `#FFFFFF` | Panels that sit over the page for a moment: a prompt, a list of people, comments. |
-| surfaceRaised | `#1F2742` | `#F2F4FA` | Controls: fields, secondary buttons, chips, the current tab, menus, poster placeholders. |
-| sunken | `#090C16` | `#EEF0F6` | The shadow under a menu and the browser's own bars. |
-| ink | `#F3F5FB` | `#101530` | Text. |
-| inkSecondary | `#B7C0D4` | `#434B66` | Reading text and supporting copy. |
-| inkMuted | `#8591AB` | `#69728C` | Metadata and labels. Lowest contrast allowed for text. |
-| rule / ruleStrong | `#222A43` / `#36405F` | `#E2E5EF` / `#C4CADA` | A control under the pointer, and the outline of a pressed toggle. Not used to divide content. |
-| accent (marquee) | `#FFC53D` | `#FFC53D` | Primary button, current tab, selected chip, state marks. Always with `onAccent` `#17130A` on top. |
-| accentInk | `#FFC53D` | `#8A5A00` | The accent used as text or a thin line. |
-| error / success | `#FF8F85` / `#3DD68C` | `#B3261E` / `#0E8A4F` | Messages only. |
+| canvas | `#111110` | `#FAF9F7` | The page and the top bar. |
+| surface | `#1A1918` | `#F2F0EC` | Panels that sit over the page for a moment (a prompt, a list of people, comments) and the phone's bottom bar. |
+| surfaceRaised | `#252422` | `#EAE7E2` | Controls: fields, secondary buttons, chips, the current tab, menus, poster placeholders. |
+| sunken | `#0A0A09` | `#E3E0DA` | The shadow under a menu and the browser's own bars. |
+| ink | `#F2EFE9` | `#161514` | Text. |
+| inkSecondary | `#BEBAB2` | `#4A4844` | Reading text and supporting copy. |
+| inkMuted | `#8E8A83` | `#6F6C66` | Metadata and labels. Lowest contrast allowed for text. |
+| rule / ruleStrong | `#2B2A28` / `#3D3C39` | `#E3E0DA` / `#CDC9C1` | A control under the pointer, and the outline of a pressed toggle. Not used to divide content. |
+| accent | `#F2EFE9` | `#161514` | The ink colour used as a fill: primary button, selected chip, state marks. Always with `onAccent` on top. |
+| error / success | `#F0958B` / `#7FC79B` | `#B3261E` / `#1E7A4B` | Messages only. |
 
-People: amber, green, sky, violet, teal, coral, lime (`--m-person-1` to `-7`, with darker values in light). Chosen by `personHue(username)`. Used only for people.
+`band` equals `canvas` and `accentInk` equals `ink`; both tokens are kept so the native clients keep building.
+
+People: clay, sand, sage, teal, sky, lilac, rose (`--m-person-1` to `-7`, with darker values in light). Chosen by `personHue(username)`. Used only to fill an avatar, and in the brand mark.
 
 Rules:
 
-- Gradients do two jobs only: they fade artwork and a page's opening wash into the canvas, and they are the light of a person's colour behind what that person said. Both fade to nothing with no visible edge. No other gradients, and no tinted panels.
+- No gradients anywhere, including behind artwork and as masks.
+- No left or side rule on a quote, a note or a panel.
 - Feelings have no colours. Colour says *who*, never *what they felt*.
-- The marquee yellow is never used for a person, and a person colour is never used for an action.
+- A link or a title under the pointer is underlined; it does not change colour.
 
 ## Typography
 
@@ -75,8 +77,9 @@ Small capitals are not used for navigation, tabs, section headings or badges. Th
 
 ## Layout
 
-- Everything sits in one column, 1040px wide, on every page. Reading pages narrow to 720.
-- A page opens with a wash when it has a subject: Home's greeting and notes over the film someone last thought of you for, a film or a response over its artwork, a person in their colour, the recommendations hub. The wash starts under the top bar and has no bottom edge.
+- The bar and the wide pages (a film, a person, People, Search, the composer) sit in a 1040px box. Streams of words sit in one 720px reading column, centred.
+- A page that has a subject opens with it: a film's poster, title, synopsis and actions; a person's avatar, name and counts. It is the same surface as the rest of the page.
+- Home is one column in one order: the view tabs, the greeting, reminders, recommendations, new from friends, films through people, recent responses.
 - Sections are separated by space and a serif heading. There are no rules, and content is never placed in an outlined or filled box. Filled surfaces are for controls and for panels that sit over the page for a moment.
 - Corners are soft: 8px on posters, 10px on controls, 18px on panels; buttons, chips and tabs are pills.
 - Posters appear as walls where a set of films is the point (new from friends, search, a person's films). Beside words a poster is small: the words lead.
@@ -85,7 +88,7 @@ Small capitals are not used for navigation, tabs, section headings or badges. Th
 
 Home, Recommendations, People, Diary, with Search and Activity as icons, **Recommend** and **Log** as the two actions, and the person's own avatar. On a phone the same destinations sit in Moodie's own bottom bar with the add button in the middle. iOS and Android draw this bar themselves so the three clients look like one product.
 
-The mark is two overlapping circles: two people and what they share. It is drawn in the marquee yellow and a person colour, with the overlap in ink.
+The mark is two overlapping circles: two people and what they share. It is drawn in two person tones (clay and sky), with the overlap in ink.
 
 ## Motion
 
@@ -98,7 +101,9 @@ The person using Moodie is the most intelligent part of the system. Warm and spe
 ## Do not
 
 - Add ratings, stars, percentages, compatibility scores, charts of a person's feelings or a mood picker.
-- Add colour that is not a person, artwork or the marquee.
+- Add colour that is not a poster or an avatar.
+- Add a gradient, a glow, a blur or a tinted wash.
+- Put a coloured rule down the side of a quote or a panel.
 - Divide content with a rule, or put it in an outlined or filled box.
 - Set navigation, tabs, headings or badges in capitals.
 - Lead a response with the film instead of the person's words.
@@ -108,4 +113,4 @@ The person using Moodie is the most intelligent part of the system. Warm and spe
 
 ## Known gaps
 
-The iPhone app has not been moved to this system. Its colours and corner radii follow the shared tokens, but its layout, type and tab bar are still the earlier ones. The working brief for building a web screen is [design/WEB_UI_RULES.md](design/WEB_UI_RULES.md).
+The iPhone app has not been moved to this system. Its colours and corner radii follow the shared tokens (so its accent is now the ink colour), but its layout, type and tab bar are still the earlier ones and it has not been built or checked against this palette. The working brief for building a web screen is [design/WEB_UI_RULES.md](design/WEB_UI_RULES.md).

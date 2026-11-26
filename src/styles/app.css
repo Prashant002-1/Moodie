@@ -1,6 +1,7 @@
-/* Moodie web: one continuous surface. Nothing on a screen is boxed off from
-   the rest: no rules between sections, no outlined cards, no hard bars. Space,
-   type, a person's colour and a film's artwork do the separating.
+/* Moodie web: one continuous, flat surface. Nothing on a screen is boxed off
+   from the rest: no rules between sections, no outlined cards, no gradients,
+   no glows. The interface is one tone of ink on one tone of canvas; colour
+   comes only from film posters and people's avatars.
    Built only from design tokens (design/tokens.json). See DESIGN.md and
    design/WEB_UI_RULES.md. Add a class here only when no existing one fits. */
 @import '@fontsource-variable/inter/wght.css';
@@ -88,22 +89,20 @@ button.link { font-size: inherit; }
 .avatar--sm { width: 22px; height: 22px; font-size: 0.625rem; }
 a.avatar { transition: transform var(--m-motion-fast) var(--m-ease-out); }
 a.avatar:hover { transform: scale(1.06); }
-.who { color: var(--hue, var(--m-color-ink)); font-weight: 600; }
+.who { color: var(--m-color-ink); font-weight: 600; }
 a.who:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---- Shell --------------------------------------------------------------- */
 .app { min-height: 100dvh; display: flex; flex-direction: column; }
 .app > main { flex: 1; }
-/* The bar floats over the page: artwork and colour run to the very top of the window under it. */
 .app { --bar: 0px; }
-.app:has(> .topbar) { --bar: 64px; }
-.app:has(> .topbar) > main { margin-top: calc(var(--bar) * -1); }
 main > * { animation: enter var(--m-motion-slow) var(--m-ease-out) backwards; }
 @keyframes enter { from { opacity: 0; transform: translateY(8px); } }
 .box { width: 100%; max-width: calc(var(--box) + 2 * var(--m-space-5)); margin: 0 auto; padding-left: var(--m-space-5); padding-right: var(--m-space-5); }
-/* At the top of a page the bar is clear: the page simply starts. It frosts over once the page moves under it. */
-.topbar { position: sticky; top: 0; z-index: 20; transition: background var(--m-motion-base) var(--m-ease-out); }
-.topbar--over { background: color-mix(in srgb, var(--m-color-canvas) 70%, transparent); -webkit-backdrop-filter: blur(22px) saturate(1.6); backdrop-filter: blur(22px) saturate(1.6); }
+/* A stream of words (Home, Recommendations, Diary) is one reading column. */
+.box--narrow { max-width: calc(720px + 2 * var(--m-space-5)); }
+/* The bar is the page's own colour, with no edge: the page simply passes under it. */
+.topbar { position: sticky; top: 0; z-index: 20; background: var(--m-color-canvas); }
 .topbar__inner { max-width: calc(var(--box) + 2 * var(--m-space-5)); margin: 0 auto; height: 64px; padding: 0 var(--m-space-5); display: flex; align-items: center; gap: var(--m-space-6); }
 .wordmark { display: inline-flex; align-items: center; gap: 10px; font-family: var(--m-font-display); font-size: 1.5rem; line-height: 1; letter-spacing: -0.03em; font-weight: 700; color: var(--m-color-ink); }
 .wordmark svg { width: 30px; height: 21px; flex: none; }
@@ -127,13 +126,12 @@ main > * { animation: enter var(--m-motion-slow) var(--m-ease-out) backwards; }
 /* Phone: the same destinations in Moodie's own bottom bar. */
 .tabbar { display: none; }
 @media (max-width: 820px) {
-  .app:has(> .topbar) { --bar: 52px; }
   .topbar__inner { height: 52px; padding: 0 var(--m-space-4); gap: var(--m-space-4); }
   .topbar .nav, .topbar .topbar__wide { display: none; }
   .app--signed-in > main { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
   .tabbar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, 1fr); align-items: center;
-    background: color-mix(in srgb, var(--m-color-canvas) 72%, transparent); -webkit-backdrop-filter: blur(22px) saturate(1.6); backdrop-filter: blur(22px) saturate(1.6); padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
+    background: var(--m-color-surface); padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
   }
   .tabbar__link { display: grid; justify-items: center; gap: 3px; padding: 4px 0; color: var(--m-color-ink-muted); font-size: 0.6875rem; font-weight: 500; line-height: 1.2; letter-spacing: 0; }
   .tabbar__link[aria-current='page'] { color: var(--m-color-ink); }
@@ -161,7 +159,7 @@ main > * { animation: enter var(--m-motion-slow) var(--m-ease-out) backwards; }
 .section__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--m-space-4); margin-bottom: var(--m-space-4); }
 .section__head h2, .section__head h3 { font-family: var(--m-font-display); font-size: 1.375rem; line-height: 1.25; font-weight: 600; letter-spacing: -0.015em; color: var(--m-color-ink); }
 .section__head a, .section__head button { font-size: var(--m-type-callout-size); font-weight: 500; color: var(--m-color-ink-muted); white-space: nowrap; }
-.section__head a:hover, .section__head button:hover { color: var(--m-color-accent-ink); }
+.section__head a:hover, .section__head button:hover { color: var(--m-color-ink); }
 .section__head + .list > :first-child { padding-top: 0; }
 .footer { color: var(--m-color-ink-muted); }
 .footer__inner { max-width: calc(var(--box) + 2 * var(--m-space-5)); margin: 0 auto; padding: var(--m-space-5); display: flex; align-items: center; gap: var(--m-space-3); color: var(--m-color-ink-muted); font-size: var(--m-type-caption-size); }
@@ -172,19 +170,14 @@ main > * { animation: enter var(--m-motion-slow) var(--m-ease-out) backwards; }
 .footer__links a:hover { color: var(--m-color-ink); }
 @media (max-width: 820px) { .footer__links { margin-left: 0; flex-basis: 100%; } }
 
-/* A band opens a page: a wash of the second tone, or of a film's artwork, that
-   starts under the bar and melts into the page below it. It has no edge. */
-.band { position: relative; overflow: hidden; background: linear-gradient(to bottom, var(--m-color-band) 0%, var(--m-color-canvas) 100%); }
+/* A band opens a page with its subject: a film, a person, a greeting. It is
+   the same surface as the rest of the page, with more room. */
+.band { position: relative; }
 .band > .box { position: relative; padding-top: calc(var(--m-space-7) + var(--bar)); padding-bottom: var(--m-space-6); }
 .band--tight > .box { padding-top: calc(var(--m-space-6) + var(--bar)); padding-bottom: var(--m-space-5); }
-.band--art { background: var(--m-color-canvas); }
-.band__art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; opacity: 0.5; }
-/* Artwork fades into the page at the left and at the bottom, so words stay readable and no edge shows. */
-.band--art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to right, var(--m-color-canvas) 0%, color-mix(in srgb, var(--m-color-canvas) 82%, transparent) 42%, color-mix(in srgb, var(--m-color-canvas) 30%, transparent) 100%), linear-gradient(to top, var(--m-color-canvas) 0%, transparent 55%); }
-.band--art > .box { z-index: 1; }
 .greeting { font-family: var(--m-font-display); font-weight: 400; font-size: clamp(1.5rem, 3.6vw, 2.125rem); line-height: 1.25; letter-spacing: -0.015em; color: var(--m-color-ink-secondary); text-wrap: balance; }
 .greeting strong, .greeting a { font-weight: 650; color: var(--m-color-ink); }
-.greeting .who { color: var(--hue, var(--m-color-ink)); }
+.greeting__more { display: block; }
 
 /* ---- Controls ------------------------------------------------------------ */
 .btn {
@@ -263,6 +256,8 @@ a.poster:hover, a:hover > .poster, .tile:hover .poster { transform: translateY(-
 .wall { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--m-space-4); }
 @media (max-width: 820px) { .wall { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--m-space-3); } }
 .wall--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* A few films in a reading column: as many as there are, each a comfortable size. */
+.wall.wall--fit { grid-template-columns: repeat(auto-fit, minmax(96px, 132px)); }
 @media (max-width: 820px) { .wall--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .tile { position: relative; display: grid; gap: 8px; align-content: start; min-width: 0; }
 .tile .poster { width: 100%; }
@@ -286,7 +281,7 @@ a.poster:hover, a:hover > .poster, .tile:hover .poster { transform: translateY(-
 .row--center { align-items: center; }
 .row__main { flex: 1; min-width: 0; display: grid; gap: 4px; }
 .row__aside { flex: none; display: flex; align-items: center; gap: var(--m-space-2); }
-a.row:hover .row__title, button.row:hover .row__title { color: var(--m-color-accent-ink); }
+a.row:hover .row__title, button.row:hover .row__title { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .row__title { font-family: var(--m-font-display); font-weight: 650; font-size: var(--m-type-title3-size); line-height: var(--m-type-title3-line); letter-spacing: var(--m-type-title3-tracking); }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
@@ -294,6 +289,8 @@ a.row:hover .row__title, button.row:hover .row__title { color: var(--m-color-acc
 @media (max-width: 820px) { .two-up { grid-template-columns: 1fr; } }
 .columns { columns: 2; column-gap: var(--m-space-7); }
 .columns > * { break-inside: avoid; }
+/* Responses one under another in a reading column. */
+.responses { display: grid; gap: var(--m-space-3); }
 @media (max-width: 820px) { .columns { columns: 1; } }
 
 /* ---- People's words ------------------------------------------------------
@@ -301,10 +298,10 @@ a.row:hover .row__title, button.row:hover .row__title { color: var(--m-color-acc
    `.quote` is what someone said to you: larger, italic, with their colour. */
 .note { font-family: var(--m-font-display); font-weight: 400; font-size: var(--m-type-reading-size); line-height: var(--m-type-reading-line); letter-spacing: 0; color: var(--m-color-ink-secondary); white-space: pre-line; overflow-wrap: anywhere; }
 .note--lead { font-size: 1.25rem; line-height: 1.6; color: var(--m-color-ink); }
-.quote { position: relative; font-family: var(--m-font-display); font-style: italic; font-weight: 400; font-size: var(--m-type-quote-size); line-height: var(--m-type-quote-line); letter-spacing: var(--m-type-quote-tracking); color: var(--m-color-ink); white-space: pre-line; overflow-wrap: anywhere; padding-left: var(--m-space-4); border-left: 2px solid var(--hue, var(--m-color-accent)); }
+.quote { position: relative; font-family: var(--m-font-display); font-style: italic; font-weight: 400; font-size: var(--m-type-quote-size); line-height: var(--m-type-quote-line); letter-spacing: var(--m-type-quote-tracking); color: var(--m-color-ink); white-space: pre-line; overflow-wrap: anywhere; }
 .quote--small { font-size: 1.0625rem; line-height: 1.55; }
 .byline { font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); color: var(--m-color-ink-secondary); }
-.byline strong, .byline a { color: var(--hue, var(--m-color-ink)); font-weight: 600; }
+.byline strong, .byline a { color: var(--m-color-ink); font-weight: 600; }
 .byline a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* Feelings are words in the order the person gave them. The first is the strongest. */
@@ -326,37 +323,33 @@ a.row:hover .row__title, button.row:hover .row__title { color: var(--m-color-acc
 .response__text > .feelings { grid-column: 2; grid-row: 4; }
 .response__text > .meta { grid-column: 2; grid-row: 5; }
 .response__film span { font-family: var(--m-font-sans); font-weight: 400; font-size: var(--m-type-callout-size); color: var(--m-color-ink-muted); letter-spacing: 0; margin-left: 4px; }
-.response__film:hover { color: var(--m-color-accent-ink); }
+.response__film:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .response__photo { width: 100%; max-width: 280px; border-radius: var(--m-radius-poster); }
 .response__foot { display: flex; align-items: center; flex-wrap: wrap; gap: var(--m-space-4); font-size: var(--m-type-caption-size); font-weight: 500; color: var(--m-color-ink-muted); }
 .response__foot a:hover, .response__foot button:hover { color: var(--m-color-ink); }
 .response__foot button, .response__foot a { display: inline-flex; align-items: center; gap: 6px; }
-.response__foot [aria-pressed='true'] { color: var(--m-person-6); }
+.response__foot [aria-pressed='true'] { color: var(--m-color-ink); }
 .response__foot > .push { margin-left: auto; }
 
 /* ---- A recommendation: a note from a person ------------------------------
    The signature object. A film someone thought of you for, with their words. */
-.rec { position: relative; isolation: isolate; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--m-space-5); padding: var(--m-space-3) 0; }
-/* The note has no frame and no surface. The colour of the person who wrote it
-   falls on the page behind it, like light, and fades out with no edge. */
-.rec::before { content: ''; position: absolute; z-index: -1; inset: calc(var(--m-space-7) * -1) calc(var(--m-space-8) * -1); pointer-events: none;
-  background: radial-gradient(ellipse 32% 50% at 32% 50%, color-mix(in srgb, var(--hue, var(--m-color-accent)) 24%, transparent) 0%, color-mix(in srgb, var(--hue, var(--m-color-accent)) 11%, transparent) 45%, transparent 100%); }
+/* The note has no frame and no surface: the poster, who it is from, the film, their words. */
+.rec { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--m-space-5); }
 .rec__main { min-width: 0; display: grid; gap: var(--m-space-3); align-content: start; }
 .rec__from { display: flex; align-items: center; gap: 10px; font-size: var(--m-type-callout-size); color: var(--m-color-ink-secondary); }
 .rec__from time, .rec__from .rec__when { margin-left: auto; font-size: var(--m-type-caption-size); color: var(--m-color-ink-muted); white-space: nowrap; }
 .rec__title { font-family: var(--m-font-display); font-weight: 650; font-size: var(--m-type-title1-size); line-height: var(--m-type-title1-line); letter-spacing: var(--m-type-title1-tracking); }
-.rec__title a:hover { color: var(--m-color-accent-ink); }
-.rec .quote { border-left: 0; padding-left: 0; }
-.rec__state { display: inline-flex; align-items: center; gap: 6px; font-size: var(--m-type-caption-size); font-weight: 600; color: var(--m-color-accent-ink); }
+.rec__title a:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.rec__state { display: inline-flex; align-items: center; gap: 6px; font-size: var(--m-type-caption-size); font-weight: 600; color: var(--m-color-ink-secondary); }
 .rec--compact { grid-template-columns: auto minmax(0, 1fr); gap: var(--m-space-4); }
 .rec--compact .rec__title { font-size: var(--m-type-title2-size); line-height: var(--m-type-title2-line); }
 .rec--compact .quote { font-size: 1.0625rem; line-height: 1.55; }
-@media (max-width: 820px) { .rec { gap: var(--m-space-4); } .rec::before { inset: calc(var(--m-space-6) * -1) calc(var(--m-space-4) * -1); background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--hue, var(--m-color-accent)) 24%, transparent) 0%, color-mix(in srgb, var(--hue, var(--m-color-accent)) 11%, transparent) 45%, transparent 100%); } .rec__title { font-size: var(--m-type-title2-size); line-height: var(--m-type-title2-line); } .rec .quote { font-size: 1.0625rem; line-height: 1.55; } .rec > .poster--lg { width: 84px; } }
+@media (max-width: 820px) { .rec { gap: var(--m-space-4); } .rec__title { font-size: var(--m-type-title2-size); line-height: var(--m-type-title2-line); } .rec .quote { font-size: 1.0625rem; line-height: 1.55; } .rec > .poster--lg { width: 84px; } }
 
 /* A small state mark: new, due, watched, replied. */
 .badge { display: inline-flex; align-items: center; gap: 6px; min-height: 22px; padding: 0 9px; border-radius: var(--m-radius-pill); background: var(--m-color-surface-raised); color: var(--m-color-ink-secondary); font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
 .badge--accent { background: var(--m-color-accent); color: var(--m-color-on-accent); }
-.badge--hue { background: color-mix(in srgb, var(--hue, var(--m-color-accent)) 22%, transparent); color: var(--hue, var(--m-color-accent-ink)); }
+.badge--hue { background: var(--m-color-surface-raised); color: var(--m-color-ink); }
 
 /* Counts are a line of plain words: the number, then what it counts. */
 .stats { display: flex; flex-wrap: wrap; gap: var(--m-space-1) var(--m-space-5); }

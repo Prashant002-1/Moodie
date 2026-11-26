@@ -37,10 +37,10 @@ export type ReplyEmailData = NoteEmailData & {
 
 // The dark palette of design/tokens.json. A test keeps these equal to the tokens.
 export const emailColours = {
-  canvas: '#0E1220', surface: '#171D31', surfaceRaised: '#1F2742', ink: '#F3F5FB', inkSecondary: '#B7C0D4',
-  inkMuted: '#8591AB', rule: '#222A43', accent: '#FFC53D', onAccent: '#17130A', onPerson: '#0E1220',
+  canvas: '#111110', surface: '#1A1918', surfaceRaised: '#252422', ink: '#F2EFE9', inkSecondary: '#BEBAB2',
+  inkMuted: '#8E8A83', rule: '#2B2A28', accent: '#F2EFE9', onAccent: '#111110', onPerson: '#111110',
 };
-export const personColours = ['#FFB224', '#3DD68C', '#52B8FF', '#B79CFF', '#2CD4C0', '#FF8468', '#C4E85A'];
+export const personColours = ['#D4A088', '#CBB078', '#9DBF98', '#84BFBD', '#92B4DC', '#B5A6DE', '#DA9DB2'];
 
 /** The same choice as `personHue` in src/utils/person.ts, so a person has one colour everywhere. */
 export const personHue = (username: string) => {
@@ -136,22 +136,21 @@ ${lead ? `
   <h1 class="m-lead" style="margin:0;font-family:${SERIF};font-size:32px;line-height:36px;font-weight:700;letter-spacing:-0.02em;color:${c.ink};">${escapeHtml(lead)}</h1>
 </td></tr>` : ''}
 <tr><td ${cell(c.canvas)}">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ${cell(c.surface)}border:1px solid ${c.rule};border-radius:10px;border-collapse:separate;overflow:hidden;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ${cell(c.surface)}border-radius:14px;border-collapse:separate;overflow:hidden;">
   <tr>
-    <td width="3" bgcolor="${hue}" style="width:3px;background-color:${hue};font-size:0;line-height:0;">&nbsp;</td>
     <td ${cell(c.surface)}">
 ${art ? `      <a href="${escapeHtml(open)}" style="display:block;text-decoration:none;"><img src="${escapeHtml(art)}" width="595" alt="A scene from ${title}" style="display:block;width:100%;max-width:100%;height:auto;border:0;background-color:${c.surfaceRaised};color:${c.inkMuted};font-family:${SANS};font-size:13px;"></a>\n` : ''}      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="m-inner" ${cell(c.surface)}padding:26px 28px 28px;">
 
         <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
           <td width="40" height="40" align="center" valign="middle" bgcolor="${hue}" style="width:40px;height:40px;border-radius:20px;background-color:${hue};color:${c.onPerson};font-family:${SERIF};font-size:19px;line-height:40px;font-weight:700;text-transform:uppercase;">${escapeHtml(data.from.charAt(0))}</td>
-          <td ${cell(c.surface)}padding-left:12px;font-family:${SANS};font-size:17px;line-height:24px;color:${c.inkSecondary};">${escapeHtml(byline.before ?? '')}<strong style="font-weight:700;color:${hue};">${who}</strong>${escapeHtml(byline.after)}</td>
+          <td ${cell(c.surface)}padding-left:12px;font-family:${SANS};font-size:17px;line-height:24px;color:${c.inkSecondary};">${escapeHtml(byline.before ?? '')}<strong style="font-weight:700;color:${c.ink};">${who}</strong>${escapeHtml(byline.after)}</td>
         </tr></table>
 
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;"><tr>
 ${poster ? `          <td class="m-poster" valign="top" ${cell(c.surface)}padding-right:22px;"><a href="${escapeHtml(open)}" style="display:block;text-decoration:none;"><img src="${escapeHtml(poster)}" width="132" alt="Poster for ${title}" style="display:block;width:132px;height:auto;border:0;border-radius:4px;background-color:${c.surfaceRaised};color:${c.inkMuted};font-family:${SANS};font-size:12px;line-height:16px;"></a></td>\n` : ''}          <td width="100%" valign="top" ${cell(c.surface)}">
             <h2 class="m-title" style="margin:0;font-family:${SERIF};font-size:34px;line-height:38px;font-weight:700;letter-spacing:-0.02em;color:${c.ink};"><a href="${escapeHtml(open)}" style="color:${c.ink};text-decoration:none;">${title}</a>${released ? ` <span style="font-family:${SANS};font-size:0.56em;font-weight:400;letter-spacing:0;color:${c.inkMuted};white-space:nowrap;">${released}</span>` : ''}</h2>
-${details?.badge ? `            <p style="margin:12px 0 0;font-family:${SANS};font-size:13px;line-height:22px;color:${c.inkMuted};"><span style="display:inline-block;padding:0 9px;border-radius:11px;background-color:${c.surfaceRaised};color:${hue};font-size:11px;line-height:22px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;">${escapeHtml(details.badge)}</span>${details.rest ? `&nbsp;&nbsp;${escapeHtml(details.rest)}` : ''}</p>\n` : ''}${words ? `            <p class="m-quote" style="margin:14px 0 0;font-family:${SERIF};font-size:20px;line-height:30px;font-style:italic;font-weight:400;color:${c.ink};">${escapeHtml(words).replace(/\r?\n/g, '<br>')}</p>\n` : ''}${withheld ? `            <p style="margin:14px 0 0;font-family:${SANS};font-size:15px;line-height:22px;color:${c.inkSecondary};">${escapeHtml(withheld)}</p>\n` : ''}            <table role="presentation" class="m-button" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;"><tr>
-              <td align="center" bgcolor="${c.accent}" style="background-color:${c.accent};border-radius:6px;"><a href="${escapeHtml(open)}" style="display:inline-block;padding:13px 22px;font-family:${SANS};font-size:15px;line-height:20px;font-weight:700;color:${c.onAccent};text-decoration:none;border-radius:6px;">${escapeHtml(button)}</a></td>
+${details?.badge ? `            <p style="margin:12px 0 0;font-family:${SANS};font-size:13px;line-height:22px;color:${c.inkMuted};"><span style="display:inline-block;padding:0 9px;border-radius:11px;background-color:${c.surfaceRaised};color:${c.ink};font-size:12px;line-height:22px;font-weight:600;white-space:nowrap;">${escapeHtml(details.badge)}</span>${details.rest ? `&nbsp;&nbsp;${escapeHtml(details.rest)}` : ''}</p>\n` : ''}${words ? `            <p class="m-quote" style="margin:14px 0 0;font-family:${SERIF};font-size:20px;line-height:30px;font-style:italic;font-weight:400;color:${c.ink};">${escapeHtml(words).replace(/\r?\n/g, '<br>')}</p>\n` : ''}${withheld ? `            <p style="margin:14px 0 0;font-family:${SANS};font-size:15px;line-height:22px;color:${c.inkSecondary};">${escapeHtml(withheld)}</p>\n` : ''}            <table role="presentation" class="m-button" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;"><tr>
+              <td align="center" bgcolor="${c.accent}" style="background-color:${c.accent};border-radius:22px;"><a href="${escapeHtml(open)}" style="display:inline-block;padding:13px 22px;font-family:${SANS};font-size:15px;line-height:20px;font-weight:700;color:${c.onAccent};text-decoration:none;border-radius:22px;">${escapeHtml(button)}</a></td>
             </tr></table>
           </td>
         </tr></table>

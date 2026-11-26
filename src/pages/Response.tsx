@@ -60,7 +60,6 @@ function ResponseReader({ id, viewerId }: { id: number; viewerId: number }) {
   };
   usePageTitle(entry ? `${entry.username} on ${entry.title}` : 'Response');
   const poster = imageUrl(entry?.poster_path, 'w500');
-  const backdrop = imageUrl(entry?.backdrop_path, 'w1280');
   const likes = entry?.like_count || 0;
   const problem = error && <p role="alert" className="notice notice--error">{error} <button className="link" onClick={() => setRevision(value => value + 1)} type="button">Retry</button></p>;
   if (!entry) return <div className="page page--narrow">
@@ -71,10 +70,9 @@ function ResponseReader({ id, viewerId }: { id: number; viewerId: number }) {
     </div>}
   </div>;
   return <article>
-    <section className={`band${backdrop ? ' band--art' : ''}`}>
-      {backdrop && <img alt="" className="band__art" src={backdrop} />}
-      <div className="box hero" data-hue={personHue(entry.username)}>
-        <Link className="poster poster--xl" tabIndex={-1} to={`/movie/${entry.movie_id}`}>{poster && <img alt={`Poster for ${entry.title}`} src={poster} />}</Link>
+    <section className="band">
+      <div className="box box--narrow hero" data-hue={personHue(entry.username)}>
+        <Link className="poster poster--lg" tabIndex={-1} to={`/movie/${entry.movie_id}`}>{poster && <img alt={`Poster for ${entry.title}`} src={poster} />}</Link>
         <div className="hero__main">
           <div className="hero__head">
             <p className="hero__by"><Avatar username={entry.username} /><Link className="who" to={`/member/${encodeURIComponent(entry.username)}`}>@{entry.username}</Link></p>
@@ -85,8 +83,8 @@ function ResponseReader({ id, viewerId }: { id: number; viewerId: number }) {
         </div>
       </div>
     </section>
-    <div className="page">
-      <div className="reading reading--offset">
+    <div className="page page--narrow">
+      <div className="reading">
         {problem}
         {entry.note && <p className="note note--lead">{entry.note}</p>}
         <ResponseDetails enjoyment={entry.enjoyment} highlights={entry.highlights} />

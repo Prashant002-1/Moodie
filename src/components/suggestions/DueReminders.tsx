@@ -23,11 +23,11 @@ export function DueReminders() {
   };
   const due = page.items.filter(item => reminderDue(item));
   if (!user || (!due.length && !moved)) return null;
-  return <section aria-label="Reminders" className="stack">
+  return <section aria-label="Reminders">
     {due.length > 0 && <>
-      <header className="section__head" style={{ marginBottom: 0 }}><h2>Reminders</h2><Link to="/suggestions?box=reminders">All reminders</Link></header>
-      <div className={due.length > 1 ? 'two-up' : undefined}>{due.map(item => <RecommendationNote compact item={item} key={item.id} later onChange={change} primary={false} viewerId={user.id} />)}</div>
+      <header className="section__head"><h2>Reminders</h2><Link to="/suggestions?box=reminders">All reminders</Link></header>
+      <div className="notes">{due.map(item => <RecommendationNote compact item={item} key={item.id} later onChange={change} primary={false} viewerId={user.id} />)}</div>
     </>}
-    {moved && <p className="t-caption muted" role="status">{moved}</p>}
+    {moved && <p className="t-caption muted" role="status" style={{ marginTop: due.length ? 'var(--m-space-3)' : 0 }}>{moved}</p>}
   </section>;
 }

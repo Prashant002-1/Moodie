@@ -90,7 +90,6 @@ const MovieDetails: React.FC = () => {
   if (!movie) return <div className="page page--narrow"><div className="empty"><h1>Film could not be loaded</h1><div className="actions"><button className="btn btn--secondary" onClick={() => { catalog.refresh(); responses.refresh(); }} type="button">Retry film</button><Link className="link" to="/search">Search films</Link></div></div></div>;
 
   const poster = imageUrl(movie.poster_path, 'w500');
-  const backdrop = imageUrl(movie.backdrop_path, 'w1280');
   const runtime = formatRuntime(movie.runtime);
   const fromPerson = searchParams.get('from');
   const throughFilm = searchParams.get('through');
@@ -99,8 +98,7 @@ const MovieDetails: React.FC = () => {
   const ordered = [...publicEntries.filter(entry => entry.following), ...publicEntries.filter(entry => !entry.following)];
 
   return <>
-    <section className={`band${backdrop ? ' band--art' : ''}`}>
-      {backdrop && <img alt="" className="band__art" src={backdrop} />}
+    <section className="band">
       <div className="box hero">
         <span className="poster poster--xl">{poster && <img alt={`Poster for ${movie.title}`} src={poster} />}</span>
         <div className="hero__main">
@@ -112,6 +110,7 @@ const MovieDetails: React.FC = () => {
               {!!summary?.total && <span>{summary.total} {summary.total === 1 ? 'response' : 'responses'}</span>}
             </p>}
           </div>
+          {movie.overview && <p className="note hero__about">{movie.overview}</p>}
           {user ? <div className="actions hero__actions">
             <Link aria-label={viewings ? `Log ${movie.title} again` : `Log ${movie.title}`} className="btn btn--primary" to={`/log?movieId=${movie.id}`}>Log</Link>
             <Link className="btn btn--secondary" to={`/suggestions/new?movieId=${movie.id}`}>Recommend</Link>
@@ -123,25 +122,27 @@ const MovieDetails: React.FC = () => {
     </section>
 
     <div className="page stack stack--loose">
-      {(notice || library.error || catalog.error || movie.overview) && <div className="stack">
+      {(notice || library.error || catalog.error) && <div className="stack">
         {notice && <p className="t-callout secondary" role="status">{notice}</p>}
         {library.error && <p className="notice notice--error" role="alert">{library.error} <button className="link" onClick={library.refresh} type="button">Retry library status</button></p>}
         {catalog.error && <p className="notice" role="alert">Film catalog details are unavailable. <button className="link" onClick={catalog.refresh} type="button">Retry catalog</button></p>}
-        {movie.overview && <p className="note measure">{movie.overview}</p>}
       </div>}
       <SuggestionPreview movieId={movie.id} />
 
       <div>
-        <div aria-label="Choose film view" className="tabs" role="group">
-          <button aria-pressed={view === 'responses'} onClick={() => setView('responses')} type="button">Responses</button>
-          <button aria-pressed={view === 'related'} onClick={() => setView('related')} type="button">More films</button>
+        {/* One line: what is shown at the left, whose at the right. */}
+        <div className="switches">
+          <div aria-label="Choose film view" className="tabs" role="group">
+            <button aria-pressed={view === 'responses'} onClick={() => setView('responses')} type="button">Responses</button>
+            <button aria-pressed={view === 'related'} onClick={() => setView('related')} type="button">More films</button>
+          </div>
+          {view === 'responses' && <div aria-label="Filter film responses" className="tabs" role="group">
+            <button aria-pressed={responseScope === 'everyone'} onClick={() => setResponseScope('everyone')} type="button">Everyone</button>
+            <button aria-pressed={responseScope === 'following'} onClick={() => setResponseScope('following')} type="button">Following</button>
+          </div>}
         </div>
 
         {view === 'responses' && <>
-          <div aria-label="Filter film responses" className="chips" role="group" style={{ marginTop: 'var(--m-space-4)' }}>
-            <button aria-pressed={responseScope === 'everyone'} className="chip" onClick={() => setResponseScope('everyone')} type="button">Everyone</button>
-            <button aria-pressed={responseScope === 'following'} className="chip" onClick={() => setResponseScope('following')} type="button">Following</button>
-          </div>
           {responses.error && <p className="status" role="alert">{responses.error} <button className="link" onClick={responses.refresh} type="button">Retry responses</button></p>}
           {ordered.length > 0 && <section aria-label={`Public responses to ${movie.title}`} className="columns responses--film">
             {ordered.map(entry => <div id={`response-${entry.id}`} key={entry.id}><ResponseCard entry={entry} onLike={entry => void toggleLike(entry)} ownUserId={user?.id} /></div>)}

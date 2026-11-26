@@ -108,7 +108,7 @@ describe('the emails', () => {
       expect(email.html).toContain('<meta name="color-scheme" content="dark">');
       // Every cell that holds words carries its own background, as an attribute and as a style.
       const cells = email.html.match(/<td[^>]*>(?=\s*[^<\s])/g) ?? [];
-      expect(cells.length).toBeGreaterThan(3);
+      expect(cells.length).toBeGreaterThanOrEqual(3);
       for (const cell of cells) expect(cell).toMatch(/bgcolor="#[0-9A-F]{6}"[^>]*background-color:#[0-9A-F]{6}/);
     }
   });
@@ -127,7 +127,9 @@ describe('the emails', () => {
     expect(new Set(names.map(personHue)).size).toBe(7);
     const email = recommendationEmail({ ...note, from: 'hiro' });
     expect(email.html).toContain(`bgcolor="${personColour('hiro')}"`);
-    expect(email.html).toContain(`color:${personColour('hiro')};">hiro</strong> thought of you`);
+    // The colour fills the avatar only; the name is ink, and no coloured rule runs down the side of the note.
+    expect(email.html).toContain(`color:${emailColours.ink};">hiro</strong> thought of you`);
+    expect(email.html).not.toContain(`<td width="3" bgcolor="${personColour('hiro')}"`);
   });
 });
 

@@ -29,9 +29,9 @@ const samples = (webUrl: string): { recommendation: NoteEmailData; reminder: Not
 
 router.get('/emails', (_req, res) => {
   res.type('html').send(`<!doctype html><html lang="en"><meta charset="utf-8"><title>Moodie emails</title>
-<body style="margin:40px;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0E1220;color:#F3F5FB">
+<body style="margin:40px;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#111110;color:#F2EFE9">
 <h1 style="font:700 28px Georgia,serif">Moodie emails</h1>
-<ul>${emailKinds.map(kind => `<li><a style="color:#FFC53D" href="emails/${kind}">${kind}</a> · <a style="color:#B7C0D4" href="emails/${kind}?format=text">plain text</a></li>`).join('')}</ul>
+<ul>${emailKinds.map(kind => `<li><a style="color:#F2EFE9" href="emails/${kind}">${kind}</a> · <a style="color:#BEBAB2" href="emails/${kind}?format=text">plain text</a></li>`).join('')}</ul>
 </body></html>`);
 });
 

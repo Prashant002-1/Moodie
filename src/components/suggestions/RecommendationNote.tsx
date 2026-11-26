@@ -10,11 +10,10 @@ import { RemindMe } from './RemindMe';
  * A recommendation as a note from a person: who it is from, the film, and
  * what they said, in their colour. This is Moodie's signature object.
  *
- * Full size it carries the film's artwork and, for one you received and have
- * not watched, the next steps. `compact` is the same note set small.
+ * Full size it carries, for one you received and have not watched, the next steps. `compact` is the same note set small.
  */
 export function RecommendationNote({ item: given, viewerId, compact = false, headingLevel = 3, onChange, tracker = false, later = false,
-  primary = true, page = false, preview = false, hideFilm = false, ambient = false, children }: {
+  primary = true, page = false, preview = false, hideFilm = false, children }: {
   item: FilmSuggestion; viewerId: number; compact?: boolean; headingLevel?: 1 | 2 | 3;
   /** Told when a reminder on this note is set, changed or cleared. */
   onChange?: (item: FilmSuggestion) => void;
@@ -28,8 +27,6 @@ export function RecommendationNote({ item: given, viewerId, compact = false, hea
   page?: boolean;
   /** The note while it is being written: nothing in it can be opened. */
   preview?: boolean;
-  /** The first note on Home: the page behind it already carries the film's artwork, so the note has no surface of its own. */
-  ambient?: boolean;
   /** On the film's own page, where the poster and title are already shown. */
   hideFilm?: boolean;
   children?: ReactNode;
@@ -43,7 +40,6 @@ export function RecommendationNote({ item: given, viewerId, compact = false, hea
   const received = item.recipient_id === viewerId;
   const who = preview ? <strong className="who">{person}</strong> : <Link className="who" to={`/member/${encodeURIComponent(person)}`}>{person}</Link>;
   const poster = imageUrl(item.poster_path, compact ? 'w154' : 'w342');
-  const art = !compact && !page && !hideFilm && !ambient ? imageUrl(item.backdrop_path, 'w780') : null;
   const Title = headingLevel === 1 ? 'h1' : headingLevel === 2 ? 'h2' : 'h3';
   const open = `/suggestions/${item.id}`, film = `/movie/${item.movie_id}`, log = `/log?movieId=${item.movie_id}&suggestionId=${item.id}`;
   const to = page ? film : open;
@@ -59,8 +55,7 @@ export function RecommendationNote({ item: given, viewerId, compact = false, hea
   // A full-size note shows its reminder in the control beside its actions. Elsewhere it is one line.
   const reminder = received && item.remind_at && !actions && !preview && !page;
 
-  return <article className={`rec${compact ? ' rec--compact' : ''}${art ? ' rec--art' : ''}${hideFilm ? ' rec--words' : ''}${preview ? ' rec--preview' : ''}${page ? ' rec--page' : ''}${ambient ? ' rec--ambient' : ''}`} data-hue={personHue(person)}>
-    {art && <span aria-hidden="true" className="rec__art"><img alt="" loading="lazy" src={art} /></span>}
+  return <article className={`rec${compact ? ' rec--compact' : ''}${hideFilm ? ' rec--words' : ''}${preview ? ' rec--preview' : ''}${page ? ' rec--page' : ''}`} data-hue={personHue(person)}>
     {!hideFilm && (preview
       ? <span className={posterSize}>{poster && <img alt={`Poster for ${item.title}`} src={poster} />}</span>
       : <Link className={posterSize} tabIndex={-1} to={to}>{poster && <img alt={`Poster for ${item.title}`} loading="lazy" src={poster} />}</Link>)}

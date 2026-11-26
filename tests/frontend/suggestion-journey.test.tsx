@@ -342,16 +342,14 @@ it('renders nothing on home when no reminder is due', async () => {
   await waitFor(() => expect(view.container).toBeEmptyDOMElement());
 });
 
-it('shows a note with the film’s artwork and its reminder, and keeps both off a note you sent', async () => {
+it('shows a note with its reminder, and keeps it off a note you sent', async () => {
   const reminded = { ...suggestion, backdrop_path: '/wide.jpg', remind_at: hours(30) };
   const view = render(<MemoryRouter><RecommendationNote item={reminded} viewerId={1} /></MemoryRouter>);
-  expect(view.container.querySelector('.rec__art img')).toHaveAttribute('src', expect.stringContaining('/wide.jpg'));
   expect(screen.getByText(formatReminder(reminded.remind_at))).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Change reminder about Scream' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Open Scream' })).toHaveAttribute('href', '/suggestions/7');
   // The small note says it in one line: the day, or Due once the time has passed.
   view.rerender(<MemoryRouter><RecommendationNote compact item={reminded} viewerId={1} /></MemoryRouter>);
-  expect(view.container.querySelector('.rec__art')).toBeNull();
   expect(screen.getByText(formatReminder(reminded.remind_at, false))).toBeInTheDocument();
   expect(screen.queryByRole('button')).not.toBeInTheDocument();
   view.rerender(<MemoryRouter><RecommendationNote compact item={{ ...reminded, remind_at: hours(-1) }} viewerId={1} /></MemoryRouter>);
