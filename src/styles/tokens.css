@@ -78,9 +78,9 @@
   --m-space-7: 48px;
   --m-space-8: 64px;
   --m-space-9: 96px;
-  --m-radius-poster: 4px;
-  --m-radius-control: 6px;
-  --m-radius-surface: 10px;
+  --m-radius-poster: 8px;
+  --m-radius-control: 10px;
+  --m-radius-surface: 18px;
   --m-radius-pill: 999px;
   --m-motion-fast: 120ms;
   --m-motion-base: 220ms;

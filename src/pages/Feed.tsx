@@ -109,11 +109,15 @@ const Feed = () => {
   // When nothing could be read, say it once.
   const homeFailed = forYou && Boolean(page.error && circle.error && notes.error && recommendations.error);
   const retryHome = () => { page.refresh(); circle.refresh(); notes.refresh(); recommendations.refresh(); };
+  // The film someone most recently thought of you for lights the top of Home.
+  const ambient = imageUrl(fresh[0]?.backdrop_path, 'w1280');
   const hour = new Date().getHours();
   const senders = [...new Set(notes.items.filter(item => item.origin === 'sent').map(item => item.sender_username))];
   return <>
     <h1 className="sr-only">Home</h1>
-    {forYou && user && <section className="band band--tight" aria-label="Personal recommendations"><div className="box stack" style={{ gap: 'var(--m-space-5)' }}>
+    {forYou && user && <section className={`band band--tight${ambient ? ' band--art' : ''}`} aria-label="Personal recommendations">
+      {ambient && <img alt="" className="band__art" src={ambient} />}
+      <div className="box stack" style={{ gap: 'var(--m-space-6)' }}>
       <p className="greeting">Good {hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'}, <strong>{user.username}</strong>.
         {senders.length > 0 && <> {senders.slice(0, 2).map((name, index) => <span key={name}>{index > 0 && ' and '}<Link className="who" data-hue={personHue(name)} to={`/member/${encodeURIComponent(name)}`}>{name}</Link></span>)}{senders.length > 2 && ' and others'} thought of you.</>}
       </p>
@@ -121,7 +125,7 @@ const Feed = () => {
       {notes.error && !homeFailed && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={notes.refresh}>Retry</button></p>}
       {fresh.length > 0 && <>
         <header className="section__head" style={{ marginBottom: 0 }}><h2>Recommended to you</h2><Link to="/suggestions">All recommendations</Link></header>
-        <RecommendationNote item={fresh[0]} viewerId={user.id} />
+        <RecommendationNote ambient={Boolean(ambient)} item={fresh[0]} viewerId={user.id} />
         {fresh.length > 1 && <div className={fresh.length > 2 ? 'two-up' : undefined}>{fresh.slice(1, 3).map(item => <RecommendationNote compact item={item} key={item.id} viewerId={user.id} />)}</div>}
       </>}
     </div></section>}

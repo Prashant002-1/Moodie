@@ -70,6 +70,14 @@ const Layout: React.FC = () => {
   useEffect(() => {
     if (navigationType !== 'POP' && !location.hash) window.scrollTo?.(0, 0);
   }, [location.pathname, location.hash, navigationType]);
+  // The bar is clear at the top of a page and frosts over once the page moves under it.
+  const [over, setOver] = useState(false);
+  useEffect(() => {
+    const moved = () => setOver(window.scrollY > 8);
+    moved();
+    window.addEventListener('scroll', moved, { passive: true });
+    return () => window.removeEventListener('scroll', moved);
+  }, [location.key]);
   // Artwork that fails to load leaves its placeholder, never a broken-image mark.
   useEffect(() => {
     const failed = (event: Event) => { if (event.target instanceof HTMLImageElement) event.target.dataset.failed = ''; };
@@ -85,7 +93,7 @@ const Layout: React.FC = () => {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <p aria-atomic="true" aria-live="polite" className="sr-only">{announced}</p>
 
-      {!onboarding && <header className="topbar">
+      {!onboarding && <header className={`topbar${over ? ' topbar--over' : ''}`}>
         <div className="topbar__inner">
           <Link aria-label="Moodie home" className="wordmark" to={user ? '/feed' : '/'}><BrandMark />Moodie</Link>
           {user ? <>
