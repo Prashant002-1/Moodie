@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../../src/App';
 import { responseDraftStore } from '../../src/services/responseDraftStore';
@@ -11,14 +11,18 @@ beforeEach(() => {
   mocks.me.mockResolvedValue({ id: 3, username: 'member', email: 'member@example.test', bio: '' });
   mocks.summary.mockResolvedValue({ entries: 1, public_entries: 0, saved: 0 });
   mocks.savedPage.mockResolvedValue({ films: [], nextOffset: null });
-  vi.spyOn(window, 'confirm').mockReturnValue(true);
   window.history.replaceState({}, '', '/account');
 });
 afterEach(() => { vi.restoreAllMocks(); window.history.replaceState({}, '', '/'); });
 async function remove() {
   await userEvent.click((await screen.findAllByRole('button', { name: 'Account', exact: true }))[0]);
   await userEvent.type(screen.getByLabelText('Confirm with your password'), 'delete-password');
+  await send();
+}
+// Moodie asks in its own words, in the page, every time.
+async function send() {
   await userEvent.click(screen.getByRole('button', { name: 'Delete my account' }));
+  await userEvent.click(within(await screen.findByRole('alertdialog', { name: 'Delete your account?' })).getByRole('button', { name: 'Delete account' }));
 }
 it('keeps the draft on server failure, then deletes only that account draft after success', async () => {
   await responseDraftStore.replace(3, null, newResponseDraft());
@@ -28,7 +32,7 @@ it('keeps the draft on server failure, then deletes only that account draft afte
   await remove();
   expect(await screen.findByRole('alert')).toBeInTheDocument();
   expect(await responseDraftStore.read(3)).not.toBeNull();
-  await userEvent.click(screen.getByRole('button', { name: 'Delete my account' }));
+  await send();
   expect(await screen.findByRole('heading', { name: 'Account deleted' })).toBeInTheDocument();
   expect(await responseDraftStore.read(3)).toBeNull();
   expect(await responseDraftStore.read(4)).not.toBeNull();

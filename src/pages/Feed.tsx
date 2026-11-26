@@ -125,7 +125,7 @@ const Feed = () => {
       {notes.error && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={notes.refresh}>Retry</button></p>}
       {user && fresh.length > 0 && <section aria-label="Personal recommendations">
         <header className="section__head"><h2>Recommended to you</h2><Link to="/suggestions">All recommendations</Link></header>
-        <div className="notes">{fresh.slice(0, 3).map(item => <RecommendationNote compact item={item} key={item.id} viewerId={user.id} />)}</div>
+        <div className="notes">{fresh.slice(0, 3).map(item => <RecommendationNote act compact item={item} key={item.id} primary={false} viewerId={user.id} />)}</div>
       </section>}
       {summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Log a film</Link></div>}
       {wall.length > 0 && <section aria-label="New from people you follow"><header className="section__head"><h2>New from friends</h2><button onClick={() => setView('following')}>See all</button></header>

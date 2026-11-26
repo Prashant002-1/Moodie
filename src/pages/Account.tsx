@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { useConfirm } from '../hooks/useConfirm';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useDiary } from '../contexts/DiaryContext';
@@ -17,6 +18,7 @@ const themes: [ThemeChoice, string][] = [['dark', 'Dark'], ['light', 'Light'], [
 const count = (value: number, one: string, many: string) => `${value} ${value === 1 ? one : many}`;
 
 export default function Account() {
+  const confirm = useConfirm();
   const { user, updateProfile, setAiMode, setEmailNotifications, signOut, deleteAccount } = useUser();
   const { summary } = useDiary();
   usePageTitle('Account');
@@ -92,7 +94,7 @@ export default function Account() {
         <li><Link className="link" to="/account/blocked">Blocked people</Link></li>
         <li><nav aria-label="About Moodie" className="actions"><Link className="link" to="/about/privacy">Privacy</Link><Link className="link" to="/about/community">Community guidelines</Link><Link className="link" to="/about/credits">Credits</Link></nav></li>
       </ul>
-      <form className="section stack" onSubmit={event => { event.preventDefault(); if (window.confirm('Permanently delete your account, diary, photos, saved films, follows, likes, and comments? This cannot be undone.')) void run(async () => { await deleteAccount(deletePassword); navigate('/account-deleted', { replace: true }); }, ''); }}>
+      <form className="section stack" onSubmit={event => { event.preventDefault(); void confirm({ title: 'Delete your account?', body: 'Your diary, photos, saved films, follows, likes and comments are permanently deleted. This cannot be undone.', action: 'Delete account' }).then(ok => { if (ok) void run(async () => { await deleteAccount(deletePassword); navigate('/account-deleted', { replace: true }); }, ''); }); }}>
         <header className="section__head"><h2>Delete account</h2></header>
         <p className="secondary t-callout">This permanently removes your diary, photos, saved films, and social activity.</p>
         <div className="field"><label htmlFor="account-delete-password">Confirm with your password</label><input className="input" id="account-delete-password" type="password" autoComplete="current-password" required maxLength={128} value={deletePassword} onChange={event => setDeletePassword(event.target.value)} /></div>

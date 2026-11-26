@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useConfirm } from '../../hooks/useConfirm';
 import { Link } from 'react-router-dom';
 import { usePagedResource } from '../../hooks/usePagedResource';
 import { suggestionService } from '../../services/suggestionService';
@@ -9,6 +10,7 @@ import { Spoiler } from './Spoiler';
 
 /** What two people said to each other about one recommendation, each in their own colour. */
 export function SuggestionMessages({ id, viewerId, onRevoked }: { id: number; viewerId: number; onRevoked: () => void }) {
+  const confirm = useConfirm();
   const load = useCallback(async (offset: number | undefined, signal: AbortSignal) => {
     const result = await suggestionService.messages(id, offset, signal);
     return { items: result.messages, next: result.nextOffset };
@@ -31,7 +33,7 @@ export function SuggestionMessages({ id, viewerId, onRevoked }: { id: number; vi
     finally { setBusy(false); }
   };
   const remove = async (messageId: number) => {
-    if (deleting != null || !window.confirm('Delete this message?')) return;
+    if (deleting != null || !(await confirm({ title: 'Delete this message?', action: 'Delete' }))) return;
     setDeleting(messageId); setError('');
     try { await suggestionService.deleteMessage(id, messageId); page.refresh(); }
     catch (error) { setError(apiError(error)); onRevoked(); }

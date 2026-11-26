@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useConfirm } from '../hooks/useConfirm';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useDiary } from '../contexts/DiaryContext';
 import { useUser } from '../contexts/UserContext';
@@ -38,6 +39,7 @@ export default function Diary() {
 }
 
 function ViewingHistory({ movieId }: { movieId?: number }) {
+  const confirm = useConfirm();
   const { user } = useUser();
   const { revision, removeEntry } = useDiary();
   // The filter and the search live in the address, so Back from a response returns to the same list.
@@ -71,7 +73,7 @@ function ViewingHistory({ movieId }: { movieId?: number }) {
     return [...groups];
   }, [items]);
   const remove = async (id: number) => {
-    if (busy || !window.confirm('Delete this viewing? Any reply linked to it will also be removed.')) return;
+    if (busy || !(await confirm({ title: 'Delete this viewing?', body: 'Any reply linked to it is removed too.', action: 'Delete' }))) return;
     setBusy(id); setError('');
     try { await removeEntry(id); }
     catch (error) { setError(apiError(error, 'This viewing could not be deleted. Try again.')); }

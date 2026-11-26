@@ -4,6 +4,7 @@ import { ErrorBoundary, LoadingSpinner, ProtectedRoute } from './components/comm
 import { UserProvider } from './contexts/UserContext';
 import { DiaryProvider } from './contexts/DiaryContext';
 import Layout from './components/layout/Layout';
+import { ConfirmProvider } from './components/common/Confirm';
 import Auth from './pages/Auth';
 import Account from './pages/Account';
 
@@ -29,7 +30,7 @@ const Welcome = lazy(() => import('./pages/Welcome'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
-  return <ErrorBoundary><UserProvider><BrowserRouter>
+  return <ErrorBoundary><ConfirmProvider><UserProvider><BrowserRouter>
     <Suspense fallback={<LoadingSpinner message="Loading page" />}>
       <Routes><Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
@@ -64,6 +65,6 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Route></Routes>
     </Suspense>
-  </BrowserRouter></UserProvider></ErrorBoundary>;
+  </BrowserRouter></UserProvider></ConfirmProvider></ErrorBoundary>;
 }
 export default App;

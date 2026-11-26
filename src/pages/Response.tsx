@@ -1,4 +1,5 @@
 import { SafetyActions } from '../components/discovery/SafetyActions';
+import { useConfirm } from '../hooks/useConfirm';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Heart } from 'lucide-react';
@@ -22,6 +23,7 @@ export default function Response() {
   return <ResponseReader key={`${user?.id}:${id}`} id={Number(id)} viewerId={user!.id} />;
 }
 function ResponseReader({ id, viewerId }: { id: number; viewerId: number }) {
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const { removeEntry } = useDiary();
   const [entry, setEntry] = useState<ResponseEntry | null>(null);
@@ -52,7 +54,7 @@ function ResponseReader({ id, viewerId }: { id: number; viewerId: number }) {
     finally { setBusy(false); }
   };
   const remove = async () => {
-    if (busy || !window.confirm('Delete this viewing? Any reply linked to it will also be removed.')) return;
+    if (busy || !(await confirm({ title: 'Delete this viewing?', body: 'Any reply linked to it is removed too.', action: 'Delete' }))) return;
     setBusy(true); setError('');
     try { await removeEntry(id); navigate('/diary', { replace: true }); }
     catch (error) { setError(apiError(error)); }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useConfirm } from '../hooks/useConfirm';
 import { ImagePlus, X } from 'lucide-react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
@@ -39,6 +40,7 @@ export default function Log() {
 }
 
 function ResponseComposer({ ownerId, request }: { ownerId: number; request: ComposerRequest }) {
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const { createEntry, updateEntry } = useDiary();
   const [draft, setDraft] = useState<ResponseDraft | null>(null);
@@ -136,7 +138,7 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
   };
   const discardUnreadable = async () => {
     if (!unreadable || saving) return;
-    if (!window.confirm('Discard the unreadable response draft on this browser? This cannot be undone.')) return;
+    if (!(await confirm({ title: 'Discard this draft?', body: 'The response draft on this browser cannot be read. Discarding it cannot be undone.', action: 'Discard' }))) return;
     setSaving(true);
     try { await responseDraftStore.replace(ownerId, unreadable.revision, null); setRevision(value => value + 1); }
     catch (error) { setError(error instanceof Error ? error.message : 'The draft could not be cleared.'); }
@@ -232,6 +234,7 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
           {draft.suggestionId && <Link className="btn btn--primary" to={`/suggestions/${draft.suggestionId}`}>Reply to {draft.suggestionName || 'them'}</Link>}
           <Link className={`btn ${draft.suggestionId ? 'btn--secondary' : 'btn--primary'}`} to={`/response/${savedEntry.id}`}>Read your response</Link>
           <Link className="btn btn--quiet" to="/diary">Open Diary</Link>
+          <button className="btn btn--quiet" onClick={() => navigate('/log', { replace: true, state: { newDraft: crypto.randomUUID() } })}>Add another film</button>
         </div>
         {draft.suggestionId && <p className="hint">Your diary note has not been sent. Your reply is written separately.</p>}
       </div>
@@ -240,7 +243,6 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
     {discoveryLoading && <p className="status" role="status">Loading</p>}
     {discoveryError && <p className="status" role="alert">{discoveryError} <button className="link" onClick={() => void findNextFilm()}>Retry recommendations</button></p>}
     {nextFilm && <section><header className="section__head"><h2>Through this film</h2></header><div className="list"><RecommendationSpotlight movie={nextFilm} /></div></section>}
-    <div className="actions"><Link className="btn btn--quiet" to="/feed">Return home</Link><button className="btn btn--quiet" onClick={() => navigate('/log', { replace: true, state: { newDraft: crypto.randomUUID() } })}>Add another film</button></div>
   </div>;
 
   return <div className="page">

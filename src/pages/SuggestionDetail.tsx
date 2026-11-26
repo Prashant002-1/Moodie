@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useConfirm } from '../hooks/useConfirm';
 import axios from 'axios';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
@@ -28,6 +29,7 @@ export default function SuggestionDetail() {
 
 /** One recommendation as a page: the note, the next step, the reply, the conversation. */
 function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number }) {
+  const confirm = useConfirm();
   const { refresh: refreshDiary } = useDiary();
   const [item, setItem] = useState<FilmSuggestion | null>(null);
   const library = useLibraryState(item ? [item.movie_id] : []);
@@ -70,7 +72,7 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
     finally { setBusy(false); }
   };
   const retract = async () => {
-    if (busy || !window.confirm('Remove your reply? Your diary stays as it is. Conversation messages stay until their author deletes them.')) return;
+    if (busy || !(await confirm({ title: 'Remove your reply?', body: 'Your diary stays as it is. Conversation messages stay until their author deletes them.', action: 'Remove reply' }))) return;
     setBusy(true); setError('');
     try { await suggestionService.removeReply(id); setItem(previous => previous ? { ...previous, reply: null } : null); refresh(); }
     catch (error) { setError(apiError(error)); }
