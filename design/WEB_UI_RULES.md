@@ -33,6 +33,20 @@ The person using Moodie is the most intelligent part of the system.
 - Nothing is said or shown twice on one screen.
 - Keep every error message and every confirmation that protects data or privacy.
 
+## A person keeps their place
+
+These hold on every screen. A new screen follows them from the start.
+
+- **Every page names itself.** Call `usePageTitle('Diary')` (`src/hooks/usePageTitle.ts`). It sets the tab title and is read aloud to a screen reader when the page opens. Use the film, person or recommendation once it has loaded.
+- **What a list is showing lives in the address.** A tab, a filter or a search goes in the query string with `useSearchParams` (see `People.tsx`, `Search.tsx`, `Diary.tsx`), so Back from a film or a person returns to the same results, and a reload keeps them.
+- **A list never goes blank because something else changed.** Identity (account, route, query) goes in the `key` of `usePagedResource`; anything that only means "read it again", such as the diary `revision`, goes in its third argument, `version`. A new key hides the old list at once; a new version reloads it in place.
+- **An action answers where it was taken.** Follow, like and Save for later change the control in place. They do not move the person to another page or reload the list under them.
+- **A disabled primary button says what it is waiting for**, in a `.hint` beside it.
+- **Nothing is asked about nothing.** No "keep this draft?" for a response nobody started writing.
+- **Missing is said plainly.** A removed or private thing gets a heading that says so and one way onward, not an error with a Retry that cannot work.
+- **Touch targets are 44px.** The rules are in the "Touch" block at the end of `app.css`; a new kind of small control is added there.
+- The layout has no sideways scroll from 320px up. The top bar tightens between 821px and 960px.
+
 ## Keep working
 
 - Do not change data loading, services, hooks, routes or behaviour unless your task says so.
