@@ -62,7 +62,8 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
   const mounted = useRef(true);
   // The response exactly as it was opened. Until the person changes it there is nothing to keep.
   const pristine = useRef<ResponseDraft | null>(null);
-  const keepable = Boolean(draft) && (session?.saved != null || (draft !== pristine.current && !untouchedDraft(draft!)));
+  const keepable = Boolean(draft) && ((session?.saved != null && !untouchedDraft(session.saved))
+    || (draft !== pristine.current && !untouchedDraft(draft!)));
   const auto = useDraftAutosave(session, draft, !savedEntry && !closed.current && keepable);
   const location = useLocation();
   const { movieId, entryId, suggestionId } = request;
@@ -96,21 +97,17 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
     const open = async () => {
       const stored = await responseDraftStore.read(ownerId);
       if (!active) return;
-      // A stored draft with nothing in it is replaced without asking.
-      if (stored && untouchedDraft(stored.draft) && (movieId || entryId || suggestionId)) {
-        const value = await incoming();
-        if (!active) return;
-        setDraft(value);
-        setSession(new ResponseDraftSession(ownerId, stored.revision, stored.draft));
-      } else if (stored && (movieId || entryId || suggestionId)) {
+      // A stored draft with nothing felt or written in it is never resumed or asked about: it is simply replaced.
+      const kept = stored && !untouchedDraft(stored.draft) ? stored : null;
+      if (kept && (movieId || entryId || suggestionId)) {
         // Recovery stays available even if the newly requested film is offline.
-        setChoice({ stored, incoming: null }); setOpening(false);
+        setChoice({ stored: kept, incoming: null }); setOpening(false);
         const value = await incoming();
-        if (active) setChoice(current => current ? { stored, incoming: value } : null);
+        if (active) setChoice(current => current ? { stored: kept, incoming: value } : null);
       } else {
-        const value = stored?.draft ?? await incoming();
+        const value = kept?.draft ?? await incoming();
         if (!active) return;
-        if (!stored) pristine.current = value;
+        if (!kept) pristine.current = value;
         setDraft(value);
         setSession(new ResponseDraftSession(ownerId, stored?.revision ?? null, stored?.draft ?? null));
       }

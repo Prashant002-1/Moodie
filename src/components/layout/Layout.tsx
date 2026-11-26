@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Bell, BookOpen, House, Plus, Search, Send, UsersRound } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
@@ -31,9 +31,35 @@ const Layout: React.FC = () => {
     document.addEventListener('keydown', close); document.addEventListener('pointerdown', close);
     return () => { document.removeEventListener('keydown', close); document.removeEventListener('pointerdown', close); };
   }, [adding]);
-  // A new page opens at its top. Going back returns to where the person was, and
-  // a link to a place inside a page (a response on a film) is left to that page.
+  // A new page opens at its top. Going back returns to where the person was:
+  // pages load their content after they open, so the browser's own restoration
+  // arrives too early and the position is kept and restored here. A link to a
+  // place inside a page (a response on a film) is left to that page.
   const navigationType = useNavigationType();
+  const positions = useRef(new Map<string, number>());
+  useLayoutEffect(() => {
+    const key = location.key;
+    const remember = () => positions.current.set(key, window.scrollY);
+    window.addEventListener('scroll', remember, { passive: true });
+    return () => window.removeEventListener('scroll', remember);
+  }, [location.key]);
+  useLayoutEffect(() => {
+    if (navigationType !== 'POP') return;
+    const target = positions.current.get(location.key);
+    if (!target) return;
+    let timer = 0, tries = 0;
+    const stop = () => window.clearTimeout(timer);
+    const restore = () => {
+      // Wait until the page is tall enough again, but not for ever.
+      if (document.documentElement.scrollHeight - window.innerHeight >= target || ++tries > 40) window.scrollTo?.(0, target);
+      else timer = window.setTimeout(restore, 50);
+    };
+    restore();
+    // The person's own scrolling always wins.
+    window.addEventListener('wheel', stop, { passive: true, once: true });
+    window.addEventListener('touchstart', stop, { passive: true, once: true });
+    return () => { stop(); window.removeEventListener('wheel', stop); window.removeEventListener('touchstart', stop); };
+  }, [location.key, navigationType]);
   useEffect(() => {
     if (navigationType !== 'POP' && !location.hash) window.scrollTo?.(0, 0);
   }, [location.pathname, location.hash, navigationType]);
