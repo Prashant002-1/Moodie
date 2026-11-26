@@ -17,7 +17,7 @@ export function SharedFilms({ username }: { username: string }) {
     const result = await discoveryService.sharedFilms(username, offset, signal);
     return { items: result.films, next: result.nextOffset };
   }, [username]);
-  const page = usePagedResource(`${user?.id}:shared:${username}:${revision}`, load);
+  const page = usePagedResource(`${user?.id}:shared:${username}`, load, revision);
   const date = (value: string) => formatCalendarDate(value, { month: 'short', day: 'numeric', year: 'numeric' });
   return <section aria-label={`Films you share with @${username}`}>
     {page.error && <p className="notice notice--error" role="alert">{page.error} <button className="link" onClick={page.refresh} type="button">Retry shared films</button></p>}

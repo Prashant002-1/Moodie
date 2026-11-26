@@ -48,7 +48,7 @@ export default function Suggestions() {
     <div className="page">
       <div aria-label="Choose recommendations view" className="tabs" role="group">{tabs.map(([value, label, count]) => {
         const total = summary.data ? count(summary.data) : null;
-        return <button aria-pressed={box === value} key={value} onClick={() => changeBox(value)}>{label}{total != null && <span className="tabs__count">{total}</span>}</button>;
+        return <button aria-pressed={box === value} key={value} onClick={() => changeBox(value)}>{label}{total != null && total > 0 && <span className="tabs__count">{total}</span>}</button>;
       })}</div>
       <div style={{ marginTop: 'var(--m-space-5)' }}>{box === 'saved' ? <div className="page--narrow"><SavedFilms /></div> : <SuggestionInbox box={box} onChanged={summary.refresh} />}</div>
     </div>

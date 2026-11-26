@@ -34,7 +34,7 @@ const MovieDetails: React.FC = () => {
     const result = await discoveryService.filmEntriesPage(Number(id), { offset, scope: responseScope }, signal);
     return { items: result.entries, next: result.nextOffset, metadata: { summary: result.summary, film: result.film } };
   }, [id, responseScope]);
-  const responses = usePagedResource(`${user?.id}:${revision}:${id}:${responseScope}`, loadResponses);
+  const responses = usePagedResource(`${user?.id}:responses:${id}:${responseScope}`, loadResponses, revision);
   const publicEntries = responses.items;
   const summary = responses.metadata?.summary;
   const cached = responses.metadata?.film;

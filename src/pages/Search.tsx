@@ -1,5 +1,5 @@
-import { FormEvent, useCallback, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { PersonRow } from '../components/discovery/PersonRow';
 import { useDiary } from '../contexts/DiaryContext';
 import { useUser } from '../contexts/UserContext';
@@ -16,24 +16,35 @@ type SearchView = 'films' | 'people';
 export default function Search() {
   const { user } = useUser();
   usePageTitle('Search');
-  const [view, setView] = useState<SearchView>('films');
+  // What was searched lives in the address: Back from a film or a person returns to the same results.
+  const [params, setParams] = useSearchParams();
+  const view: SearchView = params.get('view') === 'people' ? 'people' : 'films';
+  const submitted = params.get('q') ?? '';
+  const show = (next: { view?: SearchView; q?: string }) => {
+    const updated = new URLSearchParams();
+    if ((next.view ?? view) === 'people') updated.set('view', 'people');
+    const q = next.q ?? submitted;
+    if (q) updated.set('q', q);
+    setParams(updated);
+  };
+  const setView = (next: SearchView) => show({ view: next });
   return <div className="page">
     <h1 className="sr-only">Search</h1>
     <div className="tabs" role="group" aria-label="Choose search type">
       <button aria-pressed={view === 'films'} onClick={() => setView('films')} type="button">Films</button>
       <button aria-pressed={view === 'people'} onClick={() => setView('people')} type="button">People</button>
     </div>
-    <TextSearch key={`${user?.id}:${view}`} view={view} />
+    <TextSearch key={`${user?.id}:${view}`} onSubmit={q => show({ q })} submitted={submitted} view={view} />
   </div>;
 }
 
-function TextSearch({ view }: { view: SearchView }) {
-  const [query, setQuery] = useState('');
-  const [submitted, setSubmitted] = useState('');
-  const submit = (event: FormEvent) => { event.preventDefault(); setSubmitted(query.trim()); };
+function TextSearch({ view, submitted, onSubmit }: { view: SearchView; submitted: string; onSubmit: (query: string) => void }) {
+  const [query, setQuery] = useState(submitted);
+  useEffect(() => setQuery(submitted), [submitted]);
+  const submit = (event: FormEvent) => { event.preventDefault(); onSubmit(query.trim()); };
   return <>
     <form className="search search--lead" onSubmit={submit} role="search" style={{ marginTop: 'var(--m-space-5)' }}>
-      <input aria-label={`Search ${view}`} className="input" onChange={event => setQuery(event.target.value)} placeholder={view === 'films' ? 'Film title' : 'Name or username'} type="search" value={query} />
+      <input aria-label={`Search ${view}`} autoFocus={!submitted} className="input" maxLength={200} onChange={event => setQuery(event.target.value)} placeholder={view === 'films' ? 'Film title' : 'Name or username'} type="search" value={query} />
       <button className="btn btn--primary" type="submit">Search</button>
     </form>
     {view === 'people' ? <PeopleResults query={submitted} /> : submitted ? <FilmResults query={submitted} /> : <SearchStart />}
@@ -44,7 +55,7 @@ function SearchStart() {
   const { savedFilms, revision } = useDiary();
   const { user } = useUser();
   const load = useCallback((signal: AbortSignal) => discoveryService.pulse(signal), []);
-  const pulse = useResource(`${user?.id}:${revision}`, load);
+  const pulse = useResource(`${user?.id}:pulse`, load, revision);
   return <>
     {!!savedFilms.length && <p className="t-callout" style={{ marginTop: 'var(--m-space-4)' }}><Link className="link" to="/suggestions?box=saved">Saved films</Link></p>}
     {pulse.loading && <p className="status" role="status">Loading recent responses</p>}
@@ -106,7 +117,7 @@ function FilmResults({ query }: { query: string }) {
 
 function PeopleResults({ query }: { query: string }) {
   const { user } = useUser();
-  const { revision, refresh } = useDiary();
+  const { refresh } = useDiary();
   const lock = useRef(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -114,18 +125,23 @@ function PeopleResults({ query }: { query: string }) {
     const result = await discoveryService.peoplePage({ q: query, offset }, signal);
     return { items: result.people, next: result.nextOffset };
   }, [query]);
-  const page = usePagedResource(`${user?.id}:${revision}:${query}`, load);
+  const page = usePagedResource(`${user?.id}:people:${query}`, load);
+  const { updateItems } = page;
   const follow = async (person: CommunityPerson) => {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError('');
-    try { if (person.following) await discoveryService.unfollow(person.id); else await discoveryService.follow(person.id); void refresh(); }
+    try {
+      if (person.following) await discoveryService.unfollow(person.id); else await discoveryService.follow(person.id);
+      updateItems(items => items.map(item => item.id === person.id ? { ...item, following: !person.following } : item));
+      void refresh();
+    }
     catch { setError('Your follow could not be updated. Try again.'); }
     finally { lock.current = false; setBusy(false); }
   };
   return <>
     {page.error && <p className="notice notice--error" role="alert" style={{ marginTop: 'var(--m-space-4)' }}>{page.error} <button className="link" onClick={page.refresh}>Retry people</button></p>}
     {error && <p className="notice notice--error" role="alert" style={{ marginTop: 'var(--m-space-4)' }}>{error}</p>}
-    <ul aria-label="People results" className="list measure--list">{page.items.map(person => <PersonRow disabled={busy} key={person.id} onFollow={person => void follow(person)} person={person} />)}</ul>
+    <ul aria-label="People results" className="people" style={{ marginTop: 'var(--m-space-5)' }}>{page.items.map(person => <PersonRow disabled={busy} key={person.id} onFollow={person => void follow(person)} person={person} />)}</ul>
     {page.loading && <p className="status" role="status">Searching people</p>}
     {page.loaded && !page.loading && !page.items.length && <p className="status">No people found.</p>}
     {page.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore}>Load more people</button></div>}

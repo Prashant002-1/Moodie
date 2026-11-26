@@ -29,14 +29,16 @@ function ResponseReader({ id, viewerId }: { id: number; viewerId: number }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
+  // Removed, made private, or never there: trying again will not bring it back.
+  const [gone, setGone] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setGone(false);
     discoveryService.response(id, controller.signal).then(next => { if (!controller.signal.aborted) setEntry(next); })
       .catch(error => {
         if (controller.signal.aborted) return;
         setError(apiError(error, 'This response could not be loaded. Try again.'));
-        if (axios.isAxiosError(error) && [401, 403, 404, 410].includes(error.response?.status ?? 0)) setEntry(null);
+        if (axios.isAxiosError(error) && [401, 403, 404, 410].includes(error.response?.status ?? 0)) { setEntry(null); setGone(true); }
       }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [id, revision]);
@@ -63,8 +65,8 @@ function ResponseReader({ id, viewerId }: { id: number; viewerId: number }) {
   const problem = error && <p role="alert" className="notice notice--error">{error} <button className="link" onClick={() => setRevision(value => value + 1)} type="button">Retry</button></p>;
   if (!entry) return <div className="page page--narrow">
     {loading ? <p className="status" role="status">Loading response</p> : <div className="empty">
-      <h1>This response is not available</h1>
-      {problem}
+      <h1>{gone ? 'This response is not available' : 'This response could not be loaded'}</h1>
+      {gone ? <p>It may have been removed or made private.</p> : problem}
       <Link className="link" to="/feed">Return home</Link>
     </div>}
   </div>;

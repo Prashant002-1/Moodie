@@ -18,7 +18,7 @@ export function useLibraryState(movieIds: number[]) {
     const results = await Promise.all(batches.map(batch => diaryService.status(batch, signal)));
     return { items: results.flat(), next: null };
   }, [ids, ownerId]);
-  const resource = usePagedResource(`${ownerId}:library:${revision}:${ids}`, load);
+  const resource = usePagedResource(`${ownerId}:library:${ids}`, load, revision);
   const states = new Map(resource.items.map(film => [film.id, film]));
   return { ...resource, get: (id: number) => states.get(id) };
 }

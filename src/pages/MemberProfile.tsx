@@ -29,7 +29,7 @@ const MemberProfile: React.FC = () => {
     const result = await discoveryService.profile(username, { offset, view: responseView }, signal);
     return { items: result.entries, next: result.nextOffset, metadata: result.person };
   }, [username, responseView]);
-  const page = usePagedResource<CommunityEntry, number, MemberProfileData>(`${user?.id}:${revision}:${username}:${responseView}`, load);
+  const page = usePagedResource<CommunityEntry, number, MemberProfileData>(`${user?.id}:profile:${username}:${responseView}`, load, revision);
   const { items: entries, metadata: person, error, loading } = page;
   const films = entries;
   const setEntries = page.updateItems;
@@ -139,7 +139,7 @@ function Connections({ username, kind, close }: { username: string; kind: 'follo
     const result = await discoveryService.connections(username, kind, offset, signal);
     return { items: result.people, next: result.nextOffset };
   }, [username, kind]);
-  const page = usePagedResource(`${user?.id}:${revision}:${username}:${kind}`, load);
+  const page = usePagedResource(`${user?.id}:connections:${username}:${kind}`, load, revision);
   const follow = async (id: number, following: boolean) => {
     if (busy !== null) return;
     setBusy(id); setError('');

@@ -55,7 +55,7 @@ export default function Activity() {
     const result = await discoveryService.activityPage({ limit: 40, offset, kind }, signal);
     return { items: result.activity.map(event => ({ ...event, id: event.event_id })), next: result.nextOffset };
   }, [kind]);
-  const page = usePagedResource(`${user?.id}:activity:${revision}:${kind}`, load);
+  const page = usePagedResource(`${user?.id}:activity:${kind}`, load, revision);
   return <div className="page page--narrow">
     <header className="page__head"><h1>Activity</h1></header>
     <div aria-label="Filter activity" className="tabs" role="group">{filters.map(([value, label]) => <button aria-pressed={kind === value} key={value} onClick={() => setKind(value)} type="button">{label}</button>)}</div>

@@ -30,7 +30,9 @@ const Feed = () => {
   const [focusRevision, setFocusRevision] = useState(0);
   const [actionError, setActionError] = useState('');
   const actionLocks = useRef(new Set<string>());
-  const key = `${user?.id}:home:${diaryRevision}:${focusRevision}`;
+  // The account is the identity. A diary change or a return to the window reads the same lists again, in place.
+  const key = `${user?.id}:home`;
+  const version = `${diaryRevision}:${focusRevision}`;
   const forYou = view === 'for-you';
   const scope = view === 'following' ? 'following' : 'everyone';
   const limit = forYou ? 12 : 30;
@@ -38,26 +40,41 @@ const Feed = () => {
     const result = await discoveryService.feedPage({ scope, limit, cursor }, signal);
     return { items: result.entries, next: result.nextCursor };
   }, [scope, limit]);
-  const page = usePagedResource(`${key}:${scope}:${limit}`, loadFeed);
+  const page = usePagedResource(`${key}:${scope}:${limit}`, loadFeed, version);
   const loadCircle = useCallback(async (_cursor: string | undefined, signal: AbortSignal) => {
     const result = forYou ? await discoveryService.feedPage({ scope: 'following', limit: 6 }, signal) : { entries: [] };
     return { items: result.entries, next: null };
   }, [forYou]);
-  const circle = usePagedResource(`${key}:circle:${forYou}`, loadCircle);
+  const circle = usePagedResource(`${key}:circle:${forYou}`, loadCircle, version);
   const loadNotes = useCallback(async (_cursor: number | undefined, signal: AbortSignal) => {
     const result = forYou ? await suggestionService.list({ box: 'received', limit: 3 }, signal) : { suggestions: [] };
     return { items: result.suggestions, next: null };
   }, [forYou]);
-  const notes = usePagedResource(`${key}:notes:${forYou}`, loadNotes);
+  const notes = usePagedResource(`${key}:notes:${forYou}`, loadNotes, version);
   // A recommendation whose reminder is due is shown once, under Reminders.
   const fresh = notes.items.filter(item => !item.remind_at || new Date(item.remind_at).getTime() > Date.now());
   const loadRecommendations = useCallback((signal: AbortSignal) => forYou ? recommendationService.get(currentSignal || undefined, signal) : Promise.resolve(null), [forYou, currentSignal]);
-  const recommendations = useResource(`${key}:recommendations:${forYou}:${JSON.stringify(currentSignal)}`, loadRecommendations);
+  const recommendations = useResource(`${key}:recommendations:${forYou}:${JSON.stringify(currentSignal)}`, loadRecommendations, version);
   const films = recommendations.data?.forYou.filter(movie => movie.recommended_by?.length) ?? [];
-  const recent = circle.items.length ? circle.items : page.items;
+  // Nothing is shown twice. Friends lead as a wall of posters, with the wider
+  // community's words under them. When everything recent is from friends, their
+  // words are shown once, in full, and the wall is left out.
+  const friends = circle.items.slice(0, 6);
+  // Both lists are needed before deciding what goes where, so nothing moves once it is shown.
+  const settled = !forYou || circle.loaded || Boolean(circle.error);
+  const others = settled ? page.items.filter(entry => !friends.some(friend => friend.id === entry.id)) : [];
+  const wall = others.length ? friends : [];
+  const recent = !settled ? [] : others.length ? others : circle.items.length ? circle.items : page.items;
 
+  // Coming back to the window brings in what is new, but never under someone
+  // who is partway down the page, and not more than once a minute.
+  const lastRefresh = useRef(Date.now());
   useEffect(() => {
-    const refresh = () => setFocusRevision(value => value + 1);
+    const refresh = () => {
+      if (window.scrollY > 400 || Date.now() - lastRefresh.current < 60_000) return;
+      lastRefresh.current = Date.now();
+      setFocusRevision(value => value + 1);
+    };
     window.addEventListener('focus', refresh);
     return () => window.removeEventListener('focus', refresh);
   }, []);
@@ -98,7 +115,7 @@ const Feed = () => {
       {fresh.length > 0 && <>
         <header className="section__head" style={{ marginBottom: 0 }}><h2>Recommended to you</h2><Link to="/suggestions">All recommendations</Link></header>
         <RecommendationNote item={fresh[0]} viewerId={user.id} />
-        {fresh.length > 1 && <div className="two-up">{fresh.slice(1, 3).map(item => <RecommendationNote compact item={item} key={item.id} viewerId={user.id} />)}</div>}
+        {fresh.length > 1 && <div className={fresh.length > 2 ? 'two-up' : undefined}>{fresh.slice(1, 3).map(item => <RecommendationNote compact item={item} key={item.id} viewerId={user.id} />)}</div>}
       </>}
     </div></section>}
     <div className="page">
@@ -106,8 +123,8 @@ const Feed = () => {
       {actionError && <p className="notice notice--error" role="alert">{actionError}</p>}
       {forYou ? <div className="stack stack--loose">
         {summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Add a response</Link></div>}
-        {circle.items.length > 0 && <section aria-label="New from people you follow"><header className="section__head"><h2>New from friends</h2><button onClick={() => setView('following')}>All activity</button></header>
-          <div className="wall">{circle.items.slice(0, 6).map(entry => <article className="tile" data-hue={personHue(entry.username)} key={entry.id}>
+        {wall.length > 0 && <section aria-label="New from people you follow"><header className="section__head"><h2>New from friends</h2><button onClick={() => setView('following')}>See all</button></header>
+          <div className="wall">{wall.map(entry => <article className="tile" data-hue={personHue(entry.username)} key={entry.id}>
             <Link aria-label={`${entry.username} on ${entry.title}`} className="tile__art" to={`/response/${entry.id}`}>
               <span className="poster">{imageUrl(entry.poster_path, 'w342') && <img alt="" loading="lazy" src={imageUrl(entry.poster_path, 'w342')!} />}</span>
               <Avatar className="tile__who" size="sm" to={null} username={entry.username} />
@@ -119,7 +136,7 @@ const Feed = () => {
         {recommendations.loading && !recommendations.data && <p className="status" role="status">Loading</p>}
         {recommendations.error && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={recommendations.refresh}>Try again</button></p>}
         {films.length > 0 && <section aria-labelledby="recommendations-title"><header className="section__head"><h2 id="recommendations-title">Through films you share</h2><Link to="/recommendations">See all</Link></header><div className="list">{films.slice(0, 3).map(movie => <DiscoveryPathCard key={movie.id} movie={movie} />)}</div></section>}
-        <section aria-label="Recent responses"><header className="section__head"><h2>{circle.items.length ? 'From people you follow' : 'Recent responses'}</h2><Link to="/people">Find people</Link></header>
+        <section aria-label="Recent responses"><header className="section__head"><h2>{!others.length && circle.items.length ? 'From people you follow' : 'Recent responses'}</h2><Link to="/people">Find people</Link></header>
           {circle.error && <p className="status" role="alert">Responses could not be loaded. <button className="link" onClick={circle.refresh}>Retry</button></p>}
           {page.error && <p className="status" role="alert">{page.error} <button className="link" onClick={page.refresh}>Retry</button></p>}
           <div className="columns">{recent.slice(0, 6).map(card)}</div>

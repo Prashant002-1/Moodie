@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useDiary } from '../contexts/DiaryContext';
 import { useLibraryState } from '../hooks/useLibraryState';
@@ -38,19 +38,22 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
   const [revision, setRevision] = useState(0);
   const [choosing, setChoosing] = useState(false);
   const [replyViewing, setReplyViewing] = useState<ResponseEntry | null>(null);
+  const [gone, setGone] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setGone(false);
     suggestionService.get(id, controller.signal).then(result => { if (!controller.signal.aborted) setItem(result); })
       .catch(error => {
         if (controller.signal.aborted) return;
         setError(apiError(error, 'This recommendation could not be loaded. Try again.'));
-        if (axios.isAxiosError(error) && [401, 403, 404, 410].includes(error.response?.status ?? 0)) { setItem(null); setReplyViewing(null); setChoosing(false); }
+        if (axios.isAxiosError(error) && [401, 403, 404, 410].includes(error.response?.status ?? 0)) { setItem(null); setReplyViewing(null); setChoosing(false); setGone(true); }
       }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [id, revision]);
   usePageTitle(item ? `${item.title}, ${item.recipient_id === viewerId ? `from ${item.sender_username}` : `for ${item.recipient_username}`}` : 'Recommendation');
   const refresh = () => setRevision(value => value + 1);
+  // Arriving straight from sending it: say that it went.
+  const sentTo = (useLocation().state as { sent?: string } | null)?.sent;
   const update = async (action: SuggestionAction) => {
     if (busy) return;
     setBusy(true); setError('');
@@ -83,7 +86,8 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
       <div className="box stack">
         <div className="actions actions--spread t-caption"><Link className="link" to="/suggestions">Recommendations</Link><button className="link" onClick={refresh} disabled={loading || busy}>Refresh</button></div>
         {loading && !item && <p className="status" role="status">Loading recommendation</p>}
-        {!loading && !item && <h1>This recommendation is not available</h1>}
+        {!loading && !item && <h1>{gone ? 'This recommendation is not available' : 'This recommendation could not be loaded'}</h1>}
+        {!loading && !item && gone && <p className="secondary">It may have been removed, or it is between two other people.</p>}
         {item && <RecommendationNote headingLevel={1} item={item} page tracker viewerId={viewerId}>
           {item.source_entry_id && <p className="t-caption"><Link className="link" to={`/response/${item.source_entry_id}`}>Their response</Link></p>}
           {item.origin === 'discovered' && !item.conversation_open && <p className="hint">Kept from their response. Only you can see this.</p>}
@@ -92,7 +96,8 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
     </section>
     {/* The same left edge as the note above, at a reading width. */}
     <div className="page"><div className="page--narrow stack stack--loose">
-      {error && <p className="notice notice--error" role="alert">{error} <button className="link" onClick={refresh}>Retry</button></p>}
+      {error && !gone && <p className="notice notice--error" role="alert">{error} <button className="link" onClick={refresh}>Retry</button></p>}
+      {item && sentTo && <p className="notice" role="status">Sent to {sentTo}.</p>}
       {item && <>
         {received && library.error && <p className="notice notice--error" role="alert">{library.error} <button className="link" onClick={library.refresh}>Retry library status</button></p>}
         {received && <section aria-label="Your viewing" className="stack">
@@ -104,12 +109,16 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
                 {!item.reply && <button className="btn btn--quiet" disabled={busy} onClick={() => setChoosing(true)}>Change linked viewing</button>}
               </div>
               {!item.reply && <p className="hint">Your viewing stays private here until you choose what to send.</p>}
-            </> : <div className="actions">
-              <Link className="btn btn--primary" to={`/log?movieId=${item.movie_id}&suggestionId=${item.id}`}>I watched it</Link>
-              {!item.archived && <RemindMe item={item} onChange={setItem} small={false} />}
-              <button className="btn btn--secondary" disabled={busy || !saved || saved.saved} onClick={() => void update({ action: 'save' })}>{saved?.saved ? 'Saved for later' : 'Save for later'}</button>
-              <button className="btn btn--quiet" disabled={busy} onClick={() => setChoosing(true)}>Link an existing viewing</button>
-            </div>}
+            </> : <>
+              {/* The buttons keep one line. A reminder that is set reads as a line of its own under them. */}
+              <div className="actions">
+                <Link className="btn btn--primary" to={`/log?movieId=${item.movie_id}&suggestionId=${item.id}`}>I watched it</Link>
+                <button className="btn btn--secondary" disabled={busy || !saved || saved.saved} onClick={() => void update({ action: 'save' })}>{saved?.saved ? 'Saved for later' : 'Save for later'}</button>
+                {!item.archived && !item.remind_at && <RemindMe item={item} onChange={setItem} small={false} />}
+                <button className="btn btn--quiet" disabled={busy} onClick={() => setChoosing(true)}>Link an existing viewing</button>
+              </div>
+              {!item.archived && item.remind_at && <RemindMe item={item} onChange={setItem} small={false} />}
+            </>}
             <details className="disclosure"><summary>Options</summary><div className="actions"><button className="btn btn--secondary btn--small" disabled={busy} onClick={() => void update({ action: item.archived ? 'restore' : 'archive' })}>{item.archived ? 'Restore recommendation' : 'Archive recommendation'}</button>{item.reply && <button className="btn btn--secondary btn--small" disabled={busy} onClick={() => void retract()}>Remove my reply</button>}</div></details>
           </>}
         </section>}

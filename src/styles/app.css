@@ -402,7 +402,7 @@ fieldset > legend.legend + .hint { margin-top: calc(var(--m-space-2) * -1); }
   .response__foot > :first-child { margin-left: -14px; }
   .response__foot > .push > :last-child { margin-right: 0; justify-content: flex-end; }
   details.disclosure > summary, .check { min-height: 44px; }
-  .remind .link, .actions > .link, .meta > button.link { display: inline-flex; align-items: center; min-height: 44px; }
+  .remind .link, .actions > .link, .meta > button.link, .empty > .link, .page__head > .link { display: inline-flex; align-items: center; min-height: 44px; }
   .menu__list > * { min-height: 44px; }
 }
 

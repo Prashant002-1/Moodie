@@ -78,11 +78,13 @@ export default function SendSuggestion() {
     try {
       const result = await suggestionService.create({ origin: 'sent', movieId: film.id, recipientId: recipient.id, reason: reason.trim(),
         ...(sourceEntryId && film.id === movieId ? { sourceEntryId } : {}) });
-      navigate(`/suggestions/${result.id}`, { replace: true });
+      navigate(`/suggestions/${result.id}`, { replace: true, state: { sent: recipient.username } });
     } catch (error) { setError(apiError(error)); }
     finally { setBusy(false); }
   };
 
+  const noFollowers = !loadingPeople && !people.length && !personQuery && !recipient && !recipientError;
+  const missing = !recipient ? 'Choose who this is for.' : !reason.trim() ? 'Say why you thought of them.' : '';
   const poster = imageUrl(film?.poster_path, 'w154');
   // The note exactly as the other person will open it: from you, in your colour, with these words.
   const draft: FilmSuggestion | null = film && user ? {
@@ -94,7 +96,9 @@ export default function SendSuggestion() {
   return <div className="page">
     <header className="page__head"><h1>Recommend a film</h1></header>
     {error && <p className="notice notice--error" role="alert" style={{ marginBottom: 'var(--m-space-5)' }}>{error} <button className="link" onClick={() => setRevision(value => value + 1)}>Retry loading</button></p>}
-    {!film ? loadingFilm ? <p className="status" role="status">Loading film</p> : <section aria-label="Choose a film" className="stack">
+    {/* Recommendations go to followers. With none, say so before any film is chosen. */}
+    {noFollowers ? <div className="empty"><p>Recommendations go to people who follow you. Nobody follows you yet.</p><Link className="btn btn--primary" to="/people?view=discover">Find people</Link></div>
+    : !film ? loadingFilm ? <p className="status" role="status">Loading film</p> : <section aria-label="Choose a film" className="stack">
       <form className="search page--narrow" role="search" onSubmit={event => { event.preventDefault(); void findFilm(); }}><input aria-label="Find a film to recommend" autoFocus className="input" placeholder="Film title" type="search" value={filmQuery} onChange={event => setFilmQuery(event.target.value)} /><button className="btn btn--secondary" disabled={finding || !filmQuery.trim()}>Find film</button></form>
       {finding && <p className="status" role="status">Searching films</p>}
       {films.length > 0 && <ul className="poster-grid">{films.map(item => <li key={item.id}><button className="poster-grid__item tile pick" onClick={() => setFilm(item)} type="button">
@@ -132,7 +136,7 @@ export default function SendSuggestion() {
         <p className="label">{recipient ? `What ${recipient.username} will receive` : 'What they will receive'}</p>
         <RecommendationNote item={draft} preview viewerId={draft.recipient_id} />
       </section>}
-      <div className="recommend__send actions"><button className="btn btn--primary" disabled={!film || !recipient || !reason.trim() || busy}>{busy ? 'Sending' : 'Send recommendation'}</button><Link className="btn btn--quiet" to={movieId ? `/movie/${movieId}` : '/suggestions'}>Cancel</Link></div>
+      <div className="recommend__send stack stack--tight"><div className="actions"><button className="btn btn--primary" disabled={!film || !recipient || !reason.trim() || busy}>{busy ? 'Sending' : 'Send recommendation'}</button><Link className="btn btn--quiet" to={movieId ? `/movie/${movieId}` : '/suggestions'}>Cancel</Link></div>{missing && <p className="hint">{missing}</p>}</div>
     </form>}
   </div>;
 }

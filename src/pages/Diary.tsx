@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useDiary } from '../contexts/DiaryContext';
 import { useUser } from '../contexts/UserContext';
@@ -40,16 +40,27 @@ export default function Diary() {
 function ViewingHistory({ movieId }: { movieId?: number }) {
   const { user } = useUser();
   const { revision, removeEntry } = useDiary();
-  const [query, setQuery] = useState('');
-  const [term, setTerm] = useState('');
-  const [visibility, setVisibility] = useState<'all' | 'public' | 'private'>('all');
+  // The filter and the search live in the address, so Back from a response returns to the same list.
+  const [params, setParams] = useSearchParams();
+  const term = params.get('q') ?? '';
+  const visibility = params.get('visibility') === 'public' ? 'public' : params.get('visibility') === 'private' ? 'private' : 'all';
+  const [query, setQuery] = useState(term);
+  useEffect(() => setQuery(term), [term]);
+  const show = (next: { q?: string; visibility?: 'all' | 'public' | 'private' }) => setParams(previous => {
+    const updated = new URLSearchParams(previous);
+    const q = next.q ?? term, who = next.visibility ?? visibility;
+    if (q) updated.set('q', q); else updated.delete('q');
+    if (who === 'all') updated.delete('visibility'); else updated.set('visibility', who);
+    return updated;
+  });
+  const setVisibility = (value: 'all' | 'public' | 'private') => show({ visibility: value });
   const [busy, setBusy] = useState<number | null>(null);
   const [error, setError] = useState('');
   const load = useCallback(async (offset: number | undefined, signal: AbortSignal) => {
     const result = await diaryService.page({ movieId, q: term || undefined, visibility: visibility === 'all' ? undefined : visibility, limit: 30, offset }, signal);
     return { items: result.entries, next: result.nextOffset };
   }, [movieId, term, visibility]);
-  const page = usePagedResource(`${user?.id}:diary:${revision}:${movieId}:${term}:${visibility}`, load);
+  const page = usePagedResource(`${user?.id}:diary:${movieId}:${term}:${visibility}`, load, revision);
   const items = page.items;
   const months = useMemo(() => {
     const groups = new Map<string, typeof items>();
@@ -71,7 +82,7 @@ function ViewingHistory({ movieId }: { movieId?: number }) {
     {movieId && <header className="actions actions--spread" style={{ marginBottom: 'var(--m-space-5)' }}><h2>{page.items[0]?.title ?? 'Film history'}</h2><Link className="link" to="/diary">All viewings</Link></header>}
     <div className="toolbar">
       <div aria-label="Filter diary visibility" className="tabs" role="group">{(['all', 'public', 'private'] as const).map(option => <button key={option} aria-pressed={visibility === option} onClick={() => setVisibility(option)} type="button">{option.charAt(0).toUpperCase() + option.slice(1)}</button>)}</div>
-      <form className="search" role="search" onSubmit={event => { event.preventDefault(); setTerm(query.trim()); }}>
+      <form className="search" role="search" onSubmit={event => { event.preventDefault(); show({ q: query.trim() }); }}>
         <input aria-label="Search your diary" className="input" maxLength={200} onChange={event => setQuery(event.target.value)} placeholder="Film or words" type="search" value={query} />
         <button className="btn btn--secondary" type="submit">Search</button>
       </form>
@@ -110,7 +121,7 @@ function ViewingHistory({ movieId }: { movieId?: number }) {
     {page.loading && <p className="status" role="status">Loading viewings</p>}
     {page.loaded && !page.loading && !page.error && !page.items.length && <div className="empty">
       <p>{filtered ? 'No responses match these filters.' : movieId ? 'No viewings of this film.' : 'Your diary is empty.'}</p>
-      {filtered ? <button className="link" onClick={() => { setQuery(''); setTerm(''); setVisibility('all'); }} type="button">Clear filters</button>
+      {filtered ? <button className="link" onClick={() => show({ q: '', visibility: 'all' })} type="button">Clear filters</button>
         : <Link className="btn btn--primary" to={movieId ? `/log?movieId=${movieId}` : '/log'}>Add a response</Link>}
     </div>}
     {page.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore} type="button">Older viewings</button></div>}

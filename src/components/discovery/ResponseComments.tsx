@@ -38,7 +38,7 @@ function CommentPanel({ entryId, setCount, body, setBody }: { entryId: number; s
     const result = await discoveryService.commentsPage(entryId, offset, signal);
     return { items: result.comments, next: result.nextOffset, metadata: result.total };
   }, [entryId]);
-  const page = usePagedResource(`${user?.id}:${revision}:${entryId}`, load);
+  const page = usePagedResource(`${user?.id}:comments:${entryId}`, load, revision);
   useEffect(() => { if (page.metadata !== undefined) setCount(page.metadata); }, [page.metadata, setCount]);
   const submit = async (event: FormEvent) => {
     event.preventDefault();

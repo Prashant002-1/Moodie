@@ -7,11 +7,15 @@ interface PageState<T, Cursor, Meta> extends ResourcePage<T, Cursor, Meta> {
   key: string; loading: boolean; error: string; loaded: boolean;
 }
 
-// Route/query/account identity belongs in key. Callers memoize load. Each request
-// reads ONE page; neither initial loads nor refreshes drain an entire history.
+// Route/query/account identity belongs in key: a new key hides what was shown
+// at once. `version` is for the same list read again (something it depends on
+// changed): the first page is fetched afresh while the current one stays on
+// screen, so a follow or a save never blanks the page. Callers memoize load.
+// Each request reads ONE page; neither initial loads nor refreshes drain an entire history.
 export function usePagedResource<T extends { id: number | string }, Cursor extends string | number, Meta = unknown>(
   key: string,
   load: (cursor: Cursor | undefined, signal: AbortSignal) => Promise<ResourcePage<T, Cursor, Meta>>,
+  version: string | number = 0,
 ) {
   const [state, setState] = useState<PageState<T, Cursor, Meta>>({ key, items: [], next: null, loading: true, error: '', loaded: false });
   const [revision, setRevision] = useState(0);
@@ -43,7 +47,7 @@ export function usePagedResource<T extends { id: number | string }, Cursor exten
   useEffect(() => {
     void fetchPage();
     return () => request.current?.controller.abort();
-  }, [fetchPage, revision]);
+  }, [fetchPage, revision, version]);
 
   const refresh = useCallback(() => setRevision(value => value + 1), []);
   const updateItems = useCallback((update: (items: T[]) => T[]) => {

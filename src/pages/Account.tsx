@@ -22,8 +22,10 @@ export default function Account() {
   usePageTitle('Account');
   const navigate = useNavigate();
   // An email's "turn these off" link opens Account on its tab: /account?view=notifications.
-  const [params] = useSearchParams();
-  const [view, setView] = useState<AccountView>(() => views.find(([tab]) => tab === params.get('view'))?.[0] ?? 'profile');
+  // The open tab lives in the address, so a reload or Back returns to it.
+  const [params, setParams] = useSearchParams();
+  const view: AccountView = views.find(([tab]) => tab === params.get('view'))?.[0] ?? 'profile';
+  const setView = (tab: AccountView) => setParams(tab === 'profile' ? {} : { view: tab }, { replace: true });
   const [bio, setBio] = useState(user?.bio || '');
   const [theme, setTheme] = useState<ThemeChoice>(readTheme);
   const [currentPassword, setCurrentPassword] = useState('');

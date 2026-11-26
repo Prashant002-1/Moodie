@@ -19,7 +19,7 @@ export function SavedFilms() {
     const result = await diaryService.savedPage({ q: term || undefined, limit: 30, offset }, signal);
     return { items: result.films, next: result.nextOffset };
   }, [term]);
-  const page = usePagedResource(`${user?.id}:saved:${revision}:${term}`, load);
+  const page = usePagedResource(`${user?.id}:saved:${term}`, load, revision);
   const remove = async (id: number) => {
     if (busy) return;
     setBusy(true); setError('');
