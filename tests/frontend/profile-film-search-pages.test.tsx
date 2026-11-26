@@ -68,7 +68,7 @@ it('keeps cached film and public responses when catalog fails, with the response
   expect(screen.getByRole('heading', { level: 1, name: 'A film 2020' })).toBeInTheDocument();
   expect(screen.getByText('80 responses')).toBeInTheDocument();
   expect(screen.getByText('Cached synopsis')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Add response' })).toHaveAttribute('href', '/log?movieId=101');
+  expect(screen.getByRole('link', { name: 'Log A film' })).toHaveAttribute('href', '/log?movieId=101');
   expect(screen.getByRole('link', { name: 'Recommend' })).toHaveAttribute('href', '/suggestions/new?movieId=101');
   expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('aria-pressed', 'false');
   expect(screen.queryByText(/%/)).not.toBeInTheDocument();

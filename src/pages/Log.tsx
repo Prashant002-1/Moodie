@@ -245,7 +245,7 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
 
   return <div className="page">
     <header className="page__head page__head--bar">
-      <div><h1>{draft.editingId ? 'Edit response' : 'Add a response'}</h1>
+      <div><h1>{draft.editingId ? 'Edit response' : 'Log a film'}</h1>
         <p className="t-caption muted" role="status">{!keepable ? '' : auto.error ? 'Draft not saved' : auto.saved ? 'Draft saved' : 'Saving draft'}</p></div>
       {/* With nothing written there is nothing to ask about: Close just closes. */}
       <button className="btn btn--quiet btn--small" disabled={saving || photoPreparing} onClick={() => { if (keepable) setCloseChoice(true); else void close(false); }}>Close</button>

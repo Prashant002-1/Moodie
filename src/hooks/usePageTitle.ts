@@ -9,6 +9,7 @@ const SITE = 'Moodie';
 export function usePageTitle(title?: string | null | false) {
   useEffect(() => {
     document.title = title ? `${title} · ${SITE}` : SITE;
+    if (title) window.dispatchEvent(new CustomEvent('moodie:page', { detail: title }));
     return () => { document.title = SITE; };
   }, [title]);
 }

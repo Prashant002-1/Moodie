@@ -113,7 +113,7 @@ const MovieDetails: React.FC = () => {
             </p>}
           </div>
           {user ? <div className="actions hero__actions">
-            <Link aria-label={viewings ? 'Add another response' : 'Add response'} className="btn btn--primary" to={`/log?movieId=${movie.id}`}>Log</Link>
+            <Link aria-label={viewings ? `Log ${movie.title} again` : `Log ${movie.title}`} className="btn btn--primary" to={`/log?movieId=${movie.id}`}>Log</Link>
             <Link className="btn btn--secondary" to={`/suggestions/new?movieId=${movie.id}`}>Recommend</Link>
             <button aria-pressed={Boolean(libraryState?.saved)} className="btn btn--secondary" disabled={saving || !libraryState} onClick={() => void toggleSaved()} type="button">{libraryState?.saved ? 'Saved' : 'Save'}</button>
             {viewings > 0 && <Link className="link t-callout" to={`/diary?movieId=${movie.id}`}>Your {viewings === 1 ? 'viewing' : `${viewings} viewings`}</Link>}

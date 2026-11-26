@@ -86,7 +86,7 @@ it('says so plainly when nothing has been recommended through a shared film', as
   state.recommendations.mockResolvedValue({ ...recs, forYou: [] });
   render(<MemoryRouter><Recommendations /></MemoryRouter>);
   expect(await screen.findByText('No recommendations.')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Add a response' })).toHaveAttribute('href', '/log');
+  expect(screen.getByRole('link', { name: 'Log a film' })).toHaveAttribute('href', '/log');
 });
 
 it('does not display stale recommendations after a revised diary fails to load', async () => {

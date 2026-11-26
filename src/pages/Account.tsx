@@ -49,7 +49,8 @@ export default function Account() {
   };
   const chooseTheme = (choice: ThemeChoice) => { saveTheme(choice); setTheme(choice); };
   return <section className="page page--narrow stack">
-    <h1>Account</h1>
+    <header className="page__head page__head--bar" style={{ marginBottom: 0 }}><h1>Account</h1>
+      <button className="btn btn--quiet btn--small" disabled={busy} type="button" onClick={() => void run(async () => { await signOut(); navigate('/signin', { replace: true }); }, '')}>Sign out</button></header>
     <div className="tabs" role="group" aria-label="Account views">{views.map(([tab, label]) => <button key={tab} aria-pressed={view === tab} onClick={() => { setView(tab); setError(''); setNotice(''); }} type="button">{label}</button>)}</div>
     {error && <p className="notice notice--error" role="alert">{error}</p>}
     {notice && <p className="notice" role="status">{notice}</p>}
@@ -63,10 +64,7 @@ export default function Account() {
         <Link className="btn btn--secondary btn--small" to={`/member/${user.username}`}>Public profile</Link>
       </div>}
       <div className="field"><label htmlFor="account-bio">Public bio</label><textarea className="textarea" id="account-bio" maxLength={240} value={bio} onChange={event => setBio(event.target.value)} />{bio.length > 200 && <span className="field__hint">{bio.length} / 240</span>}</div>
-      <div className="actions actions--spread">
-        <button className="btn btn--primary" disabled={busy} type="submit">{busy ? 'Saving' : 'Save profile'}</button>
-        <button className="btn btn--quiet" disabled={busy} type="button" onClick={() => void run(async () => { await signOut(); navigate('/signin', { replace: true }); }, '')}>Sign out</button>
-      </div>
+      <div className="actions"><button className="btn btn--primary" disabled={busy} type="submit">{busy ? 'Saving' : 'Save profile'}</button></div>
     </form>}
     {view === 'appearance' && <fieldset>
       <legend className="sr-only">Appearance</legend>

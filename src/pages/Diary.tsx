@@ -122,7 +122,7 @@ function ViewingHistory({ movieId }: { movieId?: number }) {
     {page.loaded && !page.loading && !page.error && !page.items.length && <div className="empty">
       <p>{filtered ? 'No responses match these filters.' : movieId ? 'No viewings of this film.' : 'Your diary is empty.'}</p>
       {filtered ? <button className="link" onClick={() => show({ q: '', visibility: 'all' })} type="button">Clear filters</button>
-        : <Link className="btn btn--primary" to={movieId ? `/log?movieId=${movieId}` : '/log'}>Add a response</Link>}
+        : <Link className="btn btn--primary" to={movieId ? `/log?movieId=${movieId}` : '/log'}>Log a film</Link>}
     </div>}
     {page.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore} type="button">Older viewings</button></div>}
   </section>;

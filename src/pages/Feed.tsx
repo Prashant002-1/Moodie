@@ -122,7 +122,7 @@ const Feed = () => {
       <div aria-label="Choose home view" className="tabs" role="group" style={{ marginBottom: 'var(--m-space-6)' }}><button aria-pressed={forYou} onClick={() => setView('for-you')}>For you</button><button aria-pressed={view === 'following'} onClick={() => setView('following')}>Following</button><button aria-pressed={view === 'everyone'} onClick={() => setView('everyone')}>Everyone</button></div>
       {actionError && <p className="notice notice--error" role="alert">{actionError}</p>}
       {forYou ? <div className="stack stack--loose">
-        {summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Add a response</Link></div>}
+        {summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Log a film</Link></div>}
         {wall.length > 0 && <section aria-label="New from people you follow"><header className="section__head"><h2>New from friends</h2><button onClick={() => setView('following')}>See all</button></header>
           <div className="wall">{wall.map(entry => <article className="tile" data-hue={personHue(entry.username)} key={entry.id}>
             <Link aria-label={`${entry.username} on ${entry.title}`} className="tile__art" to={`/response/${entry.id}`}>
@@ -146,7 +146,7 @@ const Feed = () => {
         {page.error && <p className="status" role="alert">{page.error} <button className="link" onClick={page.refresh}>Retry responses</button></p>}
         <section aria-label={view === 'following' ? 'Responses from people you follow' : 'Public responses'}>{page.items.map(card)}</section>
         {page.loading && <p className="status" role="status">Loading responses</p>}
-        {page.loaded && !page.loading && !page.error && !page.items.length && <div className="empty"><p>No responses here yet.</p><div className="actions"><Link className="link" to="/people">Find people</Link><Link className="link" to="/log">Add a response</Link></div></div>}
+        {page.loaded && !page.loading && !page.error && !page.items.length && <div className="empty"><p>No responses here yet.</p><div className="actions"><Link className="link" to="/people">Find people</Link><Link className="link" to="/log">Log a film</Link></div></div>}
         {page.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore}>Older responses</button></div>}
       </div>}
     </div>

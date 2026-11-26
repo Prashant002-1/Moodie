@@ -24,6 +24,13 @@ const Layout: React.FC = () => {
     return () => window.removeEventListener('moodie:action-error', failed);
   }, []);
   const [adding, setAdding] = useState(false);
+  // Moving between pages is silent to a screen reader unless the new page is named aloud.
+  const [announced, setAnnounced] = useState('');
+  useEffect(() => {
+    const named = (event: Event) => setAnnounced((event as CustomEvent<string>).detail);
+    window.addEventListener('moodie:page', named);
+    return () => window.removeEventListener('moodie:page', named);
+  }, []);
   useEffect(() => { setActionError(''); setAdding(false); }, [location.pathname, location.search]);
   useEffect(() => {
     if (!adding) return;
@@ -76,6 +83,7 @@ const Layout: React.FC = () => {
   return (
     <div className={`app${user ? ' app--signed-in' : ''}`}>
       <a className="skip-link" href="#main-content">Skip to content</a>
+      <p aria-atomic="true" aria-live="polite" className="sr-only">{announced}</p>
 
       {!onboarding && <header className="topbar">
         <div className="topbar__inner">
@@ -88,7 +96,7 @@ const Layout: React.FC = () => {
               <NavLink aria-label="Search" className="btn btn--icon" to="/search"><Search aria-hidden="true" size={19} strokeWidth={2} /></NavLink>
               <NavLink aria-label="Activity" className="btn btn--icon" to="/activity"><Bell aria-hidden="true" size={19} strokeWidth={2} /></NavLink>
               <Link className="btn btn--secondary btn--small btn--caps topbar__wide" to="/suggestions/new">Recommend</Link>
-              <Link aria-label="Add a response" className="btn btn--primary btn--small btn--caps topbar__wide" to="/log"><Plus aria-hidden="true" size={15} strokeWidth={3} />Log</Link>
+              <Link aria-label="Log a film" className="btn btn--primary btn--small btn--caps topbar__wide" to="/log"><Plus aria-hidden="true" size={15} strokeWidth={3} />Log</Link>
               <NavLink aria-label="Account" className="avatar" data-hue={personHue(user.username)} to="/account">{user.username.charAt(0)}</NavLink>
             </div>
           </> : <div className="topbar__actions">

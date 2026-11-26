@@ -403,7 +403,7 @@ it('shows saved films in their own view without asking the recommendations servi
   const saved = await screen.findByRole('region', { name: 'Saved films' });
   expect(await within(saved).findByRole('heading', { name: 'Saved old film' })).toBeInTheDocument();
   expect(within(saved).getByRole('link', { name: 'Saved old film' })).toHaveAttribute('href', '/movie/102');
-  expect(within(saved).getByRole('link', { name: 'Add response' })).toHaveAttribute('href', '/log?movieId=102');
+  expect(within(saved).getByRole('link', { name: 'Log Saved old film' })).toHaveAttribute('href', '/log?movieId=102');
   expect(within(saved).getByRole('link', { name: 'Who recommended it' })).toHaveAttribute('href', '/suggestions?movieId=102');
   expect(mocks.list).not.toHaveBeenCalled();
   await userEvent.click(within(saved).getByRole('button', { name: 'More saved films' }));

@@ -39,7 +39,7 @@ const Recommendations = () => {
       ) : films.length ? (
         <div className="list list--flush">{films.map(movie => <DiscoveryPathCard headingLevel={2} key={movie.id} movie={movie} />)}</div>
       ) : data ? (
-        <div className="empty"><p>No recommendations.</p><Link className="link" to="/log">Add a response</Link></div>
+        <div className="empty"><p>No recommendations.</p><Link className="link" to="/log">Log a film</Link></div>
       ) : null}
     </div>
   );

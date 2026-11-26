@@ -41,7 +41,7 @@ export function SavedFilms() {
           <h2 className="row__title"><Link to={`/movie/${film.movie_id}`}>{film.title}</Link></h2>
           {film.release_date && <p className="t-caption muted">{releaseYear(film.release_date)}</p>}
           <div className="actions t-caption" style={{ marginTop: 'var(--m-space-1)' }}>
-            <Link className="link" to={`/log?movieId=${film.movie_id}`}>Add response</Link>
+            <Link className="link" to={`/log?movieId=${film.movie_id}`}>Log<span className="sr-only"> {film.title}</span></Link>
             <Link className="link" to={`/suggestions?movieId=${film.movie_id}`}>Who recommended it</Link>
             <button className="link" disabled={busy} onClick={() => void remove(film.movie_id)}>Remove from saved</button>
           </div>
