@@ -1,14 +1,16 @@
 import { Link, useParams } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 import { usePageTitle } from '../hooks/usePageTitle';
 
 export default function About() {
   const { topic } = useParams();
+  const { user } = useUser();
   const support = import.meta.env.VITE_SUPPORT_URL;
   const supportURL = typeof support === 'string' && /^(https:\/\/|mailto:)/.test(support) ? support : null;
   const title = topic === 'privacy' ? 'Privacy' : topic === 'community' ? 'Community guidelines' : topic === 'credits' ? 'Credits' : 'Page not found';
   usePageTitle(title);
   return <article className="page page--narrow">
-    <header className="page__head"><h1>{title}</h1><Link className="link t-callout" to="/account">Account</Link></header>
+    <header className="page__head"><h1>{title}</h1>{user ? <Link className="link t-callout" to="/account?view=account">Account</Link> : <Link className="link t-callout" to="/">Home</Link>}</header>
     <div className="stack">
       {topic === 'privacy' ? <>
         <p>Moodie stores your account email, username, profile, film responses, selected feelings, saved films, and social activity to provide the service.</p>

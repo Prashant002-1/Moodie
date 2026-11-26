@@ -91,6 +91,7 @@ const MemberProfile: React.FC = () => {
             {person.follows_you && <Link className={`btn ${person.following ? 'btn--primary' : 'btn--secondary'}`} to={recommend}>Recommend a film</Link>}
             <Link className="link t-callout" to={`/suggestions?personId=${person.id}`}>Recommendations between you</Link>
           </div>}
+          {own && <div className="actions"><Link className="btn btn--secondary" to="/account">Edit profile</Link></div>}
           <SafetyActions kind="person" targetId={person.id} personId={person.id} username={person.username} />
         </div>
       </div>

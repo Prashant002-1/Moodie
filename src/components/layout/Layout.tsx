@@ -131,6 +131,7 @@ const Layout: React.FC = () => {
               <img alt="TMDB" src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" />
             </a>
             <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+            <nav aria-label="About Moodie" className="footer__links"><Link to="/about/privacy">Privacy</Link><Link to="/about/community">Community guidelines</Link></nav>
           </div>
         </footer>
       )}

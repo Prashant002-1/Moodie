@@ -83,11 +83,15 @@ const Feed = () => {
     const lock = `like:${entry.id}`;
     if (actionLocks.current.has(lock)) return;
     actionLocks.current.add(lock); setActionError('');
+    // The heart answers the tap at once, and is taken back if the like could not be saved.
+    const set = (liked: boolean) => {
+      const update = <T extends ResponseEntry,>(items: T[]) => items.map(item => item.id === entry.id ? { ...item, liked, like_count: Math.max(0, item.like_count + (liked ? 1 : -1)) } : item);
+      page.updateItems(update); circle.updateItems(update);
+    };
+    set(!entry.liked);
     try {
       if (entry.liked) await discoveryService.unlike(entry.id); else await discoveryService.like(entry.id);
-      const update = <T extends ResponseEntry,>(items: T[]) => items.map(item => item.id === entry.id ? { ...item, liked: !entry.liked, like_count: Math.max(0, item.like_count + (entry.liked ? -1 : 1)) } : item);
-      page.updateItems(update); circle.updateItems(update);
-    } catch (error) { setActionError(apiError(error)); }
+    } catch (error) { set(Boolean(entry.liked)); setActionError(apiError(error)); }
     finally { actionLocks.current.delete(lock); }
   };
   const follow = async (id: number, following: boolean) => {
