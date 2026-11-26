@@ -106,6 +106,9 @@ const Feed = () => {
   };
   const toggleFollow = (entry: ResponseEntry) => { if (entry.following !== undefined) void follow(entry.user_id, entry.following); };
   const card = (entry: ResponseEntry) => <ResponseCard key={entry.id} entry={entry} onFollow={toggleFollow} onLike={entry => void toggleLike(entry)} ownUserId={user?.id} />;
+  // When nothing could be read, say it once.
+  const homeFailed = forYou && Boolean(page.error && circle.error && notes.error && recommendations.error);
+  const retryHome = () => { page.refresh(); circle.refresh(); notes.refresh(); recommendations.refresh(); };
   const hour = new Date().getHours();
   const senders = [...new Set(notes.items.filter(item => item.origin === 'sent').map(item => item.sender_username))];
   return <>
@@ -115,7 +118,7 @@ const Feed = () => {
         {senders.length > 0 && <> {senders.slice(0, 2).map((name, index) => <span key={name}>{index > 0 && ' and '}<Link className="who" data-hue={personHue(name)} to={`/member/${encodeURIComponent(name)}`}>{name}</Link></span>)}{senders.length > 2 && ' and others'} thought of you.</>}
       </p>
       <DueReminders />
-      {notes.error && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={notes.refresh}>Retry</button></p>}
+      {notes.error && !homeFailed && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={notes.refresh}>Retry</button></p>}
       {fresh.length > 0 && <>
         <header className="section__head" style={{ marginBottom: 0 }}><h2>Recommended to you</h2><Link to="/suggestions">All recommendations</Link></header>
         <RecommendationNote item={fresh[0]} viewerId={user.id} />
@@ -125,7 +128,8 @@ const Feed = () => {
     <div className="page">
       <div aria-label="Choose home view" className="tabs" role="group" style={{ marginBottom: 'var(--m-space-6)' }}><button aria-pressed={forYou} onClick={() => setView('for-you')}>For you</button><button aria-pressed={view === 'following'} onClick={() => setView('following')}>Following</button><button aria-pressed={view === 'everyone'} onClick={() => setView('everyone')}>Everyone</button></div>
       {actionError && <p className="notice notice--error" role="alert">{actionError}</p>}
-      {forYou ? <div className="stack stack--loose">
+      {homeFailed ? <p className="notice notice--error" role="alert">Home could not be loaded. <button className="link" onClick={retryHome}>Retry</button></p>
+      : forYou ? <div className="stack stack--loose">
         {summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Log a film</Link></div>}
         {wall.length > 0 && <section aria-label="New from people you follow"><header className="section__head"><h2>New from friends</h2><button onClick={() => setView('following')}>See all</button></header>
           <div className="wall">{wall.map(entry => <article className="tile" data-hue={personHue(entry.username)} key={entry.id}>

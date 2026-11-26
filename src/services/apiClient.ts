@@ -14,7 +14,8 @@ apiClient.interceptors.response.use(response => response, error => {
   if (error.response?.status === 401 && !/\/auth\/(login|register|recover|me)$/.test(error.config?.url || '')) {
     window.dispatchEvent(new Event('moodie:session-expired'));
   }
-  if (['post', 'patch', 'delete', 'put'].includes(error.config?.method) && !error.config?.url?.startsWith('/auth/')) {
+  // Recommendations are read with a POST. A failed read is shown where it belongs, not as a failed change.
+  if (['post', 'patch', 'delete', 'put'].includes(error.config?.method) && !error.config?.url?.startsWith('/auth/') && error.config?.url !== '/recommendations') {
     window.dispatchEvent(new CustomEvent('moodie:action-error', { detail: apiError(error) }));
   }
   return Promise.reject(error);
