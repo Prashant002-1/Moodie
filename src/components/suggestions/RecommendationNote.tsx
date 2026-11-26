@@ -86,7 +86,8 @@ export function RecommendationNote({ item: given, viewerId, compact = false, hea
         {later && reminderDue(item) && <span className="badge badge--accent">Due</span>}
         <Link className={`btn ${primary ? 'btn--primary' : 'btn--secondary'} btn--small`} to={log}>I watched it<span className="sr-only">: {item.title}</span></Link>
         <RemindMe item={item} label={later ? 'Later' : undefined} later={later} onChange={change} />
-        {!later && <Link className="btn btn--quiet btn--small" to={open}>Open<span className="sr-only"> {item.title}</span></Link>}
+        {/* A compact note's title already opens it. */}
+        {!later && !compact && <Link className="btn btn--quiet btn--small" to={open}>Open<span className="sr-only"> {item.title}</span></Link>}
       </div>}
       {!actions && !preview && !page && !compact && received && !item.archived && item.status === 'watched'
         && <div className="actions"><Link className="btn btn--secondary btn--small" to={open}>Reply<span className="sr-only"> to {item.sender_username} about {item.title}</span></Link></div>}
