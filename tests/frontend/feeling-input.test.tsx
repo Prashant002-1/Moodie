@@ -91,3 +91,13 @@ describe('feelings', () => {
     expect(feelingWords(undefined)).toEqual([]);
   });
 });
+
+it('shows only the three strongest feelings of an older response as chosen, and keeps to three once changed', async () => {
+  const changed = vi.fn();
+  const older = { neutral: .2, happy: .7, sad: .1, angry: .3, fearful: .9, disgusted: 0, surprised: .5 };
+  render(<FeelingChoices value={older} onChange={changed} />);
+  expect(screen.getAllByRole('button', { pressed: true }).map(button => button.textContent)).toEqual(['2Joy, second', '1Tension, strongest', '3Wonder, third']);
+  expect(changed).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole('button', { name: /^Wonder/ }));
+  expect(changed).toHaveBeenLastCalledWith({ neutral: 0, happy: .6, sad: 0, angry: 0, fearful: 1, disgusted: 0, surprised: 0 });
+});

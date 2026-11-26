@@ -9,7 +9,10 @@ import { FEELING_KEYS, FeelingKey, MAX_FEELINGS, feelingsFromOrder, orderedFeeli
 export function FeelingChoices({ value, onChange, disabled = false }: {
   value: EmotionScores; onChange: (value: EmotionScores) => void; disabled?: boolean;
 }) {
-  const chosen = orderedFeelings(value);
+  // An older response can hold more than three feelings. Its three strongest are
+  // the ones shown everywhere else, so they are the ones shown as chosen here;
+  // the stored values only change when the person changes their choice.
+  const chosen = orderedFeelings(value).slice(0, MAX_FEELINGS);
   const full = chosen.length >= MAX_FEELINGS;
   const toggle = (key: FeelingKey) => onChange(feelingsFromOrder(chosen.includes(key) ? chosen.filter(item => item !== key) : [...chosen, key]));
   return <fieldset disabled={disabled}>
