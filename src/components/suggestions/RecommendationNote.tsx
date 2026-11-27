@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FilmSuggestion, formatReminder, progressLabels, progressSteps, reminderDue, suggestionContext, suggestionPerson, suggestionStatus } from '../../types/suggestion';
+import { FilmSuggestion, enjoymentLabels, formatReminder, progressLabels, progressSteps, reminderDue, suggestionContext, suggestionPerson, suggestionStatus } from '../../types/suggestion';
 import { imageUrl, releaseYear } from '../../utils/display';
 import { personHue } from '../../utils/person';
 import { Avatar } from '../common/Avatar';
@@ -60,7 +60,11 @@ export function RecommendationNote({ item: given, viewerId, compact = false, hea
   return <article className={`rec${compact ? ' rec--compact' : ''}${hideFilm ? ' rec--words' : ''}${preview ? ' rec--preview' : ''}${page ? ' rec--page' : ''}`} data-hue={personHue(person)}>
     {!hideFilm && (preview
       ? <span className={posterSize}>{poster && <img alt={`Poster for ${item.title}`} src={poster} />}</span>
-      : <Link className={posterSize} tabIndex={-1} to={to}>{poster && <img alt={`Poster for ${item.title}`} loading="lazy" src={poster} />}</Link>)}
+      : <span className="poster-stamped">
+        <Link className={posterSize} tabIndex={-1} to={to}>{poster && <img alt={`Poster for ${item.title}`} loading="lazy" src={poster} />}</Link>
+        {/* Once the person it was for has answered, their verdict is on the film. */}
+        {item.reply && <span aria-hidden="true" className="stamp stamp--tag">{enjoymentLabels[item.reply.enjoyment]}</span>}
+      </span>)}
     <div className="rec__main">
       <p className="rec__from">
         <Avatar size="sm" to={null} username={person} />

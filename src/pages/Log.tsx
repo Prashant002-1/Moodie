@@ -23,6 +23,7 @@ import { ResponseDetailInputs } from '../components/diary/ResponseDetails';
 import { PathCard } from '../components/paths/PathCard';
 import { PassItOn } from '../components/paths/PassItOn';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { Mark } from '../components/common/Mark';
 
 interface ComposerRequest { movieId?: number; entryId?: number; suggestionId?: number }
 interface DraftChoice { stored: StoredResponseDraft; incoming: ResponseDraft | null }
@@ -231,7 +232,7 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
       {draft.film && <span className="poster poster--lg">{chosenPoster && <img alt={`Poster for ${draft.film.title}`} src={chosenPoster} />}</span>}
       <div className="row__main stack">
         <h1>{savedEntry.title ?? draft.film?.title}</h1>
-        <p className="secondary">In your diary. {savedEntry.visibility === 'public' ? 'Everyone can see it.' : 'Only you can see it.'}</p>
+        <p className="said-so"><Mark name="ticket" size={40} /><span>In your diary. {savedEntry.visibility === 'public' ? 'Everyone can see it.' : 'Only you can see it.'}</span></p>
         <div className="actions">
           {draft.suggestionId && <Link className="btn btn--primary" to={`/suggestions/${draft.suggestionId}`}>Reply to {draft.suggestionName || 'them'}</Link>}
           <Link className={`btn ${draft.suggestionId ? 'btn--secondary' : 'btn--primary'}`} to={`/response/${savedEntry.id}`}>Read your response</Link>

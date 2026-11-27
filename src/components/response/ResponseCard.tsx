@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ResponseEntry } from '../../services/discoveryService';
@@ -19,6 +20,8 @@ interface ResponseCardProps {
 /** One person's response to one film: who, which film, their words, their feelings. */
 export function ResponseCard({ entry, ownUserId, onFollow, onLike }: ResponseCardProps) {
   const poster = imageUrl(entry.poster_path, 'w342');
+  // The heart answers a tap with a small bounce; one that was already filled when the page opened stays still.
+  const [tapped, setTapped] = useState(false);
   const likes = entry.like_count || 0;
   return <article className="response">
     <header className="response__head" data-hue={personHue(entry.username)}>
@@ -38,7 +41,7 @@ export function ResponseCard({ entry, ownUserId, onFollow, onLike }: ResponseCar
       <Link className="poster" tabIndex={-1} to={`/movie/${entry.movie_id}`}>{poster && <img alt={`Poster for ${entry.title}`} loading="lazy" src={poster} />}</Link>
     </div>
     <footer className="response__foot">
-      <button aria-label={`${entry.liked ? 'Unlike' : 'Like'} ${entry.username}'s response`} aria-pressed={entry.liked} onClick={() => onLike(entry)} type="button"><Heart aria-hidden="true" fill={entry.liked ? 'currentColor' : 'none'} size={16} />{likes > 0 && <span>{likes}<span className="sr-only"> {likes === 1 ? 'like' : 'likes'}</span></span>}</button>
+      <button aria-label={`${entry.liked ? 'Unlike' : 'Like'} ${entry.username}'s response`} aria-pressed={entry.liked} onClick={() => { setTapped(true); onLike(entry); }} type="button"><Heart aria-hidden="true" className={tapped && entry.liked ? 'pop' : undefined} fill={entry.liked ? 'currentColor' : 'none'} size={16} />{likes > 0 && <span>{likes}<span className="sr-only"> {likes === 1 ? 'like' : 'likes'}</span></span>}</button>
       <ResponseComments entryId={entry.id} initialCount={entry.comment_count} />
       <span className="push"><KeepRecommendation entryId={entry.id} authorId={entry.user_id} movieId={entry.movie_id} /></span>
     </footer>

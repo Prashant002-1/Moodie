@@ -44,3 +44,21 @@
 /* An answer pressed onto a poster, the way a ticket is stamped. */
 .stamp { position: absolute; inset: 0; display: grid; place-items: center; padding: 6px; text-align: center; font-family: var(--m-font-display); font-style: italic; font-weight: 600; font-size: 1.375rem; line-height: 1.1; color: var(--m-color-ink); transform: rotate(-7deg); animation: stamp var(--m-motion-base) var(--m-ease-out) both; }
 @keyframes stamp { from { opacity: 0; transform: rotate(-7deg) scale(1.5); } }
+
+/* ---- Drawn marks and small motions ---------------------------------------- */
+/* A mark draws itself once. Reduced motion (app.css) shows it finished. */
+.mark { flex: none; color: var(--m-color-ink-muted); }
+.mark [pathLength] { stroke-dasharray: 1; animation: draw 900ms var(--m-ease-out) both; }
+.mark .mark__dash { stroke-dasharray: 2 4; animation: enter 900ms var(--m-ease-out) both; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+/* Something answering a tap: a heart, the number on a chosen feeling. */
+@keyframes pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.pop { animation: pop 320ms var(--m-ease-out) both; }
+.chip[aria-pressed='true'] .chip__order { animation: pop 280ms var(--m-ease-out) both; }
+/* A line that arrives with its mark: "Sent to ananya", "In your diary". */
+.said-so { display: flex; align-items: center; gap: var(--m-space-3); color: var(--m-color-ink-secondary); }
+.said-so--sent .mark { animation: fly 700ms var(--m-ease-out) both; }
+@keyframes fly { from { opacity: 0; transform: translate(-28px, 14px) rotate(-14deg); } }
+/* What someone made of a film, pressed onto its poster as a tag. */
+.poster-stamped { position: relative; display: block; flex: none; align-self: start; }
+.stamp.stamp--tag { inset: auto auto 10px -8px; display: inline-block; padding: 4px 12px; border-radius: var(--m-radius-pill); background: var(--m-color-accent); color: var(--m-color-on-accent); font-size: 1.125rem; white-space: nowrap; }

@@ -22,7 +22,7 @@ vi.mock('../../src/hooks/useLibraryState', () => ({ useLibraryState: () => ({ ge
 vi.mock('../../src/services/discoveryService', () => ({ discoveryService: mocks }));
 vi.mock('../../src/services/catalogService', () => ({ catalogService: mocks }));
 vi.mock('../../src/services/suggestionService', () => ({ suggestionService: mocks }));
-vi.mock('../../src/services/recommendationService', () => ({ recommendationService: { get: async () => ({ forYou: [] }) } }));
+vi.mock('../../src/services/pathService', () => ({ pathService: { films: async () => ({ films: [], nextOffset: null, total: 0, connected: true, diary: 1 }), recipients: async () => ({ people: [], wrote: [] }) } }));
 
 const film = { id: 10, title: 'Scream', poster_path: null, backdrop_path: null, release_date: '1996-12-20' };
 const person = { id: 2, username: 'friend', bio: '', following: false, latest_title: null, latest_movie_id: null, latest_poster_path: null, latest_note: null, shared_film_title: null };

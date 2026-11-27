@@ -8,6 +8,7 @@ import { useUser } from '../contexts/UserContext';
 import { usePagedResource } from '../hooks/usePagedResource';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { pathService } from '../services/pathService';
+import { Mark } from '../components/common/Mark';
 
 /** Films that reach the viewer through people: those they follow, those whose picks landed, those who felt alike. */
 const Recommendations = () => {
@@ -31,6 +32,7 @@ const Recommendations = () => {
     {page.items.length > 0 && <div className="paths">{page.items.map(item => <PathCard headingLevel={2} item={item} key={item.id} />)}</div>}
     {page.loading && <p className="status" role="status">Loading films</p>}
     {empty && <div className="stack stack--loose">
+      <Mark name={page.metadata?.connected ? 'reel' : 'seats'} />
       <p className="status" style={{ textAlign: 'left', padding: 0 }}>{page.metadata?.connected ? 'Nothing new through the people you know.' : 'Films reach you here through people: the ones you follow, and the ones who felt the way you did about a film.'}</p>
       <section aria-label="Films you may have seen"><header className="section__head"><h2>Seen any of these?</h2><Link to="/log">Log another film</Link></header><StarterFilms limit={12} /></section>
       <Introductions limit={6} more />

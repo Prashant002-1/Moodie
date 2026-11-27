@@ -20,6 +20,7 @@ import { SuggestionViewingPicker } from '../components/suggestions/SuggestionVie
 import { SuggestionMessages } from '../components/suggestions/SuggestionMessages';
 import { Spoiler } from '../components/suggestions/Spoiler';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { Mark } from '../components/common/Mark';
 
 export default function SuggestionDetail() {
   const { id } = useParams();
@@ -96,7 +97,7 @@ function SuggestionConversation({ id, viewerId }: { id: number; viewerId: number
     {/* The same column as the note above. */}
     <div className="page page--narrow"><div className="stack stack--loose">
       {error && !gone && <p className="notice notice--error" role="alert">{error} <button className="link" onClick={refresh}>Retry</button></p>}
-      {item && sentTo && <p className="notice" role="status">Sent to {sentTo}.</p>}
+      {item && sentTo && <p className="said-so said-so--sent" role="status"><Mark name="plane" size={40} />Sent to {sentTo}.</p>}
       {item && <>
         {received && library.error && <p className="notice notice--error" role="alert">{library.error} <button className="link" onClick={library.refresh}>Retry library status</button></p>}
         {received && <section aria-label="Your viewing" className="stack">

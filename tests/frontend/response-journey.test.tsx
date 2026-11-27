@@ -11,7 +11,7 @@ vi.mock('../../src/contexts/UserContext', () => ({ useUser: () => ({ user: { id:
 vi.mock('../../src/services/suggestionService', () => ({ suggestionService: { list: async () => ({ suggestions: [], nextOffset: null }) } }));
 vi.mock('../../src/services/catalogService', () => ({ catalogService: { search: mocks.search } }));
 vi.mock('../../src/services/discoveryService', () => ({ discoveryService: { pulse: () => Promise.resolve([]) } }));
-vi.mock('../../src/services/recommendationService', () => ({ recommendationService: { get: () => Promise.resolve({ forYou: [] }) } }));
+vi.mock('../../src/services/pathService', () => ({ pathService: { films: async () => ({ films: [], nextOffset: null, total: 0, connected: true, diary: 1 }), recipients: async () => ({ people: [], wrote: [] }) } }));
 
 it('finds a film without artwork and retains its note and feelings after a failed save', async () => {
   mocks.search.mockResolvedValue({ results: [{ id: 101, title: 'Shared Film', poster_path: null, release_date: '2020-01-01' }] });

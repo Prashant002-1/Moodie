@@ -14,6 +14,7 @@ import { personHue } from '../utils/person';
 import { Avatar } from '../components/common/Avatar';
 import { RecommendationNote } from '../components/suggestions/RecommendationNote';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { Mark } from '../components/common/Mark';
 
 /** Writing a recommendation: a film, a person, and why, with the note they will receive beside it. */
 export default function SendSuggestion() {
@@ -105,7 +106,7 @@ export default function SendSuggestion() {
     <header className="page__head"><h1>Recommend a film</h1></header>
     {error && <p className="notice notice--error" role="alert" style={{ marginBottom: 'var(--m-space-5)' }}>{error} <button className="link" onClick={() => setRevision(value => value + 1)}>Retry loading</button></p>}
     {/* Recommendations go to followers. With none, say so before any film is chosen. */}
-    {noFollowers ? <div className="empty"><p>Recommendations go to people who follow you. Nobody follows you yet.</p><Link className="btn btn--primary" to="/people?view=discover">Find people</Link></div>
+    {noFollowers ? <div className="empty"><Mark name="seats" /><p>Recommendations go to people who follow you. Nobody follows you yet.</p><Link className="btn btn--primary" to="/people?view=discover">Find people</Link></div>
     : !film ? loadingFilm ? <p className="status" role="status">Loading film</p> : <section aria-label="Choose a film" className="stack">
       <form className="search page--narrow" role="search" onSubmit={event => { event.preventDefault(); void findFilm(); }}><input aria-label="Find a film to recommend" autoFocus className="input" placeholder="Film title" type="search" value={filmQuery} onChange={event => setFilmQuery(event.target.value)} /><button className="btn btn--secondary" disabled={finding || !filmQuery.trim()}>Find film</button></form>
       {finding && <p className="status" role="status">Searching films</p>}

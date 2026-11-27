@@ -19,6 +19,7 @@ import { useResource } from '../hooks/useResource';
 import { apiError } from '../services/apiClient';
 import { pathService } from '../services/pathService';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { Mark } from '../components/common/Mark';
 
 type FeedView = 'for-you' | 'following' | 'everyone';
 
@@ -138,7 +139,7 @@ const Feed = () => {
         <div className="notes">{fresh.slice(0, 3).map(item => <RecommendationNote act compact item={item} key={item.id} primary={false} viewerId={user.id} />)}</div>
       </section>}
       {asked ? <section aria-label="Films you may have seen"><header className="section__head"><h2>Seen any of these?</h2><Link to="/log">Log another film</Link></header><StarterFilms limit={12} /></section>
-        : summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Log a film</Link></div>}
+        : summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><Mark name="ticket" /><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Log a film</Link></div>}
       {wall.length > 0 && <section aria-label="New from people you follow"><header className="section__head"><h2>New from friends</h2><button onClick={() => setView('following')}>See all</button></header>
         <div className="wall wall--fit">{wall.map(entry => <article className="tile" data-hue={personHue(entry.username)} key={entry.id}>
           <Link aria-label={`${entry.username} on ${entry.title}`} className="tile__art" to={`/response/${entry.id}`}>
@@ -163,7 +164,7 @@ const Feed = () => {
       {page.error && <p className="status" role="alert">{page.error} <button className="link" onClick={page.refresh}>Retry responses</button></p>}
       <section aria-label={view === 'following' ? 'Responses from people you follow' : 'Public responses'} className="responses">{page.items.map(card)}</section>
       {page.loading && <p className="status" role="status">Loading responses</p>}
-      {page.loaded && !page.loading && !page.error && !page.items.length && <div className="empty"><p>No responses here yet.</p><div className="actions"><Link className="link" to="/people">Find people</Link><Link className="link" to="/log">Log a film</Link></div></div>}
+      {page.loaded && !page.loading && !page.error && !page.items.length && <div className="empty"><Mark name="seats" /><p>No responses here yet.</p><div className="actions"><Link className="link" to="/people">Find people</Link><Link className="link" to="/log">Log a film</Link></div></div>}
       {page.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore}>Older responses</button></div>}
     </>}
   </div>;

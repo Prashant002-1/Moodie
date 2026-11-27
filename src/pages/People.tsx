@@ -8,6 +8,7 @@ import { usePagedResource } from '../hooks/usePagedResource';
 import { apiError } from '../services/apiClient';
 import { CommunityPerson, discoveryService } from '../services/discoveryService';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { Mark } from '../components/common/Mark';
 
 type PeopleView = 'following' | 'discover';
 
@@ -75,7 +76,7 @@ const People: React.FC = () => {
       {page.loading && <p className="status" role="status">Loading people</p>}
       {page.loaded && !page.loading && !page.error && !page.items.length && (term || view === 'discover'
         ? <p className="status">{term ? <>No people match this search. <button className="link" onClick={() => show({ q: '' })} type="button">Clear search</button></> : 'No one new to discover.'}</p>
-        : <div className="empty"><p>You are not following anyone.</p><button className="btn btn--primary" onClick={() => setView('discover')} type="button">Discover people</button></div>)}
+        : <div className="empty"><Mark name="seats" /><p>You are not following anyone.</p><button className="btn btn--primary" onClick={() => setView('discover')} type="button">Discover people</button></div>)}
       {page.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-5)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore}>More people</button></div>}
     </div>
   );

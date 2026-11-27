@@ -11,7 +11,7 @@ vi.mock('../../src/contexts/DiaryContext', () => ({ useDiary: () => ({ createEnt
 vi.mock('../../src/services/catalogService', () => ({ catalogService: { movie: mocks.movie } }));
 vi.mock('../../src/services/discoveryService', () => ({ discoveryService: { response: mocks.response, pulse: async () => [] } }));
 vi.mock('../../src/services/suggestionService', () => ({ suggestionService: { list: async () => ({ suggestions: [], nextOffset: null }) } }));
-vi.mock('../../src/services/recommendationService', () => ({ recommendationService: { get: mocks.recommendations } }));
+vi.mock('../../src/services/pathService', () => ({ pathService: { films: mocks.recommendations, recipients: async () => ({ people: [], wrote: [] }) } }));
 const film = { id: 10, title: 'Scream', poster_path: null, release_date: '1996-12-20' };
 const draft = () => ({ ...newResponseDraft(film), note: 'Only for me', emotions: { ...newResponseDraft().emotions, happy: .8 }, enjoyment: 'loved' as const,
   highlights: ['performances' as const], expressionImage: 'data:image/jpeg;base64,cGhvdG8=', suggestionId: 7, suggestionName: 'ananya' });
@@ -19,7 +19,7 @@ const ui = (path = '/log') => <MemoryRouter initialEntries={[path]}><Routes><Rou
 beforeEach(() => {
   vi.resetAllMocks(); mocks.ownerId = 1;
   mocks.movie.mockResolvedValue(film);
-  mocks.recommendations.mockResolvedValue({ forYou: [] });
+  mocks.recommendations.mockResolvedValue({ films: [], nextOffset: null, total: 0, connected: true, diary: 1 });
 });
 
 it('recovers attribution, photo, feelings and the identical failed request after relaunch', async () => {

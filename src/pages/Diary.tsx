@@ -10,6 +10,7 @@ import { ResponseDetails } from '../components/diary/ResponseDetails';
 import { Feelings } from '../components/response/Feelings';
 import { formatCalendarDate, imageUrl, releaseYear } from '../utils/display';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { Mark } from '../components/common/Mark';
 
 export default function Diary() {
   const { error, refresh, summary } = useDiary();
@@ -122,6 +123,7 @@ function ViewingHistory({ movieId }: { movieId?: number }) {
     </section>)}
     {page.loading && <p className="status" role="status">Loading viewings</p>}
     {page.loaded && !page.loading && !page.error && !page.items.length && <div className="empty">
+      {!filtered && !movieId && <Mark name="ticket" />}
       <p>{filtered ? 'No responses match these filters.' : movieId ? 'No viewings of this film.' : 'Your diary is empty.'}</p>
       {filtered ? <button className="link" onClick={() => show({ q: '', visibility: 'all' })} type="button">Clear filters</button>
         : <Link className="btn btn--primary" to={movieId ? `/log?movieId=${movieId}` : '/log'}>Log a film</Link>}

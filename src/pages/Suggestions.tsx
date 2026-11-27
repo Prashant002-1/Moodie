@@ -8,6 +8,7 @@ import { RecommendationNote } from '../components/suggestions/RecommendationNote
 import { SavedFilms } from '../components/watchlist/SavedFilms';
 import type { FilmSuggestion, SuggestionQuery, SuggestionSummary } from '../types/suggestion';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { Mark } from '../components/common/Mark';
 
 type InboxBox = NonNullable<SuggestionQuery['box']>;
 // "saved" is a tab on this page only. It is never sent to the recommendations API.
@@ -90,6 +91,7 @@ function SuggestionInbox({ box, onChanged }: { box: InboxBox; onChanged: () => v
       <RecommendationNote compact={box === 'archived'} headingLevel={2} item={item} key={item.id} onChange={change} primary={false} tracker={box === 'sent'} viewerId={user!.id} />)}</div>}
     {page.loading && <p className="status" role="status">Loading recommendations</p>}
     {page.loaded && !page.loading && !page.items.length && <div className="empty">
+      {!filtered && <Mark name="plane" />}
       <p>{filtered ? 'No recommendations match.' : empty[box]}</p>
       {!filtered && box === 'received' && <Link className="link" to="/people">Find people</Link>}
     </div>}
