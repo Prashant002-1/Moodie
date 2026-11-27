@@ -169,6 +169,13 @@ export async function starterFor(viewerId: number, limit = 18) {
   return { films: result.rows.map(({ responses: _responses, ...film }) => ({ ...film, id: Number(film.id) })) };
 }
 
+/** Films the viewer set aside, latest first, so a slip can be taken back later. */
+export async function hiddenFor(viewerId: number) {
+  const result = await pool.query<FilmCard>(`SELECT m.id, m.title, m.release_date::text, m.poster_path FROM discovery_hidden h JOIN movies m ON m.id = h.movie_id
+    WHERE h.user_id = $1 ORDER BY h.created_at DESC, m.id LIMIT 200`, [viewerId]);
+  return { films: result.rows.map(film => ({ ...film, id: Number(film.id) })) };
+}
+
 export async function hide(viewerId: number, movieId: number) {
   await pool.query('INSERT INTO discovery_hidden(user_id, movie_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [viewerId, movieId]);
 }

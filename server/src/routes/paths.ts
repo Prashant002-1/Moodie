@@ -1,7 +1,7 @@
 import express, { Response } from 'express';
 import { z } from 'zod';
 import pool from '../config/database';
-import { filmsFor, hide, introductionsFor, recipientsFor, starterFor, unhide } from '../discovery/service';
+import { filmsFor, hiddenFor, hide, introductionsFor, recipientsFor, starterFor, unhide } from '../discovery/service';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 
 // Discovery through people: films, people to follow, who to send a film to, and where a newcomer starts.
@@ -19,6 +19,9 @@ const handle = (fn: (req: AuthRequest, res: Response, user: number) => Promise<u
 router.get('/for-you', authenticateToken, handle(async (req, res, user) => {
   const { limit, offset } = z.object({ limit: z.coerce.number().int().min(1).max(50).default(12), offset: z.coerce.number().int().min(0).default(0) }).parse(req.query);
   res.json(await filmsFor(user, limit, offset));
+}));
+router.get('/for-you/hidden', authenticateToken, handle(async (_req, res, user) => {
+  res.json(await hiddenFor(user));
 }));
 router.put('/for-you/:movieId/hidden', authenticateToken, handle(async (req, res, user) => {
   const movieId = id.parse(req.params.movieId);

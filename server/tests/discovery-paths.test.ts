@@ -106,6 +106,8 @@ describe('films through people', () => {
     const put = await request(app).put('/api/discovery/for-you/20/hidden').set('Cookie', viewer.cookie).set('X-Moodie-Request', '1');
     expect(put.status).toBe(204);
     expect(titles((await get('/discovery/for-you', viewer.cookie)).body)).toEqual(['Liked']);
+    expect((await get('/discovery/for-you/hidden', viewer.cookie)).body.films).toEqual([{ id: 20, title: 'Loved', release_date: null, poster_path: '/c.jpg' }]);
+    expect((await get('/discovery/for-you/hidden', friend.cookie)).body.films).toEqual([]);
     expect((await request(app).put('/api/discovery/for-you/999/hidden').set('Cookie', viewer.cookie).set('X-Moodie-Request', '1')).status).toBe(404);
     expect((await request(app).delete('/api/discovery/for-you/20/hidden').set('Cookie', viewer.cookie).set('X-Moodie-Request', '1')).status).toBe(204);
     expect(titles((await get('/discovery/for-you', viewer.cookie)).body)).toEqual(['Loved', 'Liked']);

@@ -4,12 +4,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, expect, it, vi } from 'vitest';
 import Feed from '../../src/pages/Feed';
 import Recommendations from '../../src/pages/Recommendations';
-const state = vi.hoisted(() => ({ revision: 0, feed: vi.fn(), films: vi.fn(), introductions: vi.fn(), starter: vi.fn(), hide: vi.fn(), unhide: vi.fn(),
+const state = vi.hoisted(() => ({ revision: 0, feed: vi.fn(), films: vi.fn(), hidden: vi.fn(), introductions: vi.fn(), starter: vi.fn(), hide: vi.fn(), unhide: vi.fn(),
   follow: vi.fn(), unfollow: vi.fn(), createEntry: vi.fn(), updateEntry: vi.fn(), refresh: vi.fn(), people: vi.fn(), pulse: vi.fn(), response: vi.fn() }));
 vi.mock('../../src/contexts/UserContext', () => ({ useUser: () => ({ user: { id: 1, username: 'viewer' } }) }));
 vi.mock('../../src/contexts/DiaryContext', () => ({ useDiary: () => ({ revision: state.revision, summary: { entries: 1 }, savedFilms: [], refresh: state.refresh, createEntry: state.createEntry, updateEntry: state.updateEntry }) }));
 vi.mock('../../src/services/discoveryService', () => ({ discoveryService: { feedPage: state.feed, peoplePage: state.people, pulse: state.pulse, response: state.response, follow: state.follow, unfollow: state.unfollow, comments: async () => [] } }));
-vi.mock('../../src/services/pathService', () => ({ pathService: { films: state.films, introductions: state.introductions, starter: state.starter, hide: state.hide, unhide: state.unhide } }));
+vi.mock('../../src/services/pathService', () => ({ pathService: { films: state.films, hidden: state.hidden, introductions: state.introductions, starter: state.starter, hide: state.hide, unhide: state.unhide } }));
 vi.mock('../../src/services/catalogService', () => ({ catalogService: { trending: async () => ({ results: [] }) } }));
 vi.mock('../../src/services/suggestionService', () => ({ suggestionService: { list: async () => ({ suggestions: [], nextOffset: null }) } }));
 const response = { id: 11, movie_id: 102, user_id: 2, username: 'peer', title: 'Next Film', watched_on: '2026-07-01', created_at: '2026-07-01T00:00:00Z', note: 'A joyful surprise', happy: .8, surprised: .2, following: true };
@@ -205,7 +205,8 @@ it('keeps the list in place when the diary changes, reads it again while it is e
   expect(state.films).toHaveBeenCalledTimes(1);
   view.unmount();
   state.films.mockReset();
-  state.films.mockResolvedValueOnce(page([], { connected: false, diary: 0 })).mockResolvedValueOnce(page([film(107, 'After An Answer')]));
+  state.revision = 0;
+  state.films.mockResolvedValueOnce(page([], { connected: false, diary: 0 })).mockResolvedValue(page([film(107, 'After An Answer')]));
   const empty = render(<MemoryRouter><Recommendations /></MemoryRouter>);
   await screen.findByText(/Films reach you here through people/);
   state.revision += 1;
@@ -255,4 +256,15 @@ it('opens Following directly, asks for written responses, and requests its next 
   await userEvent.click(screen.getByRole('button', { name: 'Older responses' }));
   expect(await screen.findByText('An older response')).toBeInTheDocument();
   expect(state.feed).toHaveBeenLastCalledWith({ scope: 'following', limit: 30, cursor: 'second-page', kind: 'written' }, expect.any(AbortSignal));
+});
+
+it('lists films that were set aside only when asked, and offers one again', async () => {
+  state.hidden.mockResolvedValue([{ id: 301, title: 'Set Aside Film', release_date: null, poster_path: null }]);
+  render(<MemoryRouter><Recommendations /></MemoryRouter>);
+  await screen.findByRole('heading', { name: 'Next Film' });
+  expect(state.hidden).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByText('Films you set aside'));
+  await userEvent.click(await screen.findByRole('button', { name: 'Offer Set Aside Film again' }));
+  expect(state.unhide).toHaveBeenCalledWith(301);
+  await waitFor(() => expect(screen.queryByRole('link', { name: 'Set Aside Film' })).not.toBeInTheDocument());
 });

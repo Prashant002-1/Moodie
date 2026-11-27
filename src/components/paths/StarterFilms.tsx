@@ -68,7 +68,8 @@ export function StarterFilms({ limit = 12, onAnswered }: { limit?: number; onAns
       const given = answers[film.id];
       const poster = imageUrl(film.poster_path, 'w342');
       const choosing = open === film.id;
-      return <li className="starter__film" data-answered={given ? '' : undefined} data-open={choosing ? '' : undefined} key={film.id}>
+      return <li className="starter__film" data-answered={given ? '' : undefined} data-open={choosing ? '' : undefined} key={film.id}
+        onKeyDown={event => { if (event.key === 'Escape' && choosing) { event.stopPropagation(); setOpen(null); } }}>
         <button aria-expanded={choosing} aria-label={given ? `${film.title}: ${enjoymentLabels[given.enjoyment]}. Change` : `I have seen ${film.title}`}
           className="starter__poster" disabled={busy} onClick={() => setOpen(choosing ? null : film.id)} type="button">
           <span className="poster">{poster && <img alt="" loading="lazy" src={poster} />}</span>

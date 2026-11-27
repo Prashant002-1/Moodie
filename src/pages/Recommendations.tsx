@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Introductions } from '../components/paths/Introductions';
 import { PathCard } from '../components/paths/PathCard';
+import { SetAside } from '../components/paths/SetAside';
 import { StarterFilms } from '../components/paths/StarterFilms';
 import { useDiary } from '../contexts/DiaryContext';
 import { useUser } from '../contexts/UserContext';
@@ -38,6 +39,7 @@ const Recommendations = () => {
       <Introductions limit={6} more />
     </div>}
     {page.next !== null && <div className="actions" style={{ marginTop: 'var(--m-space-6)' }}><button className="btn btn--secondary" disabled={page.loading} onClick={page.loadMore} type="button">More films</button></div>}
+    {page.loaded && <div style={{ marginTop: 'var(--m-space-7)' }}><SetAside /></div>}
   </div>;
 };
 

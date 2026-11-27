@@ -67,6 +67,28 @@
         }
       }
     },
+    "/api/discovery/for-you/hidden": {
+      "get": {
+        "operationId": "getHiddenFilms",
+        "summary": "Films the viewer set aside",
+        "description": "Latest first. Private to the viewer.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StarterFilms"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
+    },
     "/api/discovery/for-you/{movieId}/hidden": {
       "put": {
         "operationId": "hideFilm",

@@ -18,6 +18,9 @@ export const pathService = {
   },
   async hide(movieId: number): Promise<void> { await apiClient.put(`/discovery/for-you/${movieId}/hidden`); },
   async unhide(movieId: number): Promise<void> { await apiClient.delete(`/discovery/for-you/${movieId}/hidden`); },
+  async hidden(signal?: AbortSignal): Promise<StarterFilm[]> {
+    return (await apiClient.get<Schema['StarterFilms']>('/discovery/for-you/hidden', { signal })).data.films;
+  },
   async introductions(limit = 6, signal?: AbortSignal): Promise<Introduction[]> {
     return (await apiClient.get<Schema['Introductions']>('/discovery/introductions', { params: { limit }, signal })).data.people;
   },
