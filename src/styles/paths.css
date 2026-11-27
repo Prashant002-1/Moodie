@@ -1,0 +1,46 @@
+/* Discovery through people: a film with the person it came through, people to meet, and a newcomer's first answers.
+   app.css is read after this file: a rule here that changes a shared class needs one more class to win. */
+
+/* ---- A film through people ------------------------------------------------ */
+.path { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--m-space-4); animation: enter var(--m-motion-base) var(--m-ease-out) both; }
+.path__main { min-width: 0; display: grid; gap: var(--m-space-2); align-content: start; }
+.path__lead { display: flex; flex-wrap: wrap; align-items: center; gap: var(--m-space-1) var(--m-space-2); }
+.path__lead .feelings { color: var(--m-color-ink-muted); }
+.path__why, .path__also { font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); color: var(--m-color-ink-secondary); }
+.path__also { display: flex; flex-wrap: wrap; align-items: center; gap: var(--m-space-1) var(--m-space-2); color: var(--m-color-ink-muted); }
+/* Several faces overlap a little, like people standing together. */
+.path__faces { display: inline-flex; padding-left: 6px; }
+.path__faces > .avatar { margin-left: -6px; box-shadow: 0 0 0 2px var(--m-color-canvas); }
+.path .path__actions { gap: var(--m-space-1) var(--m-space-2); margin-top: var(--m-space-1); }
+/* The two quiet answers are words beside the one button, so all three fit a phone. */
+.path__actions .btn--quiet { padding-inline: var(--m-space-2); }
+.path.path--aside { grid-template-columns: minmax(0, 1fr); }
+.path--aside .status { padding: 0; text-align: left; }
+.paths { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--m-space-6); }
+
+/* ---- People to meet ------------------------------------------------------- */
+.intros { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--m-space-4); }
+.intro { display: flex; align-items: center; gap: var(--m-space-3); }
+.intro__main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.intro__main .who { overflow-wrap: anywhere; }
+.intro__why { font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); color: var(--m-color-ink-secondary); }
+
+/* ---- First answers -------------------------------------------------------- */
+.starter { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--m-space-5); }
+.starter__films { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: var(--m-space-4) var(--m-space-3); }
+.starter__film { position: relative; min-width: 0; display: grid; gap: 8px; align-content: start; }
+.starter__poster { position: relative; display: block; width: 100%; border-radius: var(--m-radius-control); }
+.starter__poster .poster { width: 100%; transition: opacity var(--m-motion-base) var(--m-ease-out), transform var(--m-motion-base) var(--m-ease-out); }
+.starter__poster:not(:disabled):hover .poster { transform: translateY(-3px) scale(1.015); }
+.starter__film[data-answered] .poster, .starter__film[data-open] .poster { opacity: 0.28; }
+.starter__film .tile__title { font-size: var(--m-type-caption-size); line-height: var(--m-type-caption-line); font-family: var(--m-font-sans); font-weight: 500; color: var(--m-color-ink-secondary); }
+/* The four answers sit on the poster they are about. */
+.starter__choices { position: absolute; inset: 0 0 auto 0; aspect-ratio: 2 / 3; display: grid; align-content: center; gap: 6px; padding: 8px; animation: enter var(--m-motion-fast) var(--m-ease-out) both; }
+.starter__choices .chip { width: 100%; min-height: 32px; padding: 0 6px; justify-content: center; font-size: var(--m-type-caption-size); }
+.starter__more { display: grid; gap: var(--m-space-3); animation: enter var(--m-motion-base) var(--m-ease-out) both; }
+.starter__who { display: flex; flex-wrap: wrap; align-items: center; gap: var(--m-space-3); }
+.starter__who .tabs { margin: 0; }
+
+/* An answer pressed onto a poster, the way a ticket is stamped. */
+.stamp { position: absolute; inset: 0; display: grid; place-items: center; padding: 6px; text-align: center; font-family: var(--m-font-display); font-style: italic; font-weight: 600; font-size: 1.375rem; line-height: 1.1; color: var(--m-color-ink); transform: rotate(-7deg); animation: stamp var(--m-motion-base) var(--m-ease-out) both; }
+@keyframes stamp { from { opacity: 0; transform: rotate(-7deg) scale(1.5); } }

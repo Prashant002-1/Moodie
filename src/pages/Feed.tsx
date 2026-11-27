@@ -8,14 +8,16 @@ import { suggestionService } from '../services/suggestionService';
 import { feelingWords } from '../utils/feelings';
 import { imageUrl } from '../utils/display';
 import { personHue } from '../utils/person';
-import { DiscoveryPathCard } from '../components/recommendations/DiscoveryPathCard';
+import { PathCard } from '../components/paths/PathCard';
+import { Introductions } from '../components/paths/Introductions';
+import { StarterFilms } from '../components/paths/StarterFilms';
 import { useDiary } from '../contexts/DiaryContext';
 import { useUser } from '../contexts/UserContext';
 import { ResponseEntry, discoveryService } from '../services/discoveryService';
 import { usePagedResource } from '../hooks/usePagedResource';
 import { useResource } from '../hooks/useResource';
 import { apiError } from '../services/apiClient';
-import { recommendationService } from '../services/recommendationService';
+import { pathService } from '../services/pathService';
 import { usePageTitle } from '../hooks/usePageTitle';
 
 type FeedView = 'for-you' | 'following' | 'everyone';
@@ -23,7 +25,7 @@ type FeedView = 'for-you' | 'following' | 'everyone';
 const Feed = () => {
   const { user } = useUser();
   usePageTitle('Home');
-  const { summary, revision: diaryRevision, currentSignal, refresh: refreshDiary } = useDiary();
+  const { summary, revision: diaryRevision, refresh: refreshDiary } = useDiary();
   const [params, setParams] = useSearchParams();
   const view: FeedView = params.get('view') === 'following' ? 'following' : params.get('view') === 'everyone' ? 'everyone' : 'for-you';
   const setView = (next: FeedView) => setParams(next === 'for-you' ? {} : { view: next });
@@ -37,12 +39,13 @@ const Feed = () => {
   const scope = view === 'following' ? 'following' : 'everyone';
   const limit = forYou ? 12 : 30;
   const loadFeed = useCallback(async (cursor: string | undefined, signal: AbortSignal) => {
-    const result = await discoveryService.feedPage({ scope, limit, cursor }, signal);
+    // A stream is for words: a verdict nobody wrote anything under stays on the film and the person.
+    const result = await discoveryService.feedPage({ scope, limit, cursor, kind: 'written' }, signal);
     return { items: result.entries, next: result.nextCursor };
   }, [scope, limit]);
   const page = usePagedResource(`${key}:${scope}:${limit}`, loadFeed, version);
   const loadCircle = useCallback(async (_cursor: string | undefined, signal: AbortSignal) => {
-    const result = forYou ? await discoveryService.feedPage({ scope: 'following', limit: 6 }, signal) : { entries: [] };
+    const result = forYou ? await discoveryService.feedPage({ scope: 'following', limit: 18 }, signal) : { entries: [] };
     return { items: result.entries, next: null };
   }, [forYou]);
   const circle = usePagedResource(`${key}:circle:${forYou}`, loadCircle, version);
@@ -53,13 +56,20 @@ const Feed = () => {
   const notes = usePagedResource(`${key}:notes:${forYou}`, loadNotes, version);
   // A recommendation whose reminder is due is shown once, under Reminders.
   const fresh = notes.items.filter(item => !item.remind_at || new Date(item.remind_at).getTime() > Date.now());
-  const loadRecommendations = useCallback((signal: AbortSignal) => forYou ? recommendationService.get(currentSignal || undefined, signal) : Promise.resolve(null), [forYou, currentSignal]);
-  const recommendations = useResource(`${key}:recommendations:${forYou}:${JSON.stringify(currentSignal)}`, loadRecommendations, version);
-  const films = recommendations.data?.forYou.filter(movie => movie.recommended_by?.length) ?? [];
+  const loadPaths = useCallback((signal: AbortSignal) => forYou ? pathService.films({ limit: 3 }, signal) : Promise.resolve(null), [forYou]);
+  const recommendations = useResource(`${key}:paths:${forYou}`, loadPaths, version);
+  // The three first shown stay until the page is left: setting one aside or saving it does not shuffle the others.
+  const [films, setFilms] = useState<NonNullable<typeof recommendations.data>['films']>([]);
+  useEffect(() => { if (recommendations.data) setFilms(previous => previous.length ? previous : recommendations.data!.films); }, [recommendations.data]);
+  // Someone with almost nothing in their diary is asked about films they have probably seen.
+  const starting = Boolean(recommendations.data && recommendations.data.diary < 4);
+  const [asked, setAsked] = useState(false);
+  useEffect(() => { if (starting) setAsked(true); }, [starting]);
   // Nothing is shown twice. Friends lead as a wall of posters, with the wider
   // community's words under them. When everything recent is from friends, their
   // words are shown once, in full, and the wall is left out.
-  const friends = circle.items.slice(0, 6);
+  // One poster per friend: their latest.
+  const friends = circle.items.filter((entry, index, all) => all.findIndex(other => other.user_id === entry.user_id) === index).slice(0, 6);
   // Both lists are needed before deciding what goes where, so nothing moves once it is shown.
   const settled = !forYou || circle.loaded || Boolean(circle.error);
   const others = settled ? page.items.filter(entry => !friends.some(friend => friend.id === entry.id)) : [];
@@ -127,7 +137,8 @@ const Feed = () => {
         <header className="section__head"><h2>Recommended to you</h2><Link to="/suggestions">See all<span className="sr-only"> recommendations</span></Link></header>
         <div className="notes">{fresh.slice(0, 3).map(item => <RecommendationNote act compact item={item} key={item.id} primary={false} viewerId={user.id} />)}</div>
       </section>}
-      {summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Log a film</Link></div>}
+      {asked ? <section aria-label="Films you may have seen"><header className="section__head"><h2>Seen any of these?</h2><Link to="/log">Log another film</Link></header><StarterFilms limit={12} /></section>
+        : summary?.entries === 0 && <div className="empty" style={{ padding: 0 }}><p>Your diary is empty.</p><Link className="btn btn--primary" to="/log">Log a film</Link></div>}
       {wall.length > 0 && <section aria-label="New from people you follow"><header className="section__head"><h2>New from friends</h2><button onClick={() => setView('following')}>See all</button></header>
         <div className="wall wall--fit">{wall.map(entry => <article className="tile" data-hue={personHue(entry.username)} key={entry.id}>
           <Link aria-label={`${entry.username} on ${entry.title}`} className="tile__art" to={`/response/${entry.id}`}>
@@ -140,7 +151,8 @@ const Feed = () => {
       </section>}
       {recommendations.loading && !recommendations.data && <p className="status" role="status">Loading</p>}
       {recommendations.error && <p className="status" role="alert">Recommendations could not be loaded. <button className="link" onClick={recommendations.refresh}>Try again</button></p>}
-      {films.length > 0 && <section aria-labelledby="recommendations-title"><header className="section__head"><h2 id="recommendations-title">Through films you share</h2><Link to="/recommendations">See all</Link></header><div className="list list--flush">{films.slice(0, 3).map(movie => <DiscoveryPathCard key={movie.id} movie={movie} />)}</div></section>}
+      {films.length > 0 && <section aria-labelledby="recommendations-title"><header className="section__head"><h2 id="recommendations-title">Through people</h2><Link to="/recommendations">See all<span className="sr-only"> films through people</span></Link></header><div className="paths">{films.map(item => <PathCard item={item} key={item.film.id} />)}</div></section>}
+      <Introductions limit={3} more />
       <section aria-label="Recent responses"><header className="section__head"><h2>{!others.length && circle.items.length ? 'From people you follow' : 'Recent responses'}</h2><Link to="/people">Find people</Link></header>
         {circle.error && <p className="status" role="alert">Responses could not be loaded. <button className="link" onClick={circle.refresh}>Retry</button></p>}
         {page.error && <p className="status" role="alert">{page.error} <button className="link" onClick={page.refresh}>Retry</button></p>}

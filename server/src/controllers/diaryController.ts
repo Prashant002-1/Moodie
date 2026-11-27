@@ -14,7 +14,8 @@ const emotionSchema = z.object({
   fearful: z.number().min(0).max(1),
   disgusted: z.number().min(0).max(1),
   surprised: z.number().min(0).max(1),
-}).refine(scores => Object.values(scores).some(value => value >= 0.001), 'Choose at least one feeling.');
+});
+const someFeeling = (scores: Record<string, number>) => Object.values(scores).some(value => value >= 0.001);
 
 const MAX_EXPRESSION_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_EXPRESSION_IMAGE_DATA_URL_LENGTH = 2_800_000;
@@ -57,7 +58,10 @@ const entrySchema = z.object({
   clientRequestId: z.string().uuid().optional(),
 });
 
-const entryUpdateSchema = entrySchema.omit({ movieId: true, suggestionId: true, clientRequestId: true }).partial();
+// A verdict alone is a complete short answer ("Loved it"). With neither a feeling nor a verdict there is nothing to keep.
+const entryCreateSchema = entrySchema.refine(entry => someFeeling(entry.emotions) || Boolean(entry.enjoyment), { message: 'Choose at least one feeling.', path: ['emotions'] });
+const entryUpdateSchema = entrySchema.omit({ movieId: true, suggestionId: true, clientRequestId: true }).partial()
+  .refine(entry => !entry.emotions || someFeeling(entry.emotions) || Boolean(entry.enjoyment), { message: 'Choose at least one feeling.', path: ['emotions'] });
 
 const selectEntry = `
   SELECT de.id, de.user_id, de.movie_id, de.watched_on, de.note, de.visibility,
@@ -160,7 +164,7 @@ export const createEntry = async (req: AuthRequest, res: Response) => {
   if (!userId) return;
 
   try {
-    const data = entrySchema.parse(req.body);
+    const data = entryCreateSchema.parse(req.body);
     await ensureMovie(data.movieId);
     const e = data.emotions;
     const requestHash = createHash('sha256').update(JSON.stringify(data)).digest('hex');

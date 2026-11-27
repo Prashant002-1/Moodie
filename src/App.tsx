@@ -27,6 +27,7 @@ const AccountDeleted = lazy(() => import('./pages/AccountDeleted'));
 const About = lazy(() => import('./pages/About'));
 const Response = lazy(() => import('./pages/Response'));
 const Welcome = lazy(() => import('./pages/Welcome'));
+const Start = lazy(() => import('./pages/Start'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
             remount Auth before the person can keep their recovery code. */}
         <Route element={<ProtectedRoute><DiaryProvider><Outlet /></DiaryProvider></ProtectedRoute>}>
           <Route path="welcome" element={<Welcome />} />
+          <Route path="start" element={<Start />} />
           <Route path="account" element={<Account />} />
           <Route path="account/blocked" element={<BlockedPeople />} />
           <Route path="report/:kind/:id" element={<Report />} />

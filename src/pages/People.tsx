@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PersonRow } from '../components/discovery/PersonRow';
+import { Introductions } from '../components/paths/Introductions';
 import { useUser } from '../contexts/UserContext';
 import { useDiary } from '../contexts/DiaryContext';
 import { usePagedResource } from '../hooks/usePagedResource';
@@ -28,6 +29,8 @@ const People: React.FC = () => {
     return updated;
   });
   const setView = (next: PeopleView) => show({ view: next });
+  // People introduced at the top are not listed a second time under Everyone.
+  const [introduced, setIntroduced] = useState<number[]>([]);
   const [busy, setBusy] = useState<number | null>(null);
   const [actionError, setActionError] = useState('');
   const load = useCallback(async (offset: number | undefined, signal: AbortSignal) => {
@@ -63,8 +66,11 @@ const People: React.FC = () => {
       </div>
 
       {(page.error || actionError) && <p className="notice notice--error" role="alert" style={{ marginBottom: 'var(--m-space-4)' }}>{page.error || actionError} <button className="link" onClick={page.refresh}>Refresh people</button></p>}
+      {/* People with a reason come first. A search looks through everyone. */}
+      {view === 'discover' && !term && <div style={{ marginBottom: 'var(--m-space-7)' }} className="page--narrow people__intros"><Introductions heading="People to meet" limit={6} onShown={setIntroduced} /></div>}
+      {view === 'discover' && !term && introduced.length > 0 && page.items.some(person => !introduced.includes(person.id)) && <header className="section__head"><h2>Everyone</h2></header>}
       {page.items.length > 0 && <ul aria-label={view === 'following' ? 'People you follow' : 'People to discover'} className="people">
-        {page.items.map(person => <PersonRow disabled={busy !== null} key={person.id} onFollow={person => void toggleFollow(person)} person={person} />)}
+        {page.items.filter(person => view !== 'discover' || term || !introduced.includes(person.id)).map(person => <PersonRow disabled={busy !== null} key={person.id} onFollow={person => void toggleFollow(person)} person={person} />)}
       </ul>}
       {page.loading && <p className="status" role="status">Loading people</p>}
       {page.loaded && !page.loading && !page.error && !page.items.length && (term || view === 'discover'

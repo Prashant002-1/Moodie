@@ -17,7 +17,7 @@ import type { FilmSuggestion, SuggestionSummary } from '../../src/types/suggesti
 import type { ResponseEntry } from '../../src/services/discoveryService';
 
 const mocks = vi.hoisted(() => ({
-  list: vi.fn(), get: vi.fn(), recipients: vi.fn(), create: vi.fn(), update: vi.fn(), reply: vi.fn(), removeReply: vi.fn(),
+  filmRecipients: vi.fn(), paths: vi.fn(), list: vi.fn(), get: vi.fn(), recipients: vi.fn(), create: vi.fn(), update: vi.fn(), reply: vi.fn(), removeReply: vi.fn(),
   messages: vi.fn(), sendMessage: vi.fn(), deleteMessage: vi.fn(), response: vi.fn(), diaryPage: vi.fn(), createEntry: vi.fn(),
   savedPage: vi.fn(), unsaveFilm: vi.fn(), summary: vi.fn(),
 }));
@@ -27,7 +27,7 @@ vi.mock('../../src/contexts/DiaryContext', () => ({ useDiary: () => ({ refresh: 
 vi.mock('../../src/services/discoveryService', () => ({ discoveryService: { response: mocks.response, pulse: async () => [] } }));
 vi.mock('../../src/services/diaryService', () => ({ diaryService: { page: mocks.diaryPage, savedPage: mocks.savedPage, status: async () => [{ id: 10, saved: false, viewing_count: 0 }] } }));
 vi.mock('../../src/services/catalogService', () => ({ catalogService: { movie: async () => ({ id: 10, title: 'Scream', poster_path: null, release_date: '1996-12-20' }) } }));
-vi.mock('../../src/services/recommendationService', () => ({ recommendationService: { get: async () => ({ forYou: [] }) } }));
+vi.mock('../../src/services/pathService', () => ({ pathService: { recipients: mocks.filmRecipients, films: mocks.paths } }));
 
 const feelings = { neutral: 0, happy: .8, sad: .1, angry: 0, fearful: .4, disgusted: 0, surprised: .5 };
 const viewing: ResponseEntry = { ...feelings, id: 91, user_id: 1, movie_id: 10, title: 'Scream', username: 'viewer',
@@ -48,6 +48,8 @@ beforeEach(() => {
   mocks.get.mockResolvedValue(suggestion);
   mocks.list.mockResolvedValue({ suggestions: [suggestion], nextOffset: null });
   mocks.recipients.mockResolvedValue([{ id: 2, username: 'ananya', bio: 'Films with friends' }]);
+  mocks.filmRecipients.mockResolvedValue({ people: [{ id: 2, username: 'ananya', bio: 'Films with friends', reason: null }], wrote: [] });
+  mocks.paths.mockResolvedValue({ films: [], nextOffset: null, total: 0, connected: true, diary: 1 });
   mocks.messages.mockResolvedValue({ messages: [], nextOffset: null });
   mocks.response.mockResolvedValue(viewing);
   mocks.diaryPage.mockResolvedValue({ entries: [viewing], nextOffset: null });
@@ -442,6 +444,21 @@ it('preserves the chosen person and reason when a deliberate recommendation fail
   await userEvent.click(screen.getByRole('button', { name: 'Send recommendation' }));
   expect(await screen.findByText('Sent destination')).toBeInTheDocument();
   expect(mocks.create).toHaveBeenLastCalledWith({ origin: 'sent', movieId: 10, recipientId: 2, reason: 'You will laugh through the scary parts.' });
+});
+
+it('offers first the followers a film suits, each with the reason, and says who has already written about it', async () => {
+  mocks.filmRecipients.mockResolvedValue({ wrote: [{ id: 9, username: 'hiro' }], people: [
+    { id: 3, username: 'chloe', bio: 'Animated robots', reason: { kind: 'returned', film: { id: 5, title: 'Before Sunrise', release_date: null, poster_path: null }, enjoyment: 'loved' } },
+    { id: 2, username: 'ananya', bio: 'Films with friends', reason: null }] });
+  render(<MemoryRouter initialEntries={['/suggestions/new?movieId=10']}><Routes><Route path="/suggestions/new" element={<SendSuggestion />} /></Routes></MemoryRouter>);
+  const first = await screen.findByRole('button', { name: /chloe/ });
+  expect(first).toHaveTextContent('Loved Before Sunrise when you sent it.');
+  expect(first).not.toHaveTextContent('Animated robots');
+  expect(screen.getByRole('button', { name: /ananya Films with friends/ })).toBeInTheDocument();
+  expect(screen.getByText('hiro has already written about it.')).toBeInTheDocument();
+  expect(mocks.filmRecipients).toHaveBeenCalledWith(10, '', expect.any(AbortSignal));
+  await userEvent.click(first);
+  expect(screen.getByText('What chloe will receive')).toBeInTheDocument();
 });
 
 it('records attribution and enjoyment in the diary write and offers a reply without sending one automatically', async () => {

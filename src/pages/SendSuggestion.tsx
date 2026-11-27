@@ -3,6 +3,9 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { catalogService } from '../services/catalogService';
 import { suggestionService } from '../services/suggestionService';
+import { pathService, Recipient } from '../services/pathService';
+import { RecipientWhy } from '../components/paths/Reason';
+import { listed } from '../utils/paths';
 import { apiError } from '../services/apiClient';
 import type { FilmSuggestion, SuggestionRecipient } from '../types/suggestion';
 import type { Movie } from '../types/movie';
@@ -26,7 +29,9 @@ export default function SendSuggestion() {
   const [searchedQuery, setSearchedQuery] = useState('');
   const [filmPage, setFilmPage] = useState(0);
   const [filmPages, setFilmPages] = useState(0);
-  const [people, setPeople] = useState<SuggestionRecipient[]>([]);
+  const [people, setPeople] = useState<(SuggestionRecipient & { reason?: Recipient['reason'] })[]>([]);
+  // Followers who have already written about this film in public.
+  const [wrote, setWrote] = useState<string[]>([]);
   const [personQuery, setPersonQuery] = useState(params.get('recipient') ?? '');
   const [recipient, setRecipient] = useState<SuggestionRecipient | null>(null);
   const [reason, setReason] = useState('');
@@ -51,7 +56,10 @@ export default function SendSuggestion() {
     const controller = new AbortController();
     setLoadingPeople(true); setRecipientError('');
     const timer = window.setTimeout(() => {
-      suggestionService.recipients(personQuery, controller.signal).then(next => {
+      // With a film chosen, the people it suits come first, each with the reason.
+      const filmId = film?.id ?? movieId;
+      (filmId ? pathService.recipients(filmId, personQuery, controller.signal).then(result => { if (!controller.signal.aborted) setWrote(result.wrote.map(person => person.username)); return result.people; })
+        : suggestionService.recipients(personQuery, controller.signal)).then((next: (SuggestionRecipient & { reason?: Recipient['reason'] })[]) => {
         if (controller.signal.aborted) return;
         setPeople(next);
         if (params.get('recipientId')) setRecipient(previous => previous ?? next.find(person => person.id === Number(params.get('recipientId'))) ?? null);
@@ -59,7 +67,7 @@ export default function SendSuggestion() {
         .finally(() => { if (!controller.signal.aborted) setLoadingPeople(false); });
     }, 180);
     return () => { controller.abort(); window.clearTimeout(timer); };
-  }, [personQuery, params, revision]);
+  }, [personQuery, params, revision, film?.id, movieId]);
 
   const findFilm = async (page = 1) => {
     const query = page === 1 ? filmQuery.trim() : searchedQuery;
@@ -83,7 +91,7 @@ export default function SendSuggestion() {
     finally { setBusy(false); }
   };
 
-  const noFollowers = !loadingPeople && !people.length && !personQuery && !recipient && !recipientError;
+  const noFollowers = !loadingPeople && !people.length && !wrote.length && !personQuery && !recipient && !recipientError;
   const missing = !recipient ? 'Choose who this is for.' : !reason.trim() ? 'Say why you thought of them.' : '';
   const poster = imageUrl(film?.poster_path, 'w154');
   // The note exactly as the other person will open it: from you, in your colour, with these words.
@@ -124,9 +132,10 @@ export default function SendSuggestion() {
             {loadingPeople ? <p className="status" role="status">Finding people</p> : <>
               {people.length > 0 && <ul className="people-pick">{people.map(person => <li key={person.id}><button className="person-pick" data-hue={personHue(person.username)} type="button" onClick={() => setRecipient(person)}>
                 <Avatar to={null} username={person.username} />
-                <span><strong className="who truncate">{person.username}</strong>{person.bio && <span className="t-caption muted truncate"> {person.bio}</span>}</span>
+                <span><strong className="who truncate">{person.username}</strong>{person.reason ? <span className="t-caption secondary"><RecipientWhy reason={person.reason} /></span> : person.bio && <span className="t-caption muted truncate"> {person.bio}</span>}</span>
               </button></li>)}</ul>}
-              {!people.length && !recipientError && <p className="status">No one found. Recommendations go to people who follow you.</p>}
+              {wrote.length > 0 && !personQuery && <p className="hint">{listed(wrote.slice(0, 3))}{wrote.length > 3 ? ` and ${wrote.length - 3} more` : ''} {wrote.length === 1 ? 'has' : 'have'} already written about it.</p>}
+              {!people.length && !recipientError && !wrote.length && <p className="status">No one found. Recommendations go to people who follow you.</p>}
             </>}
           </>}
         </div>

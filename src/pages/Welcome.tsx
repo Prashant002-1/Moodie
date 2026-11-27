@@ -24,7 +24,8 @@ export default function Welcome() {
     event.preventDefault();
     if (!choice || busy) return;
     setBusy(true); setError('');
-    try { await setAiMode(choice); navigate(destination, { replace: true }); }
+    // Next, a few films they have seen. That page sends them on to where they were going.
+    try { await setAiMode(choice); navigate('/start', { replace: true, state: { from: destination } }); }
     catch (caught) { setError(apiError(caught, 'Your choice could not be saved. Try again.')); setBusy(false); }
   };
   return <form className="page page--narrow stack stack--loose" onSubmit={submit} style={{ paddingTop: 'var(--m-space-8)' }}>

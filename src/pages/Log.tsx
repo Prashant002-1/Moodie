@@ -7,21 +7,21 @@ import { useDiary } from '../contexts/DiaryContext';
 import { catalogService } from '../services/catalogService';
 import { discoveryService } from '../services/discoveryService';
 import { suggestionService } from '../services/suggestionService';
-import { recommendationService } from '../services/recommendationService';
+import { FilmForYou, pathService } from '../services/pathService';
 import { apiError } from '../services/apiClient';
 import { DraftUnreadable, ResponseDraftSession, responseDraftStore, StoredResponseDraft } from '../services/responseDraftStore';
 import { useDraftAutosave } from '../hooks/useDraftAutosave';
 import { DraftFilm, ResponseDraft, draftFromResponse, localDay, newResponseDraft, responseDraftInput, untouchedDraft } from '../types/responseDraft';
 import { DiaryEntry } from '../types/diary';
 import { FilmSuggestion } from '../types/suggestion';
-import { Movie } from '../types/movie';
 import { imageUrl, releaseYear } from '../utils/display';
 import { prepareExpressionPhoto } from '../utils/expressionPhoto';
 import { FilmPicker } from '../components/diary/FilmPicker';
 import { FeelingChoices } from '../components/diary/FeelingChoices';
 import { AttributionPicker } from '../components/diary/AttributionPicker';
 import { ResponseDetailInputs } from '../components/diary/ResponseDetails';
-import { RecommendationSpotlight } from '../components/recommendations/RecommendationSpotlight';
+import { PathCard } from '../components/paths/PathCard';
+import { PassItOn } from '../components/paths/PassItOn';
 import { usePageTitle } from '../hooks/usePageTitle';
 
 interface ComposerRequest { movieId?: number; entryId?: number; suggestionId?: number }
@@ -56,7 +56,7 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
   const [storageError, setStorageError] = useState('');
   const [unreadable, setUnreadable] = useState<DraftUnreadable | null>(null);
   const [savedEntry, setSavedEntry] = useState<DiaryEntry | null>(null);
-  const [nextFilm, setNextFilm] = useState<Movie | null>(null);
+  const [nextFilm, setNextFilm] = useState<FilmForYou | null>(null);
   const [discoveryLoading, setDiscoveryLoading] = useState(false);
   const [discoveryError, setDiscoveryError] = useState('');
   const closed = useRef(false);
@@ -180,8 +180,10 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
   const findNextFilm = async () => {
     setDiscoveryLoading(true); setDiscoveryError('');
     try {
-      const result = await recommendationService.get();
-      if (mounted.current) setNextFilm(result.forYou.find(movie => movie.recommended_by?.length) ?? null);
+      // A film that reaches the person through the one they just wrote about, when there is one.
+      const result = await pathService.films({ limit: 12 });
+      const through = (item: FilmForYou) => item.paths.some(path => path.reason.kind === 'shared' && path.reason.film.id === draft?.film?.id);
+      if (mounted.current) setNextFilm(result.films.find(through) ?? null);
     } catch { if (mounted.current) setDiscoveryError('Your response is saved. Recommendations could not be loaded.'); }
     finally { if (mounted.current) setDiscoveryLoading(false); }
   };
@@ -242,7 +244,8 @@ function ResponseComposer({ ownerId, request }: { ownerId: number; request: Comp
     {storageError && <p className="notice notice--error" role="alert">{storageError} <button className="link" onClick={() => void clearSavedDraft()}>Clear saved draft</button></p>}
     {discoveryLoading && <p className="status" role="status">Loading</p>}
     {discoveryError && <p className="status" role="alert">{discoveryError} <button className="link" onClick={() => void findNextFilm()}>Retry recommendations</button></p>}
-    {nextFilm && <section><header className="section__head"><h2>Through this film</h2></header><div className="list"><RecommendationSpotlight movie={nextFilm} /></div></section>}
+    {draft.film && savedEntry.enjoyment !== 'not_for_me' && savedEntry.enjoyment !== 'mixed' && <PassItOn movieId={draft.film.id} sourceEntryId={savedEntry.visibility === 'public' ? savedEntry.id : undefined} />}
+    {nextFilm && <section><header className="section__head"><h2>Through this film</h2></header><div className="paths"><PathCard item={nextFilm} /></div></section>}
   </div>;
 
   return <div className="page">

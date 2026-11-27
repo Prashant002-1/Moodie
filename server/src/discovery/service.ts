@@ -160,6 +160,8 @@ export async function starterFor(viewerId: number, limit = 18) {
     FROM movies m LEFT JOIN diary_entries de ON de.movie_id = m.id AND de.visibility = 'public' AND de.user_id <> $1 AND ${visibleResponse('$1')}
     WHERE NOT EXISTS (SELECT 1 FROM diary_entries own WHERE own.user_id = $1 AND own.movie_id = m.id)
       AND NOT EXISTS (SELECT 1 FROM discovery_hidden h WHERE h.user_id = $1 AND h.movie_id = m.id)
+      AND NOT EXISTS (SELECT 1 FROM saved_films s WHERE s.user_id = $1 AND s.movie_id = m.id)
+      AND NOT EXISTS (SELECT 1 FROM film_suggestions fs WHERE fs.recipient_id = $1 AND fs.movie_id = m.id)
       AND m.poster_path IS NOT NULL
     GROUP BY m.id ORDER BY responses DESC, m.id LIMIT $2`, [viewerId, limit]);
   return { films: result.rows.map(({ responses: _responses, ...film }) => ({ ...film, id: Number(film.id) })) };

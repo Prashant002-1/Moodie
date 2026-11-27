@@ -32,7 +32,7 @@ export interface CommunityFilm {
 }
 
 export const discoveryService = {
-  async feedPage(params: { limit?: number; scope?: 'everyone' | 'following'; cursor?: string } = {}, signal?: AbortSignal): Promise<{ entries: CommunityEntry[]; nextCursor: string | null }> {
+  async feedPage(params: { limit?: number; scope?: 'everyone' | 'following'; cursor?: string; kind?: 'all' | 'written' } = {}, signal?: AbortSignal): Promise<{ entries: CommunityEntry[]; nextCursor: string | null }> {
     return (await apiClient.get('/discovery/feed', { params, signal })).data;
   },
   async sharedFilms(username: string, offset?: number, signal?: AbortSignal): Promise<{ films: SharedFilm[]; nextOffset: number | null }> {

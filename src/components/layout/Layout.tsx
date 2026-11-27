@@ -94,7 +94,7 @@ const Layout: React.FC = () => {
   }, []);
   // Onboarding is one decision at a time: nothing competes with keeping the
   // recovery code (still on the sign-up or recovery page) or the first choice.
-  const onboarding = Boolean(user) && ['/welcome', '/signup', '/recover'].includes(location.pathname);
+  const onboarding = Boolean(user) && ['/welcome', '/start', '/signup', '/recover'].includes(location.pathname);
 
   return (
     <div className={`app${user ? ' app--signed-in' : ''}`}>

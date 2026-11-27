@@ -1,14 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../../src/App';
-const mocks = vi.hoisted(() => ({ me: vi.fn(), preferences: vi.fn(), emailNotifications: vi.fn(), summary: vi.fn(), savedPage: vi.fn() }));
+const mocks = vi.hoisted(() => ({ starter: vi.fn(), me: vi.fn(), preferences: vi.fn(), emailNotifications: vi.fn(), summary: vi.fn(), savedPage: vi.fn() }));
 vi.mock('../../src/services/authService', () => ({ authService: { me: mocks.me, preferences: mocks.preferences, emailNotifications: mocks.emailNotifications, clear: vi.fn() } }));
+vi.mock('../../src/services/pathService', () => ({ pathService: { starter: mocks.starter } }));
 vi.mock('../../src/services/diaryService', () => ({ diaryService: { summary: mocks.summary, savedPage: mocks.savedPage } }));
 const member = { id: 3, username: 'member', email: 'member@example.test', bio: '' };
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.summary.mockResolvedValue({ entries: 0, public_entries: 0, saved: 0 });
   mocks.savedPage.mockResolvedValue({ films: [], nextOffset: null });
+  mocks.starter.mockResolvedValue([{ id: 201, title: 'Well Known', release_date: null, poster_path: null }]);
   window.history.replaceState({}, '', '/account');
 });
 afterEach(() => { window.history.replaceState({}, '', '/'); });
@@ -28,8 +30,14 @@ it('asks a new account how Moodie should work before showing anything else, keep
   expect(await screen.findByRole('alert')).toHaveTextContent('could not be saved');
   expect(screen.getByRole('radio', { name: /^People only/ })).toBeChecked();
   await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
-  expect(await screen.findByRole('heading', { name: 'Account' })).toBeInTheDocument();
+  // Next, films they may have seen: still no product navigation, and it can be skipped.
+  expect(await screen.findByRole('heading', { name: 'Seen any of these?' })).toBeInTheDocument();
   expect(mocks.preferences).toHaveBeenLastCalledWith('off');
+  expect(window.location.pathname).toBe('/start');
+  expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument();
+  expect(await screen.findByRole('button', { name: 'I have seen Well Known' })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('link', { name: 'Skip' }));
+  expect(await screen.findByRole('heading', { name: 'Account' })).toBeInTheDocument();
   expect(window.location.pathname).toBe('/account');
 });
 
