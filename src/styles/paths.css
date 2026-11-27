@@ -62,3 +62,10 @@
 /* What someone made of a film, pressed onto its poster as a tag. */
 .poster-stamped { position: relative; display: block; flex: none; align-self: start; }
 .stamp.stamp--tag { inset: auto auto 10px -8px; display: inline-block; padding: 4px 12px; border-radius: var(--m-radius-pill); background: var(--m-color-accent); color: var(--m-color-on-accent); font-size: 1.125rem; white-space: nowrap; }
+
+/* ---- One film, one person ------------------------------------------------- */
+/* What the people you know made of this film: their faces, then a sentence. */
+.voices { display: flex; flex-wrap: wrap; align-items: center; gap: var(--m-space-2) var(--m-space-3); font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); color: var(--m-color-ink-secondary); }
+.voices > p { flex: 1; min-width: min(100%, 240px); }
+/* What connects you to this person. */
+.tie { max-width: 60ch; font-size: var(--m-type-callout-size); line-height: var(--m-type-callout-line); color: var(--m-color-ink-secondary); }

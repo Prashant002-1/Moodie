@@ -10,7 +10,7 @@
 import pool from '../config/database';
 import { visiblePerson, visibleResponse } from '../services/communitySafety';
 import { EMOTION_KEYS, EmotionKey } from '../services/emotionalLearning';
-import { Community, Landing, Path, Reason, Seen, SharedFilm, Verdict, films, people, recipients, ties } from './engine';
+import { Community, Landing, Path, Reason, Seen, SharedFilm, Verdict, films, people, recipients, ties, voices } from './engine';
 
 interface ResponseRow extends Record<EmotionKey, number> {
   id: number; user_id: number; movie_id: number; note: string; enjoyment: Verdict | null; visibility: 'public' | 'private';
@@ -167,6 +167,31 @@ export async function starterFor(viewerId: number, limit = 18) {
       AND m.poster_path IS NOT NULL
     GROUP BY m.id ORDER BY responses DESC, m.id LIMIT $2`, [viewerId, limit]);
   return { films: result.rows.map(({ responses: _responses, ...film }) => ({ ...film, id: Number(film.id) })) };
+}
+
+/** What the people the viewer has something in common with made of one film. */
+export async function voicesFor(viewerId: number, movieId: number) {
+  const loaded = await loadCommunity(viewerId);
+  const found = voices(loaded.community, movieId).slice(0, 12);
+  await complete(loaded, viewerId, found.flatMap(path => path.reason.kind === 'friend' ? path.reason.through : []), reasonFilms(found));
+  return { voices: found.map(path => ({ person: { id: path.personId, username: loaded.names.get(path.personId) ?? '' },
+    response: { id: path.responseId, note: loaded.rows.get(path.responseId)?.note ?? '', enjoyment: path.verdict, feelings: path.feelings }, reason: reasonOf(loaded, path.reason) })) };
+}
+
+/** What connects the viewer to one person: the closest film both responded to, friends in common, picks that landed either way. */
+export async function tieFor(viewerId: number, username: string) {
+  const person = await pool.query<{ id: number }>(`SELECT u.id FROM users u WHERE LOWER(u.username) = LOWER($2) AND ${visiblePerson('$1', 'u.id')}`, [viewerId, username]);
+  if (!person.rowCount) return null;
+  const loaded = await loadCommunity(viewerId);
+  const tie = ties(loaded.community).find(item => item.personId === Number(person.rows[0].id));
+  const shared = tie?.shared.find(film => (film.match ?? 0) > 0) ?? tie?.shared[0] ?? null;
+  const landed = tie?.landed.find(l => l.verdict === 'loved') ?? tie?.landed.find(l => l.verdict === 'liked') ?? null;
+  const returned = tie?.returned.find(l => l.verdict === 'loved') ?? tie?.returned.find(l => l.verdict === 'liked') ?? null;
+  await complete(loaded, viewerId, tie?.mutuals ?? [], [shared?.filmId, landed?.filmId, returned?.filmId].filter((id): id is number => id !== undefined));
+  return { shared: shared ? { ...sharedOf(loaded, shared), count: tie!.shared.length } : null,
+    mutuals: (tie?.mutuals ?? []).filter(id => loaded.names.has(id)).map(id => ({ id, username: loaded.names.get(id)! })),
+    landed: landed ? { film: filmOf(loaded, landed.filmId), enjoyment: landed.verdict } : null,
+    returned: returned ? { film: filmOf(loaded, returned.filmId), enjoyment: returned.verdict } : null };
 }
 
 /** Films the viewer set aside, latest first, so a slip can be taken back later. */

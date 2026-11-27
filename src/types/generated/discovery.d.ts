@@ -125,6 +125,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/discovery/films/{movieId}/voices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What the viewer's sources made of one film
+         * @description Strongest tie first, at most twelve. Answers for any film, seen or not, and includes people it was not for.
+         */
+        get: operations["getFilmVoices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/discovery/people/{username}/tie": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What connects the viewer to one person
+         * @description The closest film both responded to, people the viewer follows who follow them, and a pick that landed in either direction. Every part may be absent.
+         */
+        get: operations["getTie"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -259,6 +299,22 @@ export interface components {
             kind: "friend";
             /** @description People the viewer follows who follow this person. */
             through: components["schemas"]["PersonRef"][];
+        };
+        FilmVoices: {
+            voices: components["schemas"]["FilmPath"][];
+        };
+        LandedPick: {
+            film: components["schemas"]["Film"];
+            /** @enum {string} */
+            enjoyment: "loved" | "liked" | "mixed" | "not_for_me";
+        };
+        Tie: {
+            shared: components["schemas"]["IntroductionShared"] | null;
+            mutuals: components["schemas"]["PersonRef"][];
+            /** @description A film they sent the viewer, or the viewer kept through them, that the viewer enjoyed. */
+            landed: components["schemas"]["LandedPick"] | null;
+            /** @description A film the viewer sent them that they said they enjoyed. */
+            returned: components["schemas"]["LandedPick"] | null;
         };
     };
     responses: never;
@@ -524,6 +580,92 @@ export interface operations {
             };
             /** @description Request failed */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getFilmVoices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                movieId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FilmVoices"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getTie: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tie"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

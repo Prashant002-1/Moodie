@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { ResponseCard } from '../components/response/ResponseCard';
 import { SuggestionPreview } from '../components/suggestions/SuggestionPreview';
+import { FilmVoices } from '../components/paths/FilmVoices';
 import FilmPoster from '../components/features/movie/FilmPoster';
 import { useDiary } from '../contexts/DiaryContext';
 import { useLibraryState } from '../hooks/useLibraryState';
@@ -127,6 +128,7 @@ const MovieDetails: React.FC = () => {
         {catalog.error && <p className="notice" role="alert">Film catalog details are unavailable. <button className="link" onClick={catalog.refresh} type="button">Retry catalog</button></p>}
       </div>}
       <SuggestionPreview movieId={movie.id} />
+      {user && <FilmVoices movieId={movie.id} version={revision} />}
 
       <div>
         {/* One line: what is shown at the left, whose at the right. */}

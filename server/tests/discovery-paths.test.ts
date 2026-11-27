@@ -143,6 +143,41 @@ describe('films through people', () => {
   });
 });
 
+describe('one film and one person', () => {
+  it('says what the people the viewer knows made of a film, including those it was not for, and never a stranger', async () => {
+    const viewer = await register('asker'), friend = await register('warm'), critic = await register('cool'), stranger = await register('unknown');
+    await follow(viewer.id, friend.id); await follow(viewer.id, critic.id);
+    const loved = await respond(friend.id, 20, { enjoyment: 'loved', feelings: { happy: 1 } });
+    await respond(critic.id, 20, { enjoyment: 'not_for_me' });
+    await respond(stranger.id, 20, { enjoyment: 'loved' });
+    const said = (body: { voices: { person: { username: string }; response: { enjoyment: string } }[] }) => body.voices.map(voice => [voice.person.username, voice.response.enjoyment]).sort();
+    const result = await get('/discovery/films/20/voices', viewer.cookie);
+    expect(said(result.body)).toEqual([['cool', 'not_for_me'], ['warm', 'loved']]);
+    expect(result.body.voices.find((voice: { response: { id: number } }) => voice.response.id === loved).reason).toEqual({ kind: 'following' });
+    // Once the viewer has written about it too, someone who felt the same about this very film is no longer a stranger.
+    await respond(viewer.id, 20, { enjoyment: 'loved', visibility: 'private' });
+    expect(said((await get('/discovery/films/20/voices', viewer.cookie)).body)).toEqual([['cool', 'not_for_me'], ['unknown', 'loved'], ['warm', 'loved']]);
+    expect((await request(app).get('/api/discovery/films/20/voices')).status).toBe(401);
+  });
+
+  it('says what connects the viewer to a person, and nothing about someone they cannot see', async () => {
+    const viewer = await register('curious'), friend = await register('link'), person = await register('subject'), blocked = await register('walled');
+    await follow(viewer.id, friend.id); await follow(friend.id, person.id);
+    await respond(viewer.id, 10, { enjoyment: 'loved', feelings: { sad: 1 } });
+    await respond(person.id, 10, { enjoyment: 'loved', feelings: { sad: 1 } });
+    await pool.query("INSERT INTO film_suggestions(sender_id,recipient_id,movie_id,origin,reason) VALUES($1,$2,30,'sent','For you.')", [person.id, viewer.id]);
+    await respond(viewer.id, 30, { enjoyment: 'loved', visibility: 'private' });
+    const tie = await get('/discovery/people/subject/tie', viewer.cookie);
+    expect(tie.body).toMatchObject({ shared: { film: { id: 10, title: 'Shared' }, feelings: ['sad'], count: 1 }, mutuals: [{ id: friend.id, username: 'link' }],
+      landed: { film: { id: 30, title: 'Sent' }, enjoyment: 'loved' }, returned: null });
+    // The sender was told nothing about that private viewing.
+    expect((await get('/discovery/people/curious/tie', person.cookie)).body).toMatchObject({ landed: null, returned: null });
+    await pool.query('INSERT INTO user_blocks(blocker_id,blocked_id) VALUES($1,$2)', [blocked.id, viewer.id]);
+    expect((await get('/discovery/people/walled/tie', viewer.cookie)).status).toBe(404);
+    expect((await get('/discovery/people/link/tie', viewer.cookie)).body).toEqual({ shared: null, mutuals: [], landed: null, returned: null });
+  });
+});
+
 describe('people to meet', () => {
   it('introduces people through a shared film, a friend in common, or because they follow the viewer', async () => {
     const viewer = await register('seeker'), friend = await register('friend_one'), friendOfFriend = await register('second_step');

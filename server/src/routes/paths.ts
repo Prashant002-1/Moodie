@@ -1,7 +1,7 @@
 import express, { Response } from 'express';
 import { z } from 'zod';
 import pool from '../config/database';
-import { filmsFor, hiddenFor, hide, introductionsFor, recipientsFor, starterFor, unhide } from '../discovery/service';
+import { filmsFor, hiddenFor, hide, introductionsFor, recipientsFor, starterFor, tieFor, unhide, voicesFor } from '../discovery/service';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 
 // Discovery through people: films, people to follow, who to send a film to, and where a newcomer starts.
@@ -32,6 +32,14 @@ router.put('/for-you/:movieId/hidden', authenticateToken, handle(async (req, res
 router.delete('/for-you/:movieId/hidden', authenticateToken, handle(async (req, res, user) => {
   await unhide(user, id.parse(req.params.movieId));
   res.status(204).end();
+}));
+router.get('/films/:movieId/voices', authenticateToken, handle(async (req, res, user) => {
+  res.json(await voicesFor(user, id.parse(req.params.movieId)));
+}));
+router.get('/people/:username/tie', authenticateToken, handle(async (req, res, user) => {
+  const tie = await tieFor(user, z.string().trim().min(1).max(100).parse(req.params.username));
+  if (!tie) return res.status(404).json({ error: 'Member not found' });
+  res.json(tie);
 }));
 router.get('/introductions', authenticateToken, handle(async (req, res, user) => {
   const { limit } = z.object({ limit: z.coerce.number().int().min(1).max(50).default(12) }).parse(req.query);

@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { ResponseCard } from '../components/response/ResponseCard';
 import { SharedFilms } from '../components/discovery/SharedFilms';
+import { TieLine } from '../components/paths/TieLine';
 import { Avatar } from '../components/common/Avatar';
 import { usePagedResource } from '../hooks/usePagedResource';
 import { useDiary } from '../contexts/DiaryContext';
@@ -85,7 +86,7 @@ const MemberProfile: React.FC = () => {
             <button aria-expanded={connectionView === 'followers'} className="stat" onClick={() => toggleConnections('followers')} type="button"><span className="stat__n">{person.followers}</span> <span className="stat__l">{person.followers === 1 ? 'follower' : 'followers'}</span></button>
             <button aria-expanded={connectionView === 'following'} className="stat" onClick={() => toggleConnections('following')} type="button"><span className="stat__n">{person.following_count}</span> <span className="stat__l">following</span></button>
           </div>
-          {!own && person.shared_film_title && <p className="byline profile__common">You both responded to <button onClick={() => setView('shared')} type="button">{person.shared_film_title}</button></p>}
+          {!own && user && <TieLine fallback={person.shared_film_title} onShared={() => setView('shared')} username={person.username} />}
           {user && !own && <div aria-label="Between you" className="actions" role="group">
             <button aria-label={`${person.following ? 'Unfollow' : 'Follow'} @${person.username}`} aria-pressed={person.following} disabled={followingBusy} className={`btn ${person.following ? 'btn--secondary' : 'btn--primary'}`} onClick={() => void toggleFollow()} type="button">{person.following ? 'Following' : 'Follow'}</button>
             {person.follows_you && <Link className={`btn ${person.following ? 'btn--primary' : 'btn--secondary'}`} to={recommend}>Recommend a film</Link>}

@@ -265,6 +265,26 @@ export function films(community: Community, tuning: Tuning = defaults, known: Ti
   return tuning.repeat < 1 ? spread(picks, tuning.repeat) : picks;
 }
 
+/**
+ * What the viewer's sources made of one film, strongest tie first. Unlike `films`, this answers for any film,
+ * seen or not, and includes people it was not for: it is what you would hear in the lobby.
+ */
+export function voices(community: Community, filmId: number, tuning: Tuning = defaults, known: Tie[] = ties(community, tuning)): Path[] {
+  const sources = new Map(known.filter(tie => tie.weight >= tuning.floor).map(tie => [tie.personId, tie]));
+  const latest = new Map<number, Seen>();
+  for (const row of community.others) {
+    if (row.filmId !== filmId) continue;
+    const held = latest.get(row.personId);
+    if (!held || row.at > held.at || (row.at === held.at && row.id > held.id)) latest.set(row.personId, row);
+  }
+  const out: Path[] = [];
+  for (const row of latest.values()) {
+    const tie = sources.get(row.personId), reason = tie && reasonFor(tie);
+    if (tie && reason) out.push({ personId: row.personId, responseId: row.id, verdict: row.verdict, feelings: row.feelings, strength: tie.weight, reason });
+  }
+  return out.sort((a, b) => b.strength - a.strength || a.personId - b.personId);
+}
+
 /** Reorder so the same person does not lead film after film: each repeat is worth a little less. */
 export function spread(picks: Pick[], repeat: number): Pick[] {
   const led = new Map<number, number>();

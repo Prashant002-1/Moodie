@@ -100,6 +100,9 @@ Full results for ten worlds are in `docs/discovery-lab.json`.
 | `/start`, and Home for a nearly empty diary | "Seen any of these?": tap a film, say how it was. |
 | Recommend a film | Followers the film suits come first, each with the reason. People who already wrote about it are named. |
 | After saving a response | "Who might like it?", when there is someone with a reason. |
+| A film's page | What the people you have something in common with made of it: "hiro loved it. ananya and chloe liked it. tariq had mixed feelings." |
+| A person's page | What connects you: a pick of theirs that landed, a film you both felt the same about, a pick of yours that landed with them, friends in common. |
+| `/recommendations`, at the foot | Films you set aside, each with "Offer again". |
 
 ## Not done
 

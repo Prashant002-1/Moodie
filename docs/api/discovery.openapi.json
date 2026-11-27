@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Moodie discovery through people",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Films, people and recipients, each reached through a person and returned with the reason. The server decides the order; no score, percentage or count of agreement is ever returned. Only public responses of other people are used. Blocks and moderation apply to every row."
   },
   "servers": [
@@ -267,6 +267,84 @@
           },
           "500": {
             "description": "Request failed"
+          }
+        }
+      }
+    },
+    "/api/discovery/films/{movieId}/voices": {
+      "get": {
+        "operationId": "getFilmVoices",
+        "summary": "What the viewer's sources made of one film",
+        "description": "Strongest tie first, at most twelve. Answers for any film, seen or not, and includes people it was not for.",
+        "parameters": [
+          {
+            "name": "movieId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilmVoices"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/api/discovery/people/{username}/tie": {
+      "get": {
+        "operationId": "getTie",
+        "summary": "What connects the viewer to one person",
+        "description": "The closest film both responded to, people the viewer follows who follow them, and a pick that landed in either direction. Every part may be absent.",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tie"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       }
@@ -891,6 +969,90 @@
               "$ref": "#/components/schemas/PersonRef"
             },
             "description": "People the viewer follows who follow this person."
+          }
+        }
+      },
+      "FilmVoices": {
+        "type": "object",
+        "required": [
+          "voices"
+        ],
+        "properties": {
+          "voices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FilmPath"
+            }
+          }
+        }
+      },
+      "LandedPick": {
+        "type": "object",
+        "required": [
+          "film",
+          "enjoyment"
+        ],
+        "properties": {
+          "film": {
+            "$ref": "#/components/schemas/Film"
+          },
+          "enjoyment": {
+            "type": "string",
+            "enum": [
+              "loved",
+              "liked",
+              "mixed",
+              "not_for_me"
+            ]
+          }
+        }
+      },
+      "Tie": {
+        "type": "object",
+        "required": [
+          "shared",
+          "mutuals",
+          "landed",
+          "returned"
+        ],
+        "properties": {
+          "shared": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IntroductionShared"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mutuals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            }
+          },
+          "landed": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LandedPick"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A film they sent the viewer, or the viewer kept through them, that the viewer enjoyed."
+          },
+          "returned": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LandedPick"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A film the viewer sent them that they said they enjoyed."
           }
         }
       }
