@@ -18,6 +18,10 @@ export function SharedSentence({ shared }: { shared: Omit<Shared, 'kind'> }) {
 /** Why a film reaches you through this person. Following someone needs no sentence. */
 export function PathWhy({ reason, person }: { reason: PathReason; person: string }) {
   if (reason.kind === 'following') return null;
+  if (reason.kind === 'friend') {
+    const names = reason.through.map(friend => friend.username);
+    return names.length ? <p className="path__why">{listed(names.slice(0, 2))}{names.length > 2 ? ` and ${names.length - 2} more` : ''} {names.length === 1 ? 'follows' : 'follow'} {person}.</p> : null;
+  }
   return <p className="path__why">{reason.kind === 'landed'
     ? <>You {reason.enjoyment === 'loved' ? 'loved' : 'liked'} <Film film={reason.film} />, which came from {person}.</>
     : <SharedSentence shared={reason} />}</p>;

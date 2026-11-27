@@ -13,7 +13,7 @@ export interface paths {
         };
         /**
          * Films the viewer has not responded to, through people they have something in common with
-         * @description A person is a source when the viewer follows them, when a film they sent or the viewer kept through them was then enjoyed, or when both responded alike to a film. Their verdict on the film decides how strongly it is offered; a trusted person's 'not for me' lowers it and is listed under against. Up to three voices are returned per film, strongest first.
+         * @description A person is a source when the viewer follows them, when a film they sent or the viewer kept through them was then enjoyed, when both responded alike to a film, or, more weakly, when someone the viewer follows follows them. Their verdict on the film decides how strongly it is offered; a trusted person's 'not for me' lowers it and is listed under against. Up to three voices are returned per film, strongest first.
          */
         get: operations["getFilmsForYou"];
         put?: never;
@@ -168,8 +168,8 @@ export interface components {
         FilmPath: {
             person: components["schemas"]["PersonRef"];
             response: components["schemas"]["PathResponse"];
-            /** @description shared: a film both responded to. landed: a film this person sent, or the viewer kept through them, that the viewer then enjoyed. following: the viewer follows them. */
-            reason: components["schemas"]["SharedReason"] | components["schemas"]["LandedReason"] | components["schemas"]["FollowingReason"];
+            /** @description shared: a film both responded to. landed: a film this person sent, or the viewer kept through them, that the viewer then enjoyed. following: the viewer follows them. friend: someone the viewer follows follows them. */
+            reason: components["schemas"]["SharedReason"] | components["schemas"]["LandedReason"] | components["schemas"]["FollowingReason"] | components["schemas"]["FriendReason"];
         };
         FilmForYou: {
             film: components["schemas"]["FilmWithOverview"];
@@ -233,6 +233,12 @@ export interface components {
         };
         StarterFilms: {
             films: components["schemas"]["Film"][];
+        };
+        FriendReason: {
+            /** @constant */
+            kind: "friend";
+            /** @description People the viewer follows who follow this person. */
+            through: components["schemas"]["PersonRef"][];
         };
     };
     responses: never;

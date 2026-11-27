@@ -54,6 +54,8 @@ export interface Tuning {
   priorStrength: number;
   /** Following someone counts as this many agreeing films. */
   followEvidence: number;
+  /** Being followed by someone the viewer follows counts as this many agreeing films, once. 0 leaves friends of friends out. */
+  friendOfFriend: number;
   /** A person needs at least this weight to be a source. */
   floor: number;
   /** How much each verdict endorses a film. A response with no verdict is `none`. */
@@ -71,6 +73,7 @@ export const defaults: Tuning = {
   priorMean: 0.35,
   priorStrength: 2,
   followEvidence: 1,
+  friendOfFriend: 0.4,
   floor: 0.36,
   endorse: { loved: 1, liked: 0.7, none: 0.45, mixed: 0.15, not_for_me: 0 },
   veto: 0.5,
@@ -182,9 +185,10 @@ export function ties(community: Community, tuning: Tuning = defaults): Tie[] {
     }
     const follows = following.has(personId);
     if (tuning.use.follows && follows) agree += tuning.followEvidence;
+    const theirFollowers = [...following].filter(friend => friend !== personId && community.follows.get(friend)?.has(personId));
+    if (tuning.use.follows && !follows && theirFollowers.length) agree += tuning.friendOfFriend;
     const evidence = agree + differ;
     const weight = evidence ? (agree + tuning.priorMean * tuning.priorStrength) / (evidence + tuning.priorStrength) : 0;
-    const theirFollowers = [...following].filter(friend => friend !== personId && community.follows.get(friend)?.has(personId));
     result.push({ personId, weight, agree, differ, shared, landed, returned, following: follows,
       followsYou: Boolean(community.follows.get(personId)?.has(viewerId)), mutuals: theirFollowers.sort((a, b) => a - b) });
   }
@@ -195,7 +199,9 @@ export function ties(community: Community, tuning: Tuning = defaults): Tie[] {
 export type Reason =
   | { kind: 'landed'; filmId: number; verdict: Verdict }
   | { kind: 'shared'; film: SharedFilm }
-  | { kind: 'following' };
+  | { kind: 'following' }
+  /** Someone the viewer follows follows them. */
+  | { kind: 'friend'; through: number[] };
 
 export function reasonFor(tie: Tie): Reason | null {
   const hit = tie.landed.find(l => l.verdict === 'loved') ?? tie.landed.find(l => l.verdict === 'liked');
@@ -204,7 +210,8 @@ export function reasonFor(tie: Tie): Reason | null {
   if (close) return { kind: 'shared', film: close };
   if (tie.following) return { kind: 'following' };
   const any = tie.shared.find(film => film.match !== null && film.match > 0);
-  return any ? { kind: 'shared', film: any } : null;
+  if (any) return { kind: 'shared', film: any };
+  return tie.mutuals.length ? { kind: 'friend', through: tie.mutuals } : null;
 }
 
 export interface Path {

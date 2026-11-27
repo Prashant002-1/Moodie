@@ -84,7 +84,9 @@ const filmOf = (loaded: Loaded, id: number): FilmCard => { const { overview: _ov
 const sharedOf = (loaded: Loaded, film: SharedFilm) => ({ film: filmOf(loaded, film.filmId), feelings: film.feelings,
   own_response_id: film.ownId, their_response_id: film.theirId, own_enjoyment: film.ownVerdict, their_enjoyment: film.theirVerdict });
 const reasonOf = (loaded: Loaded, reason: Reason) => reason.kind === 'landed' ? { kind: reason.kind, film: filmOf(loaded, reason.filmId), enjoyment: reason.verdict }
-  : reason.kind === 'shared' ? { kind: reason.kind, ...sharedOf(loaded, reason.film) } : { kind: reason.kind };
+  : reason.kind === 'shared' ? { kind: reason.kind, ...sharedOf(loaded, reason.film) }
+  : reason.kind === 'friend' ? { kind: reason.kind, through: reason.through.filter(id => loaded.names.has(id)).map(id => ({ id, username: loaded.names.get(id)! })) }
+  : { kind: reason.kind };
 const reasonFilms = (paths: Path[]) => paths.flatMap(path => path.reason.kind === 'landed' ? [path.reason.filmId] : path.reason.kind === 'shared' ? [path.reason.film.filmId] : []);
 
 export async function filmsFor(viewerId: number, limit = 12, offset = 0) {
@@ -92,7 +94,7 @@ export async function filmsFor(viewerId: number, limit = 12, offset = 0) {
   const known = ties(loaded.community);
   const all = films(loaded.community, undefined, known);
   const page = all.slice(offset, offset + limit);
-  await complete(loaded, viewerId, [], page.flatMap(pick => reasonFilms(pick.paths)));
+  await complete(loaded, viewerId, page.flatMap(pick => pick.paths.flatMap(path => path.reason.kind === 'friend' ? path.reason.through : [])), page.flatMap(pick => reasonFilms(pick.paths)));
   return {
     films: page.map(pick => {
       const card = loaded.filmCards.get(pick.filmId)!;

@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Moodie discovery through people",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Films, people and recipients, each reached through a person and returned with the reason. The server decides the order; no score, percentage or count of agreement is ever returned. Only public responses of other people are used. Blocks and moderation apply to every row."
   },
   "servers": [
@@ -20,7 +20,7 @@
       "get": {
         "operationId": "getFilmsForYou",
         "summary": "Films the viewer has not responded to, through people they have something in common with",
-        "description": "A person is a source when the viewer follows them, when a film they sent or the viewer kept through them was then enjoyed, or when both responded alike to a film. Their verdict on the film decides how strongly it is offered; a trusted person's 'not for me' lowers it and is listed under against. Up to three voices are returned per film, strongest first.",
+        "description": "A person is a source when the viewer follows them, when a film they sent or the viewer kept through them was then enjoyed, when both responded alike to a film, or, more weakly, when someone the viewer follows follows them. Their verdict on the film decides how strongly it is offered; a trusted person's 'not for me' lowers it and is listed under against. Up to three voices are returned per film, strongest first.",
         "parameters": [
           {
             "name": "limit",
@@ -539,9 +539,12 @@
               },
               {
                 "$ref": "#/components/schemas/FollowingReason"
+              },
+              {
+                "$ref": "#/components/schemas/FriendReason"
               }
             ],
-            "description": "shared: a film both responded to. landed: a film this person sent, or the viewer kept through them, that the viewer then enjoyed. following: the viewer follows them."
+            "description": "shared: a film both responded to. landed: a film this person sent, or the viewer kept through them, that the viewer then enjoyed. following: the viewer follows them. friend: someone the viewer follows follows them."
           }
         }
       },
@@ -846,6 +849,26 @@
             "items": {
               "$ref": "#/components/schemas/Film"
             }
+          }
+        }
+      },
+      "FriendReason": {
+        "type": "object",
+        "required": [
+          "kind",
+          "through"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "friend"
+          },
+          "through": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            },
+            "description": "People the viewer follows who follow this person."
           }
         }
       }

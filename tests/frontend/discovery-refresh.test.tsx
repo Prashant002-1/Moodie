@@ -53,6 +53,7 @@ it('says in words why a film comes through someone: a pick that landed, or nothi
   state.films.mockResolvedValue(page([
     film(102, 'Landed Film', { kind: 'landed', film: { id: 90, title: 'Sent Film', release_date: null, poster_path: null }, enjoyment: 'loved' }),
     film(103, 'Followed Film', { kind: 'following' }),
+    film(105, 'Friend Film', { kind: 'friend', through: [{ id: 4, username: 'clara' }] }),
     { ...film(104, 'Crowded Film', { kind: 'following' }), more: 2, against: [{ id: 7, username: 'doubter' }],
       paths: [...film(104, 'x').paths, { person: { id: 3, username: 'second' }, response: { id: 12, note: '', enjoyment: 'liked', feelings: [] }, reason: { kind: 'following' } }] },
   ]));
@@ -60,6 +61,7 @@ it('says in words why a film comes through someone: a pick that landed, or nothi
   const landed = await screen.findByRole('article', { name: 'Landed Film' });
   expect(landed).toHaveTextContent('You loved Sent Film, which came from peer.');
   expect(screen.getByRole('article', { name: 'Followed Film' }).querySelector('.path__why')).toBeNull();
+  expect(screen.getByRole('article', { name: 'Friend Film' })).toHaveTextContent('clara follows peer.');
   const crowded = screen.getByRole('article', { name: 'Crowded Film' });
   expect(crowded).toHaveTextContent('Also second and 2 more.');
   expect(crowded).toHaveTextContent('Not for doubter.');

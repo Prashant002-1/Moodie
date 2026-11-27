@@ -53,6 +53,14 @@ describe('discovery engine', () => {
     expect(first.paths[0].reason).toEqual({ kind: 'landed', filmId: 90, verdict: 'loved' });
   });
 
+  it('goes one step out: a person followed by someone the viewer follows is a weak source, named through that friend', () => {
+    const c = community({ follows: new Map([[1, new Set([2])], [2, new Set([3])], [3, new Set([4])]]), others: [seen(2, 20, 'liked'), seen(3, 30, 'loved'), seen(4, 40, 'loved')] });
+    const picks = films(c);
+    expect(picks.map(pick => pick.filmId).sort()).toEqual([20, 30]);
+    expect(picks.find(pick => pick.filmId === 30)!.paths[0].reason).toEqual({ kind: 'friend', through: [2] });
+    expect(ties(c).find(tie => tie.personId === 3)!.weight).toBeLessThan(ties(c).find(tie => tie.personId === 2)!.weight);
+  });
+
   it('weakens a person the viewer disagrees with until they are no longer a source', () => {
     const own = [seen(1, 10, 'loved', ['joy']), seen(1, 11, 'loved', ['joy']), seen(1, 12, 'not_for_me', ['still'])];
     const c = community({ own, others: [seen(2, 10, 'not_for_me', ['still']), seen(2, 11, 'not_for_me', ['friction']), seen(2, 12, 'loved', ['joy']), seen(2, 20, 'loved')] });

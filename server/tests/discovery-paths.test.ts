@@ -111,6 +111,16 @@ describe('films through people', () => {
     expect(titles((await get('/discovery/for-you', viewer.cookie)).body)).toEqual(['Loved', 'Liked']);
   });
 
+  it('goes one step out through a friend, and says which friend', async () => {
+    const viewer = await register('one_step'), friend = await register('middle'), beyond = await register('beyond'), far = await register('too_far');
+    await follow(viewer.id, friend.id); await follow(friend.id, beyond.id); await follow(beyond.id, far.id);
+    await respond(beyond.id, 20, { enjoyment: 'loved' });
+    await respond(far.id, 21, { enjoyment: 'loved' });
+    const result = await get('/discovery/for-you', viewer.cookie);
+    expect(titles(result.body)).toEqual(['Loved']);
+    expect(result.body.films[0].paths[0].reason).toEqual({ kind: 'friend', through: [{ id: friend.id, username: 'middle' }] });
+  });
+
   it('leaves out a film that is already waiting for the viewer, sent by someone or saved', async () => {
     const viewer = await register('waiting'), friend = await register('sender_two');
     await follow(viewer.id, friend.id);
