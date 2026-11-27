@@ -1,5 +1,7 @@
 # Learned recommendations and feed
 
+> Status, 2026-11-27: the web app no longer ranks with this. It uses [discovery through people](DISCOVERY.md), which reads the verdict a person gave and the follows around the viewer; in simulated communities this model never gathers enough responses to switch on, and what remains ranks about as well as chance. `/api/recommendations` is unchanged and still serves the iPhone app. Everything below describes that endpoint.
+
 Moodie learns how a viewer's response to a film differs from another person's response, using the films they previously shared. It recommends through actual public responses and preserves those response IDs as evidence. It does not learn a universal emotion label for a film.
 
 The distinctive product mechanism is a complete loop: record a film and its feeling intensities, connect through shared films, predict how another person's response may transfer to the viewer, follow that response to a new film, then learn from the next saved response. This is a product implementation using established statistical methods, not a claim of a new research algorithm.

@@ -27,7 +27,8 @@ In rough priority order.
 - [ ] **Feelings without measurement.** The web now records up to three words in order with no numbers shown ([FEELINGS.md](FEELINGS.md)). Remaining: decide the vocabulary (a sixteen-word proposal is in that file), then store an ordered word list on the server and rebuild matching on word overlap.
 - [ ] **A recommendation link for someone without an account.** The strongest answer to the empty-network problem ([IDENTITY.md](IDENTITY.md)).
 - [ ] **Letterboxd import.**
-- [ ] **"Who would like this and why"** as part of a response, not only when sending a recommendation.
+- [x] **Discovery that reads what people made of a film.** Films through follows, picks that landed, shared films and friends of friends; people to meet; who to send a film to; first answers for a newcomer. Built on the web and API ([DISCOVERY.md](DISCOVERY.md)). Remaining: move the iPhone app onto it, then retire `/api/recommendations`.
+- [ ] **"Who would like this and why"** as part of a response. After saving, the web now suggests followers the film might suit; the "why" is still written only when sending.
 - [ ] **Gentle memory.** Notifications that carry the person and the reason: push on iOS (APNs), an in-app return trail everywhere. Quiet by default, never a streak.
 - [ ] **Television.** Titles need an identity that is not a TMDB movie id: a `titles` table keyed by media type and catalog id, with shows, and later seasons. This touches every table that references a film, both clients and the three OpenAPI contracts, so it should happen before real accounts exist.
 - [ ] **First AI-mode features.** A model provider behind the existing explanation port (Amazon Bedrock is the natural fit for AWS credits) and an authenticated MCP endpoint exposing the two read tools, both gated by the account's AI choice.

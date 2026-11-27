@@ -98,6 +98,12 @@ The mark is two overlapping circles: two people and what they share. It is drawn
 
 The person using Moodie is the most intelligent part of the system. Warm and specific is welcome ("hiro thought of you"). Generic persuasion is not. A screen is never explained; nothing is said twice. Persuasion lives on the signed-out front page only.
 
+## Drawn marks and small answers
+
+Four ink drawings exist: a ticket, a folded note in flight, two seats and a reel. One stroke weight, no fill, no colour; each draws itself once (the one exception to "transform and opacity only"). They appear only in quiet moments (an empty state, "Sent to", "In your diary"), never beside content.
+
+A verdict can be pressed onto a poster like a stamp: on a newcomer's first answers, and on a recommendation once the person it was for has replied. A control answers a tap with a short bounce. Nothing loops and nothing moves unasked.
+
 ## Do not
 
 - Add ratings, stars, percentages, compatibility scores, charts of a person's feelings or a mood picker.

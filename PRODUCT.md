@@ -45,7 +45,7 @@ The public landing page explains the product as a human sequence: the small mome
 
 ### Feed
 
-The signed-in home has For you, Following, and Everyone views. For you leads with one recommendation from a real person, then keeps recommended films, followed responses, people, active community films, and saved films within reach. Each recommendation names the person and shared film, shows the feelings both people recorded there, and carries the public response behind the recommended film. Following and Everyone become chronological streams of complete responses. Every response keeps the person, film, note, feeling trace, and optional photo together. The home is dense enough to support several discovery paths without becoming a metrics dashboard or making photos and likes the primary content.
+The signed-in home has For you, Following, and Everyone views. For you leads with what people sent, then new films from friends, then films that reach the person through people, people to meet, and recent responses. Each film through people names who loved it, carries their words, and says what the two have in common. Someone with a nearly empty diary is asked about films they may have seen. Following and Everyone become chronological streams of complete responses. Every response keeps the person, film, note, feeling trace, and optional photo together. The home is dense enough to support several discovery paths without becoming a metrics dashboard or making photos and likes the primary content.
 
 ### Add a film
 
@@ -53,15 +53,9 @@ The composer starts with a film, then asks: how did it make you feel, and what d
 
 ### Discovery paths
 
-Recommendations are not a primary destination in the navigation. They begin inside the response stream or immediately after a response is saved, when a person who felt something similar about the same film creates a path to another film. The sequence is:
+A film reaches a person through someone they follow, someone whose pick landed with them before, someone who responded alike to a film both have seen, or, more weakly, a friend of a friend. What that person made of the film ("loved it", "liked it") decides how strongly it is offered. How this works, how it was tested and what did not work are in [docs/DISCOVERY.md](docs/DISCOVERY.md).
 
-1. find a film both people responded to;
-2. compare their reviewed feeling mixes for that film;
-3. identify people with meaningful emotional overlap;
-4. recommend other films those people responded to strongly;
-5. show the people and shared film behind the recommendation.
-
-One shared film can begin a recommendation path. Repeated overlap strengthens that connection as both diaries grow. A person can follow the path into a focused exploration view, open the film, or continue to the source person's responses. Search remains a supporting tool, not the product's organizing idea.
+One shared film can begin a path. Agreement strengthens it and disagreement weakens it as both diaries grow. A person can follow the path into a focused exploration view, open the film, or continue to the source person's responses. Search remains a supporting tool, not the product's organizing idea.
 
 ### Diary
 
@@ -86,9 +80,9 @@ A film page leads with the film, then separates responses from related films. A 
 ## Recommendation rules
 
 - People-led recommendations are the primary personalized source.
-- Similarity is grounded in reviewed feelings on films both people have seen.
-- A recommended film must come from a real public response by a matched person.
-- Reasons name the person and shared film, show the feelings both people recorded on that film, and show what the source person felt after the recommended film.
+- A person is a source through a follow, a pick that landed, a film both responded to, or a friend in common. Each is shown as the reason.
+- A recommended film must come from a real public response by that person, and their verdict on it counts.
+- A film the viewer set aside ("Not for me") is not offered again.
 - A person may compare both written responses to the shared film without seeing an internal score.
 - Genre, TMDB rating, vote count, and universal emotion-to-genre mappings do not determine recommendations.
 - Popular or trending catalog items may be used only as an explicitly separate cold-start or browse fallback.
@@ -128,6 +122,7 @@ The current seven-key vector is a prototype constraint. It must not become the p
 - `/api/suggestions`: personal recommendations, attribution, viewing links, explicit replies, and participant conversations.
 - `/api/recommendations`: people-led recommendations and separate catalog fallbacks.
 - `/api/discovery`: feed, public responses, people, follows, likes, and comments.
+- `/api/discovery/for-you`, `/introductions`, `/recipients`, `/starter`: films through people, people to meet, who to send a film to, and a newcomer's first films ([contract](docs/api/discovery.openapi.json)).
 - `/api/discovery/activity`: likes, comments, and follows that lead back to the exact social event.
 - `/api/discovery/pulse`: films with recent public responses from the community.
 - `/api/auth`: sign up, sign in, persistent sessions, profile, the AI choice (`PATCH /api/auth/preferences`), password, recovery code, sign out, and account deletion.
