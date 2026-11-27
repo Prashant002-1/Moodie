@@ -11,10 +11,11 @@
     "node": ">=20 <26"
   },
   "scripts": {
-    "contracts:generate": "npm run contracts:suggestions && npm run contracts:library && npm run contracts:social",
+    "contracts:generate": "npm run contracts:suggestions && npm run contracts:library && npm run contracts:social && npm run contracts:discovery",
+    "contracts:discovery": "openapi-typescript docs/api/discovery.openapi.json -o src/types/generated/discovery.d.ts",
     "contracts:suggestions": "openapi-typescript docs/api/suggestions.openapi.json -o src/types/generated/suggestions.d.ts",
     "contracts:library": "openapi-typescript docs/api/library.openapi.json -o src/types/generated/library.d.ts",
-    "contracts:check": "npm run contracts:suggestions -- --check && npm run contracts:library -- --check && npm run contracts:social -- --check",
+    "contracts:check": "npm run contracts:suggestions -- --check && npm run contracts:library -- --check && npm run contracts:social -- --check && npm run contracts:discovery -- --check",
     "dev": "concurrently --kill-others --names web,api \"npm:dev:web\" \"npm:dev:api\"",
     "dev:web": "vite",
     "dev:api": "npm --workspace server run dev",

@@ -1,0 +1,854 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Moodie discovery through people",
+    "version": "1.0.0",
+    "description": "Films, people and recipients, each reached through a person and returned with the reason. The server decides the order; no score, percentage or count of agreement is ever returned. Only public responses of other people are used. Blocks and moderation apply to every row."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "session": []
+    }
+  ],
+  "paths": {
+    "/api/discovery/for-you": {
+      "get": {
+        "operationId": "getFilmsForYou",
+        "summary": "Films the viewer has not responded to, through people they have something in common with",
+        "description": "A person is a source when the viewer follows them, when a film they sent or the viewer kept through them was then enjoyed, or when both responded alike to a film. Their verdict on the film decides how strongly it is offered; a trusted person's 'not for me' lowers it and is listed under against. Up to three voices are returned per film, strongest first.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 12
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilmsForYou"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Request failed"
+          }
+        }
+      }
+    },
+    "/api/discovery/for-you/{movieId}/hidden": {
+      "put": {
+        "operationId": "hideFilm",
+        "summary": "Say a film is not for you",
+        "description": "Private to the viewer. The film is never offered again until this is removed.",
+        "parameters": [
+          {
+            "name": "movieId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Hidden"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Film not found"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unhideFilm",
+        "summary": "Take that back",
+        "parameters": [
+          {
+            "name": "movieId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Offered again"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
+    },
+    "/api/discovery/introductions": {
+      "get": {
+        "operationId": "getIntroductions",
+        "summary": "People the viewer does not follow and has a reason to",
+        "description": "Reasons, any of which may be present: a film both responded to alike, people the viewer follows who follow this person, or that this person follows the viewer.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 12
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Introductions"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Request failed"
+          }
+        }
+      }
+    },
+    "/api/discovery/recipients": {
+      "get": {
+        "operationId": "getRecipientsForFilm",
+        "summary": "Who to offer first when sending one film",
+        "description": "Only people who follow the viewer can receive a recommendation. People with a reason come first. Anyone who has already written about the film in public is returned separately under wrote.",
+        "parameters": [
+          {
+            "name": "movieId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recipients"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Request failed"
+          }
+        }
+      }
+    },
+    "/api/discovery/starter": {
+      "get": {
+        "operationId": "getStarterFilms",
+        "summary": "Films to ask a newcomer about",
+        "description": "The films most people here have written about, which the viewer has not responded to or hidden. Answering for a few connects a new person to others.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 40,
+              "default": 18
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StarterFilms"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Request failed"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "moodie_session"
+      }
+    },
+    "schemas": {
+      "Film": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "release_date",
+          "poster_path"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "release_date": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "poster_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "FilmWithOverview": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "release_date",
+          "poster_path",
+          "overview"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "release_date": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "poster_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "overview": {
+            "type": "string"
+          }
+        }
+      },
+      "PersonRef": {
+        "type": "object",
+        "required": [
+          "id",
+          "username"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "SharedReason": {
+        "type": "object",
+        "required": [
+          "kind",
+          "film",
+          "feelings",
+          "own_response_id",
+          "their_response_id",
+          "own_enjoyment",
+          "their_enjoyment"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "shared"
+          },
+          "film": {
+            "$ref": "#/components/schemas/Film"
+          },
+          "feelings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "neutral",
+                "happy",
+                "sad",
+                "angry",
+                "fearful",
+                "disgusted",
+                "surprised"
+              ]
+            },
+            "description": "Words the person chose, strongest first. At most three."
+          },
+          "own_response_id": {
+            "type": "integer"
+          },
+          "their_response_id": {
+            "type": "integer"
+          },
+          "own_enjoyment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "loved",
+              "liked",
+              "mixed",
+              "not_for_me",
+              null
+            ]
+          },
+          "their_enjoyment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "loved",
+              "liked",
+              "mixed",
+              "not_for_me",
+              null
+            ]
+          }
+        }
+      },
+      "LandedReason": {
+        "type": "object",
+        "required": [
+          "kind",
+          "film",
+          "enjoyment"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "landed"
+          },
+          "film": {
+            "$ref": "#/components/schemas/Film"
+          },
+          "enjoyment": {
+            "type": "string",
+            "enum": [
+              "loved",
+              "liked",
+              "mixed",
+              "not_for_me"
+            ]
+          }
+        }
+      },
+      "FollowingReason": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "following"
+          }
+        }
+      },
+      "ReturnedReason": {
+        "type": "object",
+        "required": [
+          "kind",
+          "film",
+          "enjoyment"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "returned"
+          },
+          "film": {
+            "$ref": "#/components/schemas/Film"
+          },
+          "enjoyment": {
+            "type": "string",
+            "enum": [
+              "loved",
+              "liked",
+              "mixed",
+              "not_for_me"
+            ]
+          }
+        }
+      },
+      "PathResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "note",
+          "enjoyment",
+          "feelings"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "note": {
+            "type": "string"
+          },
+          "enjoyment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "loved",
+              "liked",
+              "mixed",
+              "not_for_me",
+              null
+            ]
+          },
+          "feelings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "neutral",
+                "happy",
+                "sad",
+                "angry",
+                "fearful",
+                "disgusted",
+                "surprised"
+              ]
+            },
+            "description": "Words the person chose, strongest first. At most three."
+          }
+        }
+      },
+      "FilmPath": {
+        "type": "object",
+        "required": [
+          "person",
+          "response",
+          "reason"
+        ],
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonRef"
+          },
+          "response": {
+            "$ref": "#/components/schemas/PathResponse"
+          },
+          "reason": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SharedReason"
+              },
+              {
+                "$ref": "#/components/schemas/LandedReason"
+              },
+              {
+                "$ref": "#/components/schemas/FollowingReason"
+              }
+            ],
+            "description": "shared: a film both responded to. landed: a film this person sent, or the viewer kept through them, that the viewer then enjoyed. following: the viewer follows them."
+          }
+        }
+      },
+      "FilmForYou": {
+        "type": "object",
+        "required": [
+          "film",
+          "paths",
+          "more",
+          "against"
+        ],
+        "properties": {
+          "film": {
+            "$ref": "#/components/schemas/FilmWithOverview"
+          },
+          "paths": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/FilmPath"
+            }
+          },
+          "more": {
+            "type": "integer",
+            "description": "Further people this film reaches the viewer through, beyond those in paths."
+          },
+          "against": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            },
+            "description": "Sources who said the film was not for them."
+          }
+        }
+      },
+      "FilmsForYou": {
+        "type": "object",
+        "required": [
+          "films",
+          "nextOffset",
+          "total",
+          "connected",
+          "diary"
+        ],
+        "properties": {
+          "films": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FilmForYou"
+            }
+          },
+          "nextOffset": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          },
+          "connected": {
+            "type": "boolean",
+            "description": "False when the viewer has nobody to go through yet."
+          },
+          "diary": {
+            "type": "integer",
+            "description": "Films the viewer has responded to."
+          }
+        }
+      },
+      "IntroductionShared": {
+        "type": "object",
+        "required": [
+          "film",
+          "feelings",
+          "own_response_id",
+          "their_response_id",
+          "own_enjoyment",
+          "their_enjoyment",
+          "count"
+        ],
+        "properties": {
+          "film": {
+            "$ref": "#/components/schemas/Film"
+          },
+          "feelings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "neutral",
+                "happy",
+                "sad",
+                "angry",
+                "fearful",
+                "disgusted",
+                "surprised"
+              ]
+            },
+            "description": "Words the person chose, strongest first. At most three."
+          },
+          "own_response_id": {
+            "type": "integer"
+          },
+          "their_response_id": {
+            "type": "integer"
+          },
+          "own_enjoyment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "loved",
+              "liked",
+              "mixed",
+              "not_for_me",
+              null
+            ]
+          },
+          "their_enjoyment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "loved",
+              "liked",
+              "mixed",
+              "not_for_me",
+              null
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "description": "Films both have responded to."
+          }
+        }
+      },
+      "IntroductionLatest": {
+        "type": "object",
+        "required": [
+          "response_id",
+          "film",
+          "enjoyment"
+        ],
+        "properties": {
+          "response_id": {
+            "type": "integer"
+          },
+          "film": {
+            "$ref": "#/components/schemas/Film"
+          },
+          "enjoyment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "loved",
+              "liked",
+              "mixed",
+              "not_for_me",
+              null
+            ]
+          }
+        }
+      },
+      "Introduction": {
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "bio",
+          "following",
+          "follows_you",
+          "shared",
+          "mutuals",
+          "latest"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "following": {
+            "type": "boolean"
+          },
+          "follows_you": {
+            "type": "boolean"
+          },
+          "shared": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IntroductionShared"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mutuals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            }
+          },
+          "latest": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IntroductionLatest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Introductions": {
+        "type": "object",
+        "required": [
+          "people"
+        ],
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Introduction"
+            }
+          }
+        }
+      },
+      "Recipient": {
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "bio",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "reason": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReturnedReason"
+              },
+              {
+                "$ref": "#/components/schemas/SharedReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "returned: a film the viewer sent them that they enjoyed. shared: a film both responded to alike."
+          }
+        }
+      },
+      "Recipients": {
+        "type": "object",
+        "required": [
+          "people",
+          "wrote"
+        ],
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recipient"
+            }
+          },
+          "wrote": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            }
+          }
+        }
+      },
+      "StarterFilms": {
+        "type": "object",
+        "required": [
+          "films"
+        ],
+        "properties": {
+          "films": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Film"
+            }
+          }
+        }
+      }
+    }
+  }
+}

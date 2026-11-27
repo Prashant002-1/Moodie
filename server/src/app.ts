@@ -6,6 +6,7 @@ import authRoutes from './routes/auth';
 import catalogRoutes from './routes/catalog';
 import diaryRoutes from './routes/diary';
 import discoveryRoutes from './routes/discovery';
+import pathRoutes from './routes/paths';
 import libraryRoutes from './routes/library';
 import safetyRoutes from './routes/safety';
 import recommendationRoutes from './routes/recommendations';
@@ -46,6 +47,7 @@ app.get('/api/health', async (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/catalog', catalogRoutes);
 app.use('/api/diary', diaryRoutes);
+app.use('/api/discovery', pathRoutes);
 app.use('/api/discovery', discoveryRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/safety', safetyRoutes);

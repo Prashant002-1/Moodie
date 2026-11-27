@@ -12,7 +12,8 @@ const pageRows = <T>(rows: T[], limit?: number) => limit === undefined ? rows : 
 const nextOffset = (rows: unknown[], limit: number | undefined, offset: number) => limit !== undefined && rows.length > limit ? offset + limit : null;
 
 
-export const loadFeed = async (viewerId: number | null, limit = 24, offset = 0, scope = 'everyone', cursor?: { at: string; id: number }) => {
+// `written` leaves out a verdict nobody wrote anything under: a stream is for words.
+export const loadFeed = async (viewerId: number | null, limit = 24, offset = 0, scope = 'everyone', cursor?: { at: string; id: number }, written = false) => {
   const result = await pool.query(
     `SELECT de.id, de.user_id, de.movie_id, de.watched_on, de.note, de.visibility, de.created_at, de.enjoyment, de.highlights,
             to_char(de.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_at,
@@ -35,9 +36,10 @@ export const loadFeed = async (viewerId: number | null, limit = 24, offset = 0, 
      LEFT JOIN entry_media em ON em.entry_id = de.id AND em.kind = 'expression_photo'
      WHERE de.visibility = 'public' AND ${visibleResponse('$1')} AND ($4 <> 'following' OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id = $1 AND f.followed_id = de.user_id))
        AND ($5::timestamp IS NULL OR (de.created_at, de.id) < ($5::timestamp, $6::bigint))
+       AND (NOT $7::boolean OR TRIM(de.note) <> '' OR em.entry_id IS NOT NULL)
      ORDER BY de.created_at DESC, de.id DESC
      LIMIT $2 OFFSET $3`,
-    [viewerId, limit, offset, scope, cursor?.at || null, cursor?.id || null],
+    [viewerId, limit, offset, scope, cursor?.at || null, cursor?.id || null, written],
   );
   return result.rows;
 };
@@ -55,7 +57,8 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
         cursor = z.object({ at: z.string().datetime(), id: z.coerce.number().int().positive() }).parse(JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8')));
       } catch { return res.status(400).json({ error: 'Invalid feed cursor' }); }
     }
-    const entries = await loadFeed(viewerId, limit + 1, cursor ? 0 : offset, scope, cursor);
+    const written = z.enum(['all', 'written']).default('all').parse(req.query.kind) === 'written';
+    const entries = await loadFeed(viewerId, limit + 1, cursor ? 0 : offset, scope, cursor, written);
     const page = entries.slice(0, limit), last = page[page.length - 1];
     const nextCursor = entries.length > limit && last ? Buffer.from(JSON.stringify({ at: last.cursor_at, id: Number(last.id) })).toString('base64url') : null;
     res.json({ entries: page.map(({ cursor_at: _cursorAt, ...entry }) => entry), nextCursor, nextOffset: entries.length > limit ? offset + limit : null });

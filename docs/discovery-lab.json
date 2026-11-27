@@ -1,0 +1,2955 @@
+{
+  "about": "Simulated communities with a known truth. Each strategy sees only what was readable four fifths of the way through and is judged on the first five films it offers each person. This tests mechanics and robustness, not real people.",
+  "columns": {
+    "reached": "share of people offered anything",
+    "yield": "films in the first five the person would have liked, averaged over everyone",
+    "finds": "liked films in the first five that are not among the most written-about twentieth",
+    "personal": "yield minus the yield of giving each person somebody else's list",
+    "liked": "share of offered films the person would have liked",
+    "voices": "different people leading the first five",
+    "crowded": "share of places taken by the most written-about twentieth of films",
+    "range": "share of the shelf offered to anyone"
+  },
+  "worlds": {
+    "a town (150 people)": {
+      "ceiling": 5,
+      "strategies": {
+        "any film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.474,
+          "loved": 0.218,
+          "yield": 2.371,
+          "finds": 2.229,
+          "personal": -0.006,
+          "voices": null,
+          "crowded": 0.042,
+          "range": 0.987,
+          "byDiary": {
+            "empty": 2.533,
+            "few": 2.272,
+            "many": 2.381
+          }
+        },
+        "most written about": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.717,
+          "loved": 0.438,
+          "yield": 3.586,
+          "finds": 0.058,
+          "personal": 0.103,
+          "voices": null,
+          "crowded": 0.979,
+          "range": 0.068,
+          "byDiary": {
+            "empty": 3.067,
+            "few": 3.666,
+            "many": 3.599
+          }
+        },
+        "best loved overall": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.761,
+          "loved": 0.482,
+          "yield": 3.805,
+          "finds": 2.157,
+          "personal": 0.071,
+          "voices": null,
+          "crowded": 0.421,
+          "range": 0.052,
+          "byDiary": {
+            "empty": 3.8,
+            "few": 3.86,
+            "many": 3.795
+          }
+        },
+        "previous engine": {
+          "reached": 0.956,
+          "filled": 0.956,
+          "liked": 0.512,
+          "loved": 0.252,
+          "yield": 2.448,
+          "finds": 2.399,
+          "personal": 0.124,
+          "voices": 3.402,
+          "crowded": 0.012,
+          "range": 0.53,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.426,
+            "many": 2.548
+          }
+        },
+        "feelings only": {
+          "reached": 0.956,
+          "filled": 0.956,
+          "liked": 0.647,
+          "loved": 0.354,
+          "yield": 3.095,
+          "finds": 1.659,
+          "personal": 0.248,
+          "voices": 4.811,
+          "crowded": 0.408,
+          "range": 0.367,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.112,
+            "many": 3.232
+          }
+        },
+        "verdicts only": {
+          "reached": 0.936,
+          "filled": 0.936,
+          "liked": 0.76,
+          "loved": 0.476,
+          "yield": 3.559,
+          "finds": 2.151,
+          "personal": 0.326,
+          "voices": 4.851,
+          "crowded": 0.394,
+          "range": 0.245,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.007,
+            "many": 3.828
+          }
+        },
+        "feelings + verdicts": {
+          "reached": 0.956,
+          "filled": 0.956,
+          "liked": 0.767,
+          "loved": 0.496,
+          "yield": 3.666,
+          "finds": 2.219,
+          "personal": 0.408,
+          "voices": 4.921,
+          "crowded": 0.392,
+          "range": 0.21,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.489,
+            "many": 3.87
+          }
+        },
+        "follows only": {
+          "reached": 1,
+          "filled": 0.993,
+          "liked": 0.636,
+          "loved": 0.356,
+          "yield": 3.168,
+          "finds": 1.801,
+          "personal": 0.3,
+          "voices": 3.897,
+          "crowded": 0.362,
+          "range": 0.459,
+          "byDiary": {
+            "empty": 3.133,
+            "few": 3.296,
+            "many": 3.148
+          }
+        },
+        "+ follows": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.786,
+          "loved": 0.5,
+          "yield": 3.928,
+          "finds": 2.319,
+          "personal": 0.45,
+          "voices": 4.939,
+          "crowded": 0.401,
+          "range": 0.215,
+          "byDiary": {
+            "empty": 3.8,
+            "few": 3.852,
+            "many": 3.956
+          }
+        },
+        "+ what landed (all)": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.786,
+          "loved": 0.504,
+          "yield": 3.93,
+          "finds": 2.336,
+          "personal": 0.465,
+          "voices": 4.939,
+          "crowded": 0.396,
+          "range": 0.217,
+          "byDiary": {
+            "empty": 3.8,
+            "few": 3.805,
+            "many": 3.967
+          }
+        },
+        "all, one voice per film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.725,
+          "loved": 0.434,
+          "yield": 3.627,
+          "finds": 2.827,
+          "personal": 0.456,
+          "voices": 4.934,
+          "crowded": 0.203,
+          "range": 0.329,
+          "byDiary": {
+            "empty": 3.4,
+            "few": 3.793,
+            "many": 3.604
+          }
+        },
+        "all, every voice counts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.767,
+          "loved": 0.471,
+          "yield": 3.833,
+          "finds": 1.798,
+          "personal": 0.328,
+          "voices": 4.936,
+          "crowded": 0.526,
+          "range": 0.186,
+          "byDiary": {
+            "empty": 3.733,
+            "few": 3.786,
+            "many": 3.852
+          }
+        },
+        "all, no spreading": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.791,
+          "loved": 0.522,
+          "yield": 3.955,
+          "finds": 2.318,
+          "personal": 0.456,
+          "voices": 3.183,
+          "crowded": 0.408,
+          "range": 0.215,
+          "byDiary": {
+            "empty": 4,
+            "few": 3.925,
+            "many": 3.963
+          }
+        },
+        "all, no veto": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.781,
+          "loved": 0.504,
+          "yield": 3.907,
+          "finds": 1.836,
+          "personal": 0.561,
+          "voices": 4.939,
+          "crowded": 0.53,
+          "range": 0.212,
+          "byDiary": {
+            "empty": 3.733,
+            "few": 3.819,
+            "many": 3.936
+          }
+        },
+        "who loved it, anyone tied": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.766,
+          "loved": 0.484,
+          "yield": 3.83,
+          "finds": 2.368,
+          "personal": 0.35,
+          "voices": 4.941,
+          "crowded": 0.373,
+          "range": 0.186,
+          "byDiary": {
+            "empty": 3.8,
+            "few": 3.773,
+            "many": 3.849
+          }
+        },
+        "who is close, any response": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.699,
+          "loved": 0.393,
+          "yield": 3.493,
+          "finds": 1.904,
+          "personal": 0.289,
+          "voices": 4.897,
+          "crowded": 0.427,
+          "range": 0.348,
+          "byDiary": {
+            "empty": 3.267,
+            "few": 3.549,
+            "many": 3.489
+          }
+        },
+        "if ties were known exactly": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.866,
+          "loved": 0.595,
+          "yield": 4.33,
+          "finds": 2.643,
+          "personal": 1.004,
+          "voices": 4.831,
+          "crowded": 0.386,
+          "range": 0.288,
+          "byDiary": {
+            "empty": 4,
+            "few": 4.316,
+            "many": 4.353
+          }
+        }
+      }
+    },
+    "a circle of friends (30)": {
+      "ceiling": 5,
+      "strategies": {
+        "any film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.441,
+          "loved": 0.198,
+          "yield": 2.203,
+          "finds": 2.078,
+          "personal": -0.082,
+          "voices": null,
+          "crowded": 0.039,
+          "range": 0.91,
+          "byDiary": {
+            "empty": 1.667,
+            "few": 2.886,
+            "many": 2.036
+          }
+        },
+        "most written about": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.55,
+          "loved": 0.291,
+          "yield": 2.752,
+          "finds": 1.134,
+          "personal": 0.135,
+          "voices": null,
+          "crowded": 0.544,
+          "range": 0.249,
+          "byDiary": {
+            "empty": 3.667,
+            "few": 3.256,
+            "many": 2.639
+          }
+        },
+        "best loved overall": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.627,
+          "loved": 0.336,
+          "yield": 3.135,
+          "finds": 2.428,
+          "personal": 0.146,
+          "voices": null,
+          "crowded": 0.182,
+          "range": 0.192,
+          "byDiary": {
+            "empty": 4,
+            "few": 3.597,
+            "many": 2.947
+          }
+        },
+        "previous engine": {
+          "reached": 0.932,
+          "filled": 0.932,
+          "liked": 0.473,
+          "loved": 0.216,
+          "yield": 2.207,
+          "finds": 2.115,
+          "personal": 0.138,
+          "voices": 2.405,
+          "crowded": 0.027,
+          "range": 0.573,
+          "byDiary": {
+            "empty": 0,
+            "few": 2,
+            "many": 2.316
+          }
+        },
+        "feelings only": {
+          "reached": 0.92,
+          "filled": 0.92,
+          "liked": 0.521,
+          "loved": 0.267,
+          "yield": 2.398,
+          "finds": 1.748,
+          "personal": 0.158,
+          "voices": 3.948,
+          "crowded": 0.248,
+          "range": 0.441,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.072,
+            "many": 2.504
+          }
+        },
+        "verdicts only": {
+          "reached": 0.909,
+          "filled": 0.909,
+          "liked": 0.625,
+          "loved": 0.335,
+          "yield": 2.841,
+          "finds": 2.304,
+          "personal": 0.435,
+          "voices": 4.203,
+          "crowded": 0.174,
+          "range": 0.376,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.05,
+            "many": 3.055
+          }
+        },
+        "feelings + verdicts": {
+          "reached": 0.932,
+          "filled": 0.932,
+          "liked": 0.635,
+          "loved": 0.342,
+          "yield": 2.955,
+          "finds": 2.383,
+          "personal": 0.714,
+          "voices": 4.549,
+          "crowded": 0.189,
+          "range": 0.343,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.619,
+            "many": 3.093
+          }
+        },
+        "follows only": {
+          "reached": 1,
+          "filled": 0.966,
+          "liked": 0.531,
+          "loved": 0.241,
+          "yield": 2.593,
+          "finds": 1.897,
+          "personal": 0.216,
+          "voices": 3.487,
+          "crowded": 0.235,
+          "range": 0.551,
+          "byDiary": {
+            "empty": 4,
+            "few": 3.356,
+            "many": 2.363
+          }
+        },
+        "+ follows": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.632,
+          "loved": 0.337,
+          "yield": 3.161,
+          "finds": 2.476,
+          "personal": 0.469,
+          "voices": 4.705,
+          "crowded": 0.197,
+          "range": 0.376,
+          "byDiary": {
+            "empty": 4.333,
+            "few": 3.286,
+            "many": 3.071
+          }
+        },
+        "+ what landed (all)": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.637,
+          "loved": 0.33,
+          "yield": 3.183,
+          "finds": 2.51,
+          "personal": 0.548,
+          "voices": 4.693,
+          "crowded": 0.194,
+          "range": 0.376,
+          "byDiary": {
+            "empty": 4.333,
+            "few": 3.411,
+            "many": 3.059
+          }
+        },
+        "all, one voice per film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.623,
+          "loved": 0.325,
+          "yield": 3.116,
+          "finds": 2.645,
+          "personal": 0.59,
+          "voices": 4.705,
+          "crowded": 0.135,
+          "range": 0.392,
+          "byDiary": {
+            "empty": 4,
+            "few": 3.15,
+            "many": 3.041
+          }
+        },
+        "all, every voice counts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.639,
+          "loved": 0.346,
+          "yield": 3.195,
+          "finds": 2.452,
+          "personal": 0.514,
+          "voices": 4.66,
+          "crowded": 0.226,
+          "range": 0.372,
+          "byDiary": {
+            "empty": 4.333,
+            "few": 3.411,
+            "many": 3.074
+          }
+        },
+        "all, no spreading": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.634,
+          "loved": 0.341,
+          "yield": 3.169,
+          "finds": 2.369,
+          "personal": 0.511,
+          "voices": 3.354,
+          "crowded": 0.222,
+          "range": 0.363,
+          "byDiary": {
+            "empty": 4.333,
+            "few": 3.411,
+            "many": 3.063
+          }
+        },
+        "all, no veto": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.637,
+          "loved": 0.336,
+          "yield": 3.183,
+          "finds": 2.418,
+          "personal": 0.431,
+          "voices": 4.784,
+          "crowded": 0.222,
+          "range": 0.372,
+          "byDiary": {
+            "empty": 4.333,
+            "few": 3.286,
+            "many": 3.11
+          }
+        },
+        "who loved it, anyone tied": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.613,
+          "loved": 0.341,
+          "yield": 3.067,
+          "finds": 2.336,
+          "personal": 0.305,
+          "voices": 4.852,
+          "crowded": 0.201,
+          "range": 0.294,
+          "byDiary": {
+            "empty": 4.333,
+            "few": 3.233,
+            "many": 2.956
+          }
+        },
+        "who is close, any response": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.609,
+          "loved": 0.311,
+          "yield": 3.044,
+          "finds": 2.13,
+          "personal": 0.575,
+          "voices": 4.466,
+          "crowded": 0.278,
+          "range": 0.413,
+          "byDiary": {
+            "empty": 4.333,
+            "few": 3.494,
+            "many": 2.873
+          }
+        },
+        "if ties were known exactly": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.723,
+          "loved": 0.403,
+          "yield": 3.613,
+          "finds": 2.848,
+          "personal": 0.945,
+          "voices": 4.15,
+          "crowded": 0.215,
+          "range": 0.433,
+          "byDiary": {
+            "empty": 4.333,
+            "few": 3.753,
+            "many": 3.517
+          }
+        }
+      }
+    },
+    "a city (400)": {
+      "ceiling": 5,
+      "strategies": {
+        "any film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.447,
+          "loved": 0.195,
+          "yield": 2.233,
+          "finds": 2.084,
+          "personal": 0.035,
+          "voices": null,
+          "crowded": 0.046,
+          "range": 0.998,
+          "byDiary": {
+            "empty": 2.427,
+            "few": 2.184,
+            "many": 2.238
+          }
+        },
+        "most written about": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.708,
+          "loved": 0.405,
+          "yield": 3.541,
+          "finds": 0,
+          "personal": 0.016,
+          "voices": null,
+          "crowded": 1,
+          "range": 0.024,
+          "byDiary": {
+            "empty": 3.19,
+            "few": 3.733,
+            "many": 3.516
+          }
+        },
+        "best loved overall": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.844,
+          "loved": 0.536,
+          "yield": 4.221,
+          "finds": 1.945,
+          "personal": 0.047,
+          "voices": null,
+          "crowded": 0.522,
+          "range": 0.018,
+          "byDiary": {
+            "empty": 4.23,
+            "few": 4.227,
+            "many": 4.224
+          }
+        },
+        "previous engine": {
+          "reached": 0.958,
+          "filled": 0.958,
+          "liked": 0.502,
+          "loved": 0.242,
+          "yield": 2.406,
+          "finds": 2.367,
+          "personal": 0.059,
+          "voices": 3.612,
+          "crowded": 0.013,
+          "range": 0.553,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.538,
+            "many": 2.5
+          }
+        },
+        "feelings only": {
+          "reached": 0.953,
+          "filled": 0.953,
+          "liked": 0.665,
+          "loved": 0.379,
+          "yield": 3.172,
+          "finds": 1.319,
+          "personal": 0.226,
+          "voices": 4.893,
+          "crowded": 0.555,
+          "range": 0.332,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.207,
+            "many": 3.317
+          }
+        },
+        "verdicts only": {
+          "reached": 0.943,
+          "filled": 0.941,
+          "liked": 0.81,
+          "loved": 0.54,
+          "yield": 3.815,
+          "finds": 1.74,
+          "personal": 0.603,
+          "voices": 4.918,
+          "crowded": 0.533,
+          "range": 0.229,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.364,
+            "many": 4.094
+          }
+        },
+        "feelings + verdicts": {
+          "reached": 0.958,
+          "filled": 0.958,
+          "liked": 0.806,
+          "loved": 0.533,
+          "yield": 3.861,
+          "finds": 1.75,
+          "personal": 0.491,
+          "voices": 4.945,
+          "crowded": 0.533,
+          "range": 0.211,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.668,
+            "many": 4.084
+          }
+        },
+        "follows only": {
+          "reached": 0.999,
+          "filled": 0.992,
+          "liked": 0.646,
+          "loved": 0.353,
+          "yield": 3.215,
+          "finds": 1.682,
+          "personal": 0.429,
+          "voices": 3.986,
+          "crowded": 0.421,
+          "range": 0.458,
+          "byDiary": {
+            "empty": 2.926,
+            "few": 3.36,
+            "many": 3.197
+          }
+        },
+        "+ follows": {
+          "reached": 0.999,
+          "filled": 0.999,
+          "liked": 0.815,
+          "loved": 0.542,
+          "yield": 4.071,
+          "finds": 1.893,
+          "personal": 0.564,
+          "voices": 4.951,
+          "crowded": 0.524,
+          "range": 0.24,
+          "byDiary": {
+            "empty": 3.521,
+            "few": 3.977,
+            "many": 4.117
+          }
+        },
+        "+ what landed (all)": {
+          "reached": 0.999,
+          "filled": 0.999,
+          "liked": 0.812,
+          "loved": 0.542,
+          "yield": 4.055,
+          "finds": 1.88,
+          "personal": 0.556,
+          "voices": 4.951,
+          "crowded": 0.525,
+          "range": 0.241,
+          "byDiary": {
+            "empty": 3.521,
+            "few": 3.973,
+            "many": 4.098
+          }
+        },
+        "all, one voice per film": {
+          "reached": 0.999,
+          "filled": 0.999,
+          "liked": 0.733,
+          "loved": 0.44,
+          "yield": 3.663,
+          "finds": 2.729,
+          "personal": 0.569,
+          "voices": 4.954,
+          "crowded": 0.23,
+          "range": 0.352,
+          "byDiary": {
+            "empty": 3.223,
+            "few": 3.472,
+            "many": 3.722
+          }
+        },
+        "all, every voice counts": {
+          "reached": 0.999,
+          "filled": 0.999,
+          "liked": 0.806,
+          "loved": 0.508,
+          "yield": 4.028,
+          "finds": 0.888,
+          "personal": 0.364,
+          "voices": 4.951,
+          "crowded": 0.774,
+          "range": 0.179,
+          "byDiary": {
+            "empty": 3.521,
+            "few": 3.85,
+            "many": 4.089
+          }
+        },
+        "all, no spreading": {
+          "reached": 0.999,
+          "filled": 0.999,
+          "liked": 0.825,
+          "loved": 0.561,
+          "yield": 4.12,
+          "finds": 1.887,
+          "personal": 0.603,
+          "voices": 3.318,
+          "crowded": 0.531,
+          "range": 0.231,
+          "byDiary": {
+            "empty": 3.606,
+            "few": 3.975,
+            "many": 4.178
+          }
+        },
+        "all, no veto": {
+          "reached": 0.999,
+          "filled": 0.999,
+          "liked": 0.811,
+          "loved": 0.555,
+          "yield": 4.052,
+          "finds": 1.482,
+          "personal": 0.688,
+          "voices": 4.951,
+          "crowded": 0.631,
+          "range": 0.231,
+          "byDiary": {
+            "empty": 3.491,
+            "few": 3.953,
+            "many": 4.1
+          }
+        },
+        "who loved it, anyone tied": {
+          "reached": 0.999,
+          "filled": 0.999,
+          "liked": 0.813,
+          "loved": 0.536,
+          "yield": 4.059,
+          "finds": 1.984,
+          "personal": 0.528,
+          "voices": 4.953,
+          "crowded": 0.501,
+          "range": 0.219,
+          "byDiary": {
+            "empty": 3.491,
+            "few": 4.013,
+            "many": 4.098
+          }
+        },
+        "who is close, any response": {
+          "reached": 0.999,
+          "filled": 0.999,
+          "liked": 0.716,
+          "loved": 0.421,
+          "yield": 3.577,
+          "finds": 1.433,
+          "personal": 0.415,
+          "voices": 4.936,
+          "crowded": 0.575,
+          "range": 0.335,
+          "byDiary": {
+            "empty": 3.074,
+            "few": 3.571,
+            "many": 3.597
+          }
+        },
+        "if ties were known exactly": {
+          "reached": 0.999,
+          "filled": 0.999,
+          "liked": 0.917,
+          "loved": 0.675,
+          "yield": 4.578,
+          "finds": 2.242,
+          "personal": 1.206,
+          "voices": 4.895,
+          "crowded": 0.503,
+          "range": 0.26,
+          "byDiary": {
+            "empty": 3.657,
+            "few": 4.35,
+            "many": 4.671
+          }
+        }
+      }
+    },
+    "feelings say nothing about enjoyment": {
+      "ceiling": 5,
+      "strategies": {
+        "any film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.474,
+          "loved": 0.218,
+          "yield": 2.371,
+          "finds": 2.229,
+          "personal": -0.006,
+          "voices": null,
+          "crowded": 0.042,
+          "range": 0.987,
+          "byDiary": {
+            "empty": 2.533,
+            "few": 2.272,
+            "many": 2.381
+          }
+        },
+        "most written about": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.717,
+          "loved": 0.438,
+          "yield": 3.586,
+          "finds": 0.058,
+          "personal": 0.103,
+          "voices": null,
+          "crowded": 0.979,
+          "range": 0.068,
+          "byDiary": {
+            "empty": 3.067,
+            "few": 3.666,
+            "many": 3.599
+          }
+        },
+        "best loved overall": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.761,
+          "loved": 0.482,
+          "yield": 3.805,
+          "finds": 2.157,
+          "personal": 0.071,
+          "voices": null,
+          "crowded": 0.421,
+          "range": 0.052,
+          "byDiary": {
+            "empty": 3.8,
+            "few": 3.86,
+            "many": 3.795
+          }
+        },
+        "previous engine": {
+          "reached": 0.954,
+          "filled": 0.954,
+          "liked": 0.446,
+          "loved": 0.212,
+          "yield": 2.125,
+          "finds": 2.076,
+          "personal": -0.056,
+          "voices": 3.286,
+          "crowded": 0.012,
+          "range": 0.544,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.538,
+            "many": 2.131
+          }
+        },
+        "feelings only": {
+          "reached": 0.954,
+          "filled": 0.954,
+          "liked": 0.619,
+          "loved": 0.34,
+          "yield": 2.951,
+          "finds": 1.584,
+          "personal": 0.119,
+          "voices": 4.849,
+          "crowded": 0.421,
+          "range": 0.36,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.856,
+            "many": 3.095
+          }
+        },
+        "verdicts only": {
+          "reached": 0.936,
+          "filled": 0.936,
+          "liked": 0.76,
+          "loved": 0.476,
+          "yield": 3.559,
+          "finds": 2.151,
+          "personal": 0.326,
+          "voices": 4.851,
+          "crowded": 0.394,
+          "range": 0.245,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.007,
+            "many": 3.828
+          }
+        },
+        "feelings + verdicts": {
+          "reached": 0.956,
+          "filled": 0.956,
+          "liked": 0.756,
+          "loved": 0.471,
+          "yield": 3.612,
+          "finds": 2.214,
+          "personal": 0.266,
+          "voices": 4.941,
+          "crowded": 0.38,
+          "range": 0.213,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.431,
+            "many": 3.811
+          }
+        },
+        "follows only": {
+          "reached": 1,
+          "filled": 0.993,
+          "liked": 0.636,
+          "loved": 0.356,
+          "yield": 3.168,
+          "finds": 1.801,
+          "personal": 0.3,
+          "voices": 3.897,
+          "crowded": 0.362,
+          "range": 0.459,
+          "byDiary": {
+            "empty": 3.133,
+            "few": 3.296,
+            "many": 3.148
+          }
+        },
+        "+ follows": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.772,
+          "loved": 0.485,
+          "yield": 3.859,
+          "finds": 2.317,
+          "personal": 0.394,
+          "voices": 4.944,
+          "crowded": 0.383,
+          "range": 0.22,
+          "byDiary": {
+            "empty": 3.8,
+            "few": 3.84,
+            "many": 3.866
+          }
+        },
+        "+ what landed (all)": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.772,
+          "loved": 0.488,
+          "yield": 3.859,
+          "finds": 2.327,
+          "personal": 0.375,
+          "voices": 4.944,
+          "crowded": 0.381,
+          "range": 0.223,
+          "byDiary": {
+            "empty": 3.8,
+            "few": 3.833,
+            "many": 3.87
+          }
+        },
+        "all, one voice per film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.699,
+          "loved": 0.404,
+          "yield": 3.497,
+          "finds": 2.734,
+          "personal": 0.294,
+          "voices": 4.939,
+          "crowded": 0.195,
+          "range": 0.333,
+          "byDiary": {
+            "empty": 3.4,
+            "few": 3.681,
+            "many": 3.463
+          }
+        },
+        "all, every voice counts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.755,
+          "loved": 0.459,
+          "yield": 3.774,
+          "finds": 1.835,
+          "personal": 0.21,
+          "voices": 4.939,
+          "crowded": 0.509,
+          "range": 0.189,
+          "byDiary": {
+            "empty": 3.733,
+            "few": 3.806,
+            "many": 3.773
+          }
+        },
+        "all, no spreading": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.784,
+          "loved": 0.507,
+          "yield": 3.921,
+          "finds": 2.304,
+          "personal": 0.402,
+          "voices": 3.227,
+          "crowded": 0.405,
+          "range": 0.21,
+          "byDiary": {
+            "empty": 4,
+            "few": 3.866,
+            "many": 3.931
+          }
+        },
+        "all, no veto": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.768,
+          "loved": 0.483,
+          "yield": 3.838,
+          "finds": 1.765,
+          "personal": 0.502,
+          "voices": 4.944,
+          "crowded": 0.533,
+          "range": 0.206,
+          "byDiary": {
+            "empty": 3.733,
+            "few": 3.813,
+            "many": 3.85
+          }
+        },
+        "who loved it, anyone tied": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.757,
+          "loved": 0.475,
+          "yield": 3.783,
+          "finds": 2.28,
+          "personal": 0.281,
+          "voices": 4.936,
+          "crowded": 0.381,
+          "range": 0.188,
+          "byDiary": {
+            "empty": 3.8,
+            "few": 3.807,
+            "many": 3.779
+          }
+        },
+        "who is close, any response": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.699,
+          "loved": 0.394,
+          "yield": 3.494,
+          "finds": 1.858,
+          "personal": 0.351,
+          "voices": 4.907,
+          "crowded": 0.448,
+          "range": 0.341,
+          "byDiary": {
+            "empty": 3.267,
+            "few": 3.589,
+            "many": 3.48
+          }
+        },
+        "if ties were known exactly": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.867,
+          "loved": 0.593,
+          "yield": 4.335,
+          "finds": 2.63,
+          "personal": 1.001,
+          "voices": 4.829,
+          "crowded": 0.39,
+          "range": 0.285,
+          "byDiary": {
+            "empty": 4,
+            "few": 4.343,
+            "many": 4.354
+          }
+        }
+      }
+    },
+    "follows are random": {
+      "ceiling": 5,
+      "strategies": {
+        "any film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.486,
+          "loved": 0.224,
+          "yield": 2.43,
+          "finds": 2.283,
+          "personal": 0.065,
+          "voices": null,
+          "crowded": 0.041,
+          "range": 0.986,
+          "byDiary": {
+            "empty": 2.139,
+            "few": 2.673,
+            "many": 2.39
+          }
+        },
+        "most written about": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.7,
+          "loved": 0.381,
+          "yield": 3.501,
+          "finds": 0.037,
+          "personal": 0.027,
+          "voices": null,
+          "crowded": 0.988,
+          "range": 0.067,
+          "byDiary": {
+            "empty": 3.083,
+            "few": 3.579,
+            "many": 3.512
+          }
+        },
+        "best loved overall": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.778,
+          "loved": 0.502,
+          "yield": 3.892,
+          "finds": 2.021,
+          "personal": 0.086,
+          "voices": null,
+          "crowded": 0.499,
+          "range": 0.057,
+          "byDiary": {
+            "empty": 3.722,
+            "few": 3.93,
+            "many": 3.904
+          }
+        },
+        "previous engine": {
+          "reached": 0.958,
+          "filled": 0.958,
+          "liked": 0.516,
+          "loved": 0.262,
+          "yield": 2.471,
+          "finds": 2.413,
+          "personal": 0.213,
+          "voices": 3.29,
+          "crowded": 0.015,
+          "range": 0.536,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.815,
+            "many": 2.502
+          }
+        },
+        "feelings only": {
+          "reached": 0.951,
+          "filled": 0.951,
+          "liked": 0.631,
+          "loved": 0.325,
+          "yield": 3.002,
+          "finds": 1.594,
+          "personal": 0.086,
+          "voices": 4.763,
+          "crowded": 0.424,
+          "range": 0.361,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.15,
+            "many": 3.103
+          }
+        },
+        "verdicts only": {
+          "reached": 0.944,
+          "filled": 0.944,
+          "liked": 0.748,
+          "loved": 0.458,
+          "yield": 3.529,
+          "finds": 2.104,
+          "personal": 0.255,
+          "voices": 4.85,
+          "crowded": 0.399,
+          "range": 0.238,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.305,
+            "many": 3.736
+          }
+        },
+        "feelings + verdicts": {
+          "reached": 0.958,
+          "filled": 0.958,
+          "liked": 0.754,
+          "loved": 0.468,
+          "yield": 3.613,
+          "finds": 2.148,
+          "personal": 0.187,
+          "voices": 4.888,
+          "crowded": 0.404,
+          "range": 0.224,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.67,
+            "many": 3.758
+          }
+        },
+        "follows only": {
+          "reached": 1,
+          "filled": 0.988,
+          "liked": 0.61,
+          "loved": 0.311,
+          "yield": 3.031,
+          "finds": 1.692,
+          "personal": 0.193,
+          "voices": 3.925,
+          "crowded": 0.392,
+          "range": 0.447,
+          "byDiary": {
+            "empty": 2.75,
+            "few": 3.113,
+            "many": 3.028
+          }
+        },
+        "+ follows": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.741,
+          "loved": 0.454,
+          "yield": 3.703,
+          "finds": 2.187,
+          "personal": 0.12,
+          "voices": 4.941,
+          "crowded": 0.409,
+          "range": 0.239,
+          "byDiary": {
+            "empty": 2.583,
+            "few": 3.816,
+            "many": 3.733
+          }
+        },
+        "+ what landed (all)": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.742,
+          "loved": 0.453,
+          "yield": 3.708,
+          "finds": 2.185,
+          "personal": 0.14,
+          "voices": 4.941,
+          "crowded": 0.409,
+          "range": 0.236,
+          "byDiary": {
+            "empty": 2.583,
+            "few": 3.79,
+            "many": 3.746
+          }
+        },
+        "all, one voice per film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.674,
+          "loved": 0.403,
+          "yield": 3.371,
+          "finds": 2.513,
+          "personal": 0.249,
+          "voices": 4.941,
+          "crowded": 0.237,
+          "range": 0.357,
+          "byDiary": {
+            "empty": 3.222,
+            "few": 3.262,
+            "many": 3.409
+          }
+        },
+        "all, every voice counts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.722,
+          "loved": 0.411,
+          "yield": 3.611,
+          "finds": 1.411,
+          "personal": 0.074,
+          "voices": 4.941,
+          "crowded": 0.602,
+          "range": 0.201,
+          "byDiary": {
+            "empty": 2.583,
+            "few": 3.677,
+            "many": 3.645
+          }
+        },
+        "all, no spreading": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.75,
+          "loved": 0.465,
+          "yield": 3.752,
+          "finds": 2.185,
+          "personal": 0.137,
+          "voices": 3.347,
+          "crowded": 0.423,
+          "range": 0.22,
+          "byDiary": {
+            "empty": 2.917,
+            "few": 3.597,
+            "many": 3.833
+          }
+        },
+        "all, no veto": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.734,
+          "loved": 0.444,
+          "yield": 3.669,
+          "finds": 1.758,
+          "personal": 0.242,
+          "voices": 4.941,
+          "crowded": 0.513,
+          "range": 0.226,
+          "byDiary": {
+            "empty": 2.583,
+            "few": 3.608,
+            "many": 3.739
+          }
+        },
+        "who loved it, anyone tied": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.731,
+          "loved": 0.436,
+          "yield": 3.656,
+          "finds": 2.22,
+          "personal": 0.054,
+          "voices": 4.951,
+          "crowded": 0.394,
+          "range": 0.204,
+          "byDiary": {
+            "empty": 2.528,
+            "few": 3.674,
+            "many": 3.708
+          }
+        },
+        "who is close, any response": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.681,
+          "loved": 0.361,
+          "yield": 3.404,
+          "finds": 1.685,
+          "personal": 0.294,
+          "voices": 4.909,
+          "crowded": 0.478,
+          "range": 0.356,
+          "byDiary": {
+            "empty": 2.75,
+            "few": 3.576,
+            "many": 3.399
+          }
+        },
+        "if ties were known exactly": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.842,
+          "loved": 0.568,
+          "yield": 4.208,
+          "finds": 2.442,
+          "personal": 0.751,
+          "voices": 4.816,
+          "crowded": 0.424,
+          "range": 0.295,
+          "byDiary": {
+            "empty": 2.972,
+            "few": 4.09,
+            "many": 4.29
+          }
+        }
+      }
+    },
+    "follows are like-minded": {
+      "ceiling": 5,
+      "strategies": {
+        "any film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.472,
+          "loved": 0.213,
+          "yield": 2.359,
+          "finds": 2.215,
+          "personal": 0.102,
+          "voices": null,
+          "crowded": 0.043,
+          "range": 0.995,
+          "byDiary": {
+            "empty": 1.8,
+            "few": 2.258,
+            "many": 2.385
+          }
+        },
+        "most written about": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.639,
+          "loved": 0.342,
+          "yield": 3.194,
+          "finds": 0.015,
+          "personal": -0.053,
+          "voices": null,
+          "crowded": 0.997,
+          "range": 0.059,
+          "byDiary": {
+            "empty": 2.033,
+            "few": 3.256,
+            "many": 3.207
+          }
+        },
+        "best loved overall": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.708,
+          "loved": 0.424,
+          "yield": 3.541,
+          "finds": 2.123,
+          "personal": 0.005,
+          "voices": null,
+          "crowded": 0.408,
+          "range": 0.038,
+          "byDiary": {
+            "empty": 3.667,
+            "few": 3.602,
+            "many": 3.516
+          }
+        },
+        "previous engine": {
+          "reached": 0.963,
+          "filled": 0.963,
+          "liked": 0.549,
+          "loved": 0.281,
+          "yield": 2.647,
+          "finds": 2.596,
+          "personal": 0.182,
+          "voices": 3.27,
+          "crowded": 0.016,
+          "range": 0.538,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.839,
+            "many": 2.7
+          }
+        },
+        "feelings only": {
+          "reached": 0.961,
+          "filled": 0.961,
+          "liked": 0.655,
+          "loved": 0.358,
+          "yield": 3.148,
+          "finds": 1.871,
+          "personal": 0.329,
+          "voices": 4.791,
+          "crowded": 0.376,
+          "range": 0.415,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.217,
+            "many": 3.248
+          }
+        },
+        "verdicts only": {
+          "reached": 0.939,
+          "filled": 0.936,
+          "liked": 0.772,
+          "loved": 0.492,
+          "yield": 3.625,
+          "finds": 2.35,
+          "personal": 0.556,
+          "voices": 4.893,
+          "crowded": 0.346,
+          "range": 0.291,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.941,
+            "many": 3.916
+          }
+        },
+        "feelings + verdicts": {
+          "reached": 0.966,
+          "filled": 0.966,
+          "liked": 0.784,
+          "loved": 0.52,
+          "yield": 3.789,
+          "finds": 2.523,
+          "personal": 0.527,
+          "voices": 4.936,
+          "crowded": 0.335,
+          "range": 0.279,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.562,
+            "many": 3.978
+          }
+        },
+        "follows only": {
+          "reached": 1,
+          "filled": 0.99,
+          "liked": 0.666,
+          "loved": 0.372,
+          "yield": 3.325,
+          "finds": 2.346,
+          "personal": 0.635,
+          "voices": 3.657,
+          "crowded": 0.256,
+          "range": 0.542,
+          "byDiary": {
+            "empty": 4.167,
+            "few": 3.692,
+            "many": 3.214
+          }
+        },
+        "+ follows": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.797,
+          "loved": 0.524,
+          "yield": 3.987,
+          "finds": 2.675,
+          "personal": 0.705,
+          "voices": 4.963,
+          "crowded": 0.334,
+          "range": 0.295,
+          "byDiary": {
+            "empty": 4.2,
+            "few": 3.901,
+            "many": 4.003
+          }
+        },
+        "+ what landed (all)": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.798,
+          "loved": 0.526,
+          "yield": 3.991,
+          "finds": 2.67,
+          "personal": 0.719,
+          "voices": 4.963,
+          "crowded": 0.334,
+          "range": 0.295,
+          "byDiary": {
+            "empty": 4.2,
+            "few": 3.903,
+            "many": 4.009
+          }
+        },
+        "all, one voice per film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.725,
+          "loved": 0.438,
+          "yield": 3.625,
+          "finds": 2.852,
+          "personal": 0.628,
+          "voices": 4.946,
+          "crowded": 0.198,
+          "range": 0.371,
+          "byDiary": {
+            "empty": 3.967,
+            "few": 3.714,
+            "many": 3.596
+          }
+        },
+        "all, every voice counts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.771,
+          "loved": 0.494,
+          "yield": 3.856,
+          "finds": 2.003,
+          "personal": 0.486,
+          "voices": 4.961,
+          "crowded": 0.496,
+          "range": 0.248,
+          "byDiary": {
+            "empty": 4.2,
+            "few": 3.882,
+            "many": 3.844
+          }
+        },
+        "all, no spreading": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.812,
+          "loved": 0.542,
+          "yield": 4.061,
+          "finds": 2.702,
+          "personal": 0.749,
+          "voices": 3.124,
+          "crowded": 0.334,
+          "range": 0.263,
+          "byDiary": {
+            "empty": 4.4,
+            "few": 3.996,
+            "many": 4.066
+          }
+        },
+        "all, no veto": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.786,
+          "loved": 0.514,
+          "yield": 3.931,
+          "finds": 2.375,
+          "personal": 0.683,
+          "voices": 4.966,
+          "crowded": 0.403,
+          "range": 0.282,
+          "byDiary": {
+            "empty": 4.267,
+            "few": 3.915,
+            "many": 3.926
+          }
+        },
+        "who loved it, anyone tied": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.787,
+          "loved": 0.51,
+          "yield": 3.933,
+          "finds": 2.643,
+          "personal": 0.543,
+          "voices": 4.954,
+          "crowded": 0.332,
+          "range": 0.239,
+          "byDiary": {
+            "empty": 4.267,
+            "few": 3.849,
+            "many": 3.944
+          }
+        },
+        "who is close, any response": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.694,
+          "loved": 0.392,
+          "yield": 3.471,
+          "finds": 2.155,
+          "personal": 0.474,
+          "voices": 4.895,
+          "crowded": 0.355,
+          "range": 0.431,
+          "byDiary": {
+            "empty": 4.367,
+            "few": 3.592,
+            "many": 3.411
+          }
+        },
+        "if ties were known exactly": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.857,
+          "loved": 0.591,
+          "yield": 4.286,
+          "finds": 2.981,
+          "personal": 1.037,
+          "voices": 4.919,
+          "crowded": 0.298,
+          "range": 0.327,
+          "byDiary": {
+            "empty": 4.133,
+            "few": 4.213,
+            "many": 4.314
+          }
+        }
+      }
+    },
+    "few verdicts": {
+      "ceiling": 5,
+      "strategies": {
+        "any film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.472,
+          "loved": 0.217,
+          "yield": 2.358,
+          "finds": 2.224,
+          "personal": -0.004,
+          "voices": null,
+          "crowded": 0.043,
+          "range": 0.983,
+          "byDiary": {
+            "empty": 2.295,
+            "few": 2.552,
+            "many": 2.324
+          }
+        },
+        "most written about": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.675,
+          "loved": 0.383,
+          "yield": 3.373,
+          "finds": 0.005,
+          "personal": 0.005,
+          "voices": null,
+          "crowded": 0.998,
+          "range": 0.052,
+          "byDiary": {
+            "empty": 3.729,
+            "few": 3.563,
+            "many": 3.323
+          }
+        },
+        "best loved overall": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.684,
+          "loved": 0.404,
+          "yield": 3.418,
+          "finds": 0.481,
+          "personal": 0.105,
+          "voices": null,
+          "crowded": 0.819,
+          "range": 0.046,
+          "byDiary": {
+            "empty": 3.66,
+            "few": 3.641,
+            "many": 3.366
+          }
+        },
+        "previous engine": {
+          "reached": 0.951,
+          "filled": 0.949,
+          "liked": 0.522,
+          "loved": 0.253,
+          "yield": 2.484,
+          "finds": 2.432,
+          "personal": 0.138,
+          "voices": 3.181,
+          "crowded": 0.015,
+          "range": 0.548,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.521,
+            "many": 2.596
+          }
+        },
+        "feelings only": {
+          "reached": 0.946,
+          "filled": 0.944,
+          "liked": 0.623,
+          "loved": 0.358,
+          "yield": 2.944,
+          "finds": 1.399,
+          "personal": 0.227,
+          "voices": 4.788,
+          "crowded": 0.48,
+          "range": 0.352,
+          "byDiary": {
+            "empty": 0,
+            "few": 2.791,
+            "many": 3.115
+          }
+        },
+        "verdicts only": {
+          "reached": 0.733,
+          "filled": 0.714,
+          "liked": 0.636,
+          "loved": 0.354,
+          "yield": 2.299,
+          "finds": 1.338,
+          "personal": 0.247,
+          "voices": 3.911,
+          "crowded": 0.392,
+          "range": 0.335,
+          "byDiary": {
+            "empty": 0,
+            "few": 1.008,
+            "many": 2.662
+          }
+        },
+        "feelings + verdicts": {
+          "reached": 0.949,
+          "filled": 0.946,
+          "liked": 0.702,
+          "loved": 0.413,
+          "yield": 3.327,
+          "finds": 1.327,
+          "personal": 0.276,
+          "voices": 4.869,
+          "crowded": 0.585,
+          "range": 0.192,
+          "byDiary": {
+            "empty": 0,
+            "few": 3.346,
+            "many": 3.485
+          }
+        },
+        "follows only": {
+          "reached": 1,
+          "filled": 0.98,
+          "liked": 0.627,
+          "loved": 0.338,
+          "yield": 3.11,
+          "finds": 1.794,
+          "personal": 0.343,
+          "voices": 3.863,
+          "crowded": 0.373,
+          "range": 0.436,
+          "byDiary": {
+            "empty": 3.138,
+            "few": 3.314,
+            "many": 3.071
+          }
+        },
+        "+ follows": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.701,
+          "loved": 0.415,
+          "yield": 3.506,
+          "finds": 1.393,
+          "personal": 0.191,
+          "voices": 4.924,
+          "crowded": 0.587,
+          "range": 0.204,
+          "byDiary": {
+            "empty": 3.364,
+            "few": 3.555,
+            "many": 3.5
+          }
+        },
+        "+ what landed (all)": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.701,
+          "loved": 0.415,
+          "yield": 3.506,
+          "finds": 1.4,
+          "personal": 0.201,
+          "voices": 4.924,
+          "crowded": 0.586,
+          "range": 0.204,
+          "byDiary": {
+            "empty": 3.364,
+            "few": 3.541,
+            "many": 3.503
+          }
+        },
+        "all, one voice per film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.686,
+          "loved": 0.387,
+          "yield": 3.43,
+          "finds": 2.505,
+          "personal": 0.443,
+          "voices": 4.89,
+          "crowded": 0.26,
+          "range": 0.251,
+          "byDiary": {
+            "empty": 3.498,
+            "few": 3.23,
+            "many": 3.462
+          }
+        },
+        "all, every voice counts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.71,
+          "loved": 0.424,
+          "yield": 3.55,
+          "finds": 0.707,
+          "personal": 0.174,
+          "voices": 4.924,
+          "crowded": 0.789,
+          "range": 0.182,
+          "byDiary": {
+            "empty": 3.298,
+            "few": 3.657,
+            "many": 3.54
+          }
+        },
+        "all, no spreading": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.702,
+          "loved": 0.428,
+          "yield": 3.511,
+          "finds": 1.445,
+          "personal": 0.254,
+          "voices": 3.915,
+          "crowded": 0.578,
+          "range": 0.207,
+          "byDiary": {
+            "empty": 3.412,
+            "few": 3.5,
+            "many": 3.508
+          }
+        },
+        "all, no veto": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.703,
+          "loved": 0.416,
+          "yield": 3.516,
+          "finds": 1.42,
+          "personal": 0.223,
+          "voices": 4.924,
+          "crowded": 0.591,
+          "range": 0.205,
+          "byDiary": {
+            "empty": 3.364,
+            "few": 3.515,
+            "many": 3.522
+          }
+        },
+        "who loved it, anyone tied": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.683,
+          "loved": 0.397,
+          "yield": 3.417,
+          "finds": 1.216,
+          "personal": 0.095,
+          "voices": 4.929,
+          "crowded": 0.62,
+          "range": 0.18,
+          "byDiary": {
+            "empty": 3.431,
+            "few": 3.42,
+            "many": 3.412
+          }
+        },
+        "who is close, any response": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.664,
+          "loved": 0.371,
+          "yield": 3.32,
+          "finds": 1.55,
+          "personal": 0.272,
+          "voices": 4.865,
+          "crowded": 0.512,
+          "range": 0.346,
+          "byDiary": {
+            "empty": 3.3,
+            "few": 3.647,
+            "many": 3.259
+          }
+        },
+        "if ties were known exactly": {
+          "reached": 1,
+          "filled": 0.998,
+          "liked": 0.815,
+          "loved": 0.513,
+          "yield": 4.076,
+          "finds": 2.112,
+          "personal": 0.925,
+          "voices": 4.812,
+          "crowded": 0.479,
+          "range": 0.26,
+          "byDiary": {
+            "empty": 3.138,
+            "few": 4.096,
+            "many": 4.121
+          }
+        }
+      }
+    },
+    "newcomers answer for 4 well-known films": {
+      "ceiling": 5,
+      "strategies": {
+        "any film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.473,
+          "loved": 0.212,
+          "yield": 2.364,
+          "finds": 2.259,
+          "personal": 0.016,
+          "voices": null,
+          "crowded": 0.033,
+          "range": 0.985,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 2.364
+          }
+        },
+        "most written about": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.599,
+          "loved": 0.3,
+          "yield": 2.996,
+          "finds": 0.078,
+          "personal": -0.046,
+          "voices": null,
+          "crowded": 0.973,
+          "range": 0.081,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 2.996
+          }
+        },
+        "best loved overall": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.794,
+          "loved": 0.535,
+          "yield": 3.969,
+          "finds": 2.972,
+          "personal": 0.083,
+          "voices": null,
+          "crowded": 0.251,
+          "range": 0.058,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.969
+          }
+        },
+        "previous engine": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.488,
+          "loved": 0.23,
+          "yield": 2.438,
+          "finds": 2.438,
+          "personal": 0.14,
+          "voices": 3.845,
+          "crowded": 0,
+          "range": 0.367,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 2.438
+          }
+        },
+        "feelings only": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.615,
+          "loved": 0.306,
+          "yield": 3.076,
+          "finds": 1.597,
+          "personal": 0.171,
+          "voices": 5,
+          "crowded": 0.485,
+          "range": 0.334,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.076
+          }
+        },
+        "verdicts only": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.84,
+          "loved": 0.566,
+          "yield": 4.199,
+          "finds": 3.707,
+          "personal": 0.598,
+          "voices": 5,
+          "crowded": 0.111,
+          "range": 0.185,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.199
+          }
+        },
+        "feelings + verdicts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.834,
+          "loved": 0.562,
+          "yield": 4.168,
+          "finds": 3.629,
+          "personal": 0.527,
+          "voices": 5,
+          "crowded": 0.119,
+          "range": 0.183,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.168
+          }
+        },
+        "follows only": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.61,
+          "loved": 0.317,
+          "yield": 3.049,
+          "finds": 1.6,
+          "personal": 0.249,
+          "voices": 3.758,
+          "crowded": 0.479,
+          "range": 0.407,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.049
+          }
+        },
+        "+ follows": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.843,
+          "loved": 0.565,
+          "yield": 4.216,
+          "finds": 3.682,
+          "personal": 0.532,
+          "voices": 5,
+          "crowded": 0.118,
+          "range": 0.176,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.216
+          }
+        },
+        "+ what landed (all)": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.843,
+          "loved": 0.57,
+          "yield": 4.216,
+          "finds": 3.685,
+          "personal": 0.549,
+          "voices": 5,
+          "crowded": 0.118,
+          "range": 0.177,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.216
+          }
+        },
+        "all, one voice per film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.767,
+          "loved": 0.484,
+          "yield": 3.837,
+          "finds": 3.555,
+          "personal": 0.566,
+          "voices": 5,
+          "crowded": 0.061,
+          "range": 0.283,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.837
+          }
+        },
+        "all, every voice counts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.813,
+          "loved": 0.526,
+          "yield": 4.067,
+          "finds": 3.316,
+          "personal": 0.296,
+          "voices": 5,
+          "crowded": 0.175,
+          "range": 0.122,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.067
+          }
+        },
+        "all, no spreading": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.84,
+          "loved": 0.577,
+          "yield": 4.202,
+          "finds": 3.646,
+          "personal": 0.519,
+          "voices": 3.736,
+          "crowded": 0.123,
+          "range": 0.176,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.202
+          }
+        },
+        "all, no veto": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.794,
+          "loved": 0.518,
+          "yield": 3.968,
+          "finds": 2.15,
+          "personal": 0.632,
+          "voices": 5,
+          "crowded": 0.484,
+          "range": 0.212,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.968
+          }
+        },
+        "who loved it, anyone tied": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.819,
+          "loved": 0.553,
+          "yield": 4.094,
+          "finds": 3.714,
+          "personal": 0.382,
+          "voices": 5,
+          "crowded": 0.087,
+          "range": 0.11,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.094
+          }
+        },
+        "who is close, any response": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.683,
+          "loved": 0.372,
+          "yield": 3.415,
+          "finds": 1.935,
+          "personal": 0.401,
+          "voices": 5,
+          "crowded": 0.44,
+          "range": 0.316,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.415
+          }
+        },
+        "if ties were known exactly": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.908,
+          "loved": 0.673,
+          "yield": 4.538,
+          "finds": 3.791,
+          "personal": 1.058,
+          "voices": 5,
+          "crowded": 0.163,
+          "range": 0.25,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.538
+          }
+        }
+      }
+    },
+    "newcomers answer for 8 well-known films": {
+      "ceiling": 5,
+      "strategies": {
+        "any film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.463,
+          "loved": 0.211,
+          "yield": 2.317,
+          "finds": 2.212,
+          "personal": 0.022,
+          "voices": null,
+          "crowded": 0.035,
+          "range": 0.98,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 2.317
+          }
+        },
+        "most written about": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.583,
+          "loved": 0.273,
+          "yield": 2.917,
+          "finds": 0.103,
+          "personal": 0.094,
+          "voices": null,
+          "crowded": 0.972,
+          "range": 0.073,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 2.917
+          }
+        },
+        "best loved overall": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.768,
+          "loved": 0.508,
+          "yield": 3.842,
+          "finds": 3.601,
+          "personal": 0.086,
+          "voices": null,
+          "crowded": 0.061,
+          "range": 0.054,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.842
+          }
+        },
+        "previous engine": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.476,
+          "loved": 0.2,
+          "yield": 2.382,
+          "finds": 2.382,
+          "personal": -0.026,
+          "voices": 4.024,
+          "crowded": 0,
+          "range": 0.338,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 2.382
+          }
+        },
+        "feelings only": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.609,
+          "loved": 0.322,
+          "yield": 3.047,
+          "finds": 1.699,
+          "personal": 0.234,
+          "voices": 5,
+          "crowded": 0.458,
+          "range": 0.319,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.047
+          }
+        },
+        "verdicts only": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.814,
+          "loved": 0.537,
+          "yield": 4.069,
+          "finds": 3.946,
+          "personal": 0.481,
+          "voices": 5,
+          "crowded": 0.028,
+          "range": 0.14,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.069
+          }
+        },
+        "feelings + verdicts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.819,
+          "loved": 0.546,
+          "yield": 4.094,
+          "finds": 3.988,
+          "personal": 0.469,
+          "voices": 5,
+          "crowded": 0.025,
+          "range": 0.147,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.094
+          }
+        },
+        "follows only": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.602,
+          "loved": 0.31,
+          "yield": 3.01,
+          "finds": 1.661,
+          "personal": 0.262,
+          "voices": 3.849,
+          "crowded": 0.444,
+          "range": 0.351,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.01
+          }
+        },
+        "+ follows": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.822,
+          "loved": 0.548,
+          "yield": 4.111,
+          "finds": 4.005,
+          "personal": 0.454,
+          "voices": 5,
+          "crowded": 0.025,
+          "range": 0.147,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.111
+          }
+        },
+        "+ what landed (all)": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.823,
+          "loved": 0.547,
+          "yield": 4.113,
+          "finds": 4.008,
+          "personal": 0.445,
+          "voices": 5,
+          "crowded": 0.025,
+          "range": 0.148,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.113
+          }
+        },
+        "all, one voice per film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.771,
+          "loved": 0.475,
+          "yield": 3.854,
+          "finds": 3.763,
+          "personal": 0.602,
+          "voices": 5,
+          "crowded": 0.021,
+          "range": 0.258,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.854
+          }
+        },
+        "all, every voice counts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.782,
+          "loved": 0.494,
+          "yield": 3.912,
+          "finds": 3.783,
+          "personal": 0.258,
+          "voices": 5,
+          "crowded": 0.031,
+          "range": 0.1,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.912
+          }
+        },
+        "all, no spreading": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.831,
+          "loved": 0.556,
+          "yield": 4.155,
+          "finds": 4.039,
+          "personal": 0.52,
+          "voices": 3.664,
+          "crowded": 0.026,
+          "range": 0.145,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.155
+          }
+        },
+        "all, no veto": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.813,
+          "loved": 0.505,
+          "yield": 4.066,
+          "finds": 2.552,
+          "personal": 0.657,
+          "voices": 5,
+          "crowded": 0.396,
+          "range": 0.216,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.066
+          }
+        },
+        "who loved it, anyone tied": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.812,
+          "loved": 0.532,
+          "yield": 4.062,
+          "finds": 3.971,
+          "personal": 0.378,
+          "voices": 5,
+          "crowded": 0.02,
+          "range": 0.086,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.062
+          }
+        },
+        "who is close, any response": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.677,
+          "loved": 0.366,
+          "yield": 3.385,
+          "finds": 2.027,
+          "personal": 0.339,
+          "voices": 5,
+          "crowded": 0.432,
+          "range": 0.311,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.385
+          }
+        },
+        "if ties were known exactly": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.915,
+          "loved": 0.658,
+          "yield": 4.574,
+          "finds": 4.294,
+          "personal": 1.064,
+          "voices": 5,
+          "crowded": 0.059,
+          "range": 0.24,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.574
+          }
+        }
+      }
+    },
+    "newcomers answer for 4, kept private": {
+      "ceiling": 5,
+      "strategies": {
+        "any film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.473,
+          "loved": 0.212,
+          "yield": 2.364,
+          "finds": 2.244,
+          "personal": 0.016,
+          "voices": null,
+          "crowded": 0.039,
+          "range": 0.985,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 2.364
+          }
+        },
+        "most written about": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.679,
+          "loved": 0.374,
+          "yield": 3.393,
+          "finds": 0.059,
+          "personal": 0.046,
+          "voices": null,
+          "crowded": 0.98,
+          "range": 0.074,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.393
+          }
+        },
+        "best loved overall": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.789,
+          "loved": 0.531,
+          "yield": 3.947,
+          "finds": 2.142,
+          "personal": 0.125,
+          "voices": null,
+          "crowded": 0.437,
+          "range": 0.054,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.947
+          }
+        },
+        "previous engine": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.515,
+          "loved": 0.249,
+          "yield": 2.575,
+          "finds": 2.57,
+          "personal": 0.148,
+          "voices": 3.495,
+          "crowded": 0.001,
+          "range": 0.473,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 2.575
+          }
+        },
+        "feelings only": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.64,
+          "loved": 0.354,
+          "yield": 3.199,
+          "finds": 1.853,
+          "personal": 0.163,
+          "voices": 4.976,
+          "crowded": 0.393,
+          "range": 0.35,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.199
+          }
+        },
+        "verdicts only": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.801,
+          "loved": 0.512,
+          "yield": 4.003,
+          "finds": 2.538,
+          "personal": 0.477,
+          "voices": 4.998,
+          "crowded": 0.354,
+          "range": 0.219,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.003
+          }
+        },
+        "feelings + verdicts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.781,
+          "loved": 0.5,
+          "yield": 3.903,
+          "finds": 2.486,
+          "personal": 0.387,
+          "voices": 5,
+          "crowded": 0.352,
+          "range": 0.213,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.903
+          }
+        },
+        "follows only": {
+          "reached": 1,
+          "filled": 0.995,
+          "liked": 0.618,
+          "loved": 0.321,
+          "yield": 3.085,
+          "finds": 1.958,
+          "personal": 0.291,
+          "voices": 3.83,
+          "crowded": 0.326,
+          "range": 0.486,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.085
+          }
+        },
+        "+ follows": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.794,
+          "loved": 0.516,
+          "yield": 3.969,
+          "finds": 2.567,
+          "personal": 0.428,
+          "voices": 5,
+          "crowded": 0.343,
+          "range": 0.205,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.969
+          }
+        },
+        "+ what landed (all)": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.797,
+          "loved": 0.521,
+          "yield": 3.986,
+          "finds": 2.586,
+          "personal": 0.458,
+          "voices": 5,
+          "crowded": 0.341,
+          "range": 0.208,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.986
+          }
+        },
+        "all, one voice per film": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.742,
+          "loved": 0.451,
+          "yield": 3.711,
+          "finds": 3.07,
+          "personal": 0.578,
+          "voices": 5,
+          "crowded": 0.155,
+          "range": 0.334,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.711
+          }
+        },
+        "all, every voice counts": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.788,
+          "loved": 0.499,
+          "yield": 3.94,
+          "finds": 1.848,
+          "personal": 0.306,
+          "voices": 5,
+          "crowded": 0.531,
+          "range": 0.157,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.94
+          }
+        },
+        "all, no spreading": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.81,
+          "loved": 0.535,
+          "yield": 4.05,
+          "finds": 2.511,
+          "personal": 0.493,
+          "voices": 3.427,
+          "crowded": 0.37,
+          "range": 0.206,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.05
+          }
+        },
+        "all, no veto": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.76,
+          "loved": 0.489,
+          "yield": 3.798,
+          "finds": 2.043,
+          "personal": 0.375,
+          "voices": 5,
+          "crowded": 0.466,
+          "range": 0.204,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.798
+          }
+        },
+        "who loved it, anyone tied": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.788,
+          "loved": 0.516,
+          "yield": 3.942,
+          "finds": 2.627,
+          "personal": 0.356,
+          "voices": 5,
+          "crowded": 0.319,
+          "range": 0.164,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.942
+          }
+        },
+        "who is close, any response": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.666,
+          "loved": 0.369,
+          "yield": 3.329,
+          "finds": 1.91,
+          "personal": 0.22,
+          "voices": 5,
+          "crowded": 0.406,
+          "range": 0.329,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 3.329
+          }
+        },
+        "if ties were known exactly": {
+          "reached": 1,
+          "filled": 1,
+          "liked": 0.897,
+          "loved": 0.647,
+          "yield": 4.486,
+          "finds": 3.047,
+          "personal": 1.133,
+          "voices": 4.995,
+          "crowded": 0.32,
+          "range": 0.266,
+          "byDiary": {
+            "empty": 0,
+            "few": 0,
+            "many": 4.486
+          }
+        }
+      }
+    }
+  }
+}
