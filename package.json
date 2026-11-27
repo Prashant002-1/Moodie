@@ -39,6 +39,7 @@
     "test:report": "npm run test:coverage:full && echo 'Test results updated in TESTING.md'",
     "test:production": "node scripts/production-smoke.mjs",
     "catalog:import": "npm --workspace server run catalog:import",
+    "discovery:lab": "npm --workspace server run discovery:lab",
     "recommendations:evaluate": "npm run build --workspace server && node server/dist/scripts/evaluateRecommendations.js",
     "contracts:social": "openapi-typescript docs/api/social.openapi.json -o src/types/generated/social.d.ts",
     "test:platform": "npm run build && node scripts/verify-platform-continuity.mjs",

@@ -16,6 +16,7 @@
     "seed": "tsx src/scripts/runSeed.ts",
     "seed:verify": "tsx src/scripts/verifySeedData.ts",
     "demo:snapshot": "tsx src/scripts/buildDemoSnapshot.ts",
+    "discovery:lab": "tsx src/scripts/discoveryLab.ts",
     "catalog:import": "tsx src/scripts/importCatalog.ts",
     "notifications:deliver": "tsx src/scripts/deliverNotifications.ts"
   },
