@@ -36,7 +36,7 @@ if (!supported(process.versions.node)) {
 const apiPort = 3101, webPort = 5273;
 const run = (command, args, env = {}) => spawn(command, args, { cwd: root, stdio: 'inherit', env: { ...process.env, ...env } });
 const children = [
-  run(process.execPath, ['--import', 'tsx', 'ios/scripts/start-fixture.ts']),
+  run(process.execPath, ['--import', 'tsx', 'ios/scripts/start-fixture.ts'], { MOODIE_SAMPLE_WORLD: '1' }),
   run('npx', ['vite', '--port', String(webPort), '--strictPort', '--host'], { MOODIE_API_PROXY: `http://127.0.0.1:${apiPort}` }),
 ];
 console.log(`

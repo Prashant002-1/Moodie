@@ -62,6 +62,8 @@ await pool.query(`INSERT INTO film_suggestions(sender_id,recipient_id,movie_id,o
   (1,4,785084,'sent','You said you wanted one that stays with you. This did, for days.',NULL,NULL,CURRENT_TIMESTAMP - INTERVAL '2 days')`);
 await pool.query(`INSERT INTO suggestion_replies(suggestion_id,entry_id,enjoyment,highlights,note,created_at,updated_at) VALUES
   (4,2,'loved','{music,ending}','It felt like a win and a loss at once. I have not stopped thinking about his face.',CURRENT_TIMESTAMP - INTERVAL '1 day',CURRENT_TIMESTAMP - INTERVAL '1 day')`);
+// The web preview adds a larger community, so discovery has people to go through. Phone QA keeps the four above.
+if (process.env.MOODIE_SAMPLE_WORLD === '1') await (await import('../../server/src/scripts/sampleWorld')).addSampleWorld(hash);
 // Cached-only search/details keep QA deterministic and avoid remote catalog requests.
 const server = app.listen(3101,'127.0.0.1');
 server.on('listening',()=>console.log('Native QA API ready at http://127.0.0.1:3101; account ios_viewer; disposable data '+process.env.DATABASE_PATH));

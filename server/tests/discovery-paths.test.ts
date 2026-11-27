@@ -111,6 +111,15 @@ describe('films through people', () => {
     expect(titles((await get('/discovery/for-you', viewer.cookie)).body)).toEqual(['Loved', 'Liked']);
   });
 
+  it('leaves out a film that is already waiting for the viewer, sent by someone or saved', async () => {
+    const viewer = await register('waiting'), friend = await register('sender_two');
+    await follow(viewer.id, friend.id);
+    for (const movie of [20, 21, 22]) await respond(friend.id, movie, { enjoyment: 'loved' });
+    await pool.query("INSERT INTO film_suggestions(sender_id,recipient_id,movie_id,origin,reason) VALUES($1,$2,20,'sent','This one.')", [friend.id, viewer.id]);
+    await pool.query('INSERT INTO saved_films(user_id,movie_id) VALUES($1,21)', [viewer.id]);
+    expect(titles((await get('/discovery/for-you', viewer.cookie)).body)).toEqual(['Mixed']);
+  });
+
   it('pages without repeating or dropping a film', async () => {
     const viewer = await register('pager'), friend = await register('prolific');
     await follow(viewer.id, friend.id);

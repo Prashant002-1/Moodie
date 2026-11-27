@@ -42,7 +42,10 @@ export async function loadCommunity(viewerId: number) {
     FROM film_suggestions s LEFT JOIN suggestion_replies r ON r.suggestion_id = s.id
     WHERE ((s.recipient_id = $1) OR (s.sender_id = $1 AND s.origin = 'sent'))
       AND ${visiblePerson('$1', '(CASE WHEN s.sender_id = $1 THEN s.recipient_id ELSE s.sender_id END)')}`, [viewerId]);
-  const hidden = await pool.query<{ movie_id: number }>('SELECT movie_id FROM discovery_hidden WHERE user_id = $1', [viewerId]);
+  // Not offered again: films the viewer set aside, and films already waiting for them, sent by someone or saved.
+  const hidden = await pool.query<{ movie_id: number }>(`SELECT movie_id FROM discovery_hidden WHERE user_id = $1
+    UNION SELECT movie_id FROM saved_films WHERE user_id = $1
+    UNION SELECT movie_id FROM film_suggestions WHERE recipient_id = $1`, [viewerId]);
 
   const rows = new Map<number, ResponseRow>(), names = new Map<number, string>(), filmCards = new Map<number, FilmCard & { overview: string }>();
   const own: Seen[] = [], others: Seen[] = [];
